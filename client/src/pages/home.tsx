@@ -1,0 +1,42 @@
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Button } from '../components/ui/button';
+import { Input } from '../components/ui/input';
+import { getSocket, WS } from '../lib/websocket';
+
+export default function Home() {
+  const [name, setName] = useState('');
+  const [room, setRoom] = useState('');
+  const nav = useNavigate();
+
+  const create = () => {
+    const s = getSocket();
+    s.emit(WS.ROOM_CREATE, { name: name || 'Player' });
+    s.once(WS.ROOM_CREATE, (payload: { code: string }) => {
+      nav(`/lobby/${payload.code}`);
+    });
+  };
+
+  const join = () => {
+    if (!room) return;
+    nav(`/lobby/${room}`);
+  };
+
+  return (
+    <div className="mx-auto mt-24 max-w-md space-y-6 p-4">
+      <div className="text-center text-3xl font-bold">Irish Potions</div>
+      <div className="space-y-2">
+        <label className="text-sm text-slate-400">Name</label>
+        <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Your name" />
+      </div>
+      <div className="flex gap-2">
+        <Button onClick={create}>Create Room</Button>
+      </div>
+      <div className="space-y-2">
+        <label className="text-sm text-slate-400">Room Code</label>
+        <Input value={room} onChange={(e) => setRoom(e.target.value.toUpperCase())} placeholder="ABCD" />
+        <Button onClick={join}>Join Room</Button>
+      </div>
+    </div>
+  );
+}
