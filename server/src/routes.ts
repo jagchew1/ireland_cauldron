@@ -3,7 +3,7 @@ import express from 'express';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { AssetListResponse, HealthResponse } from '@shared/events';
+import { AssetListResponse, HealthResponse } from '@irish-potions/shared';
 import { getRoomsSummary } from './storage';
 
 const __filename = fileURLToPath(import.meta.url);

@@ -1,5 +1,6 @@
 import { spawnSync } from 'node:child_process';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 function run(cmd: string, args: string[], cwd: string) {
   console.log(`$ ${cmd} ${args.join(' ')}`);
@@ -7,7 +8,8 @@ function run(cmd: string, args: string[], cwd: string) {
   if (r.status !== 0) process.exit(r.status || 1);
 }
 
-const root = path.resolve(__dirname, '..');
+const currentDir = path.dirname(fileURLToPath(import.meta.url));
+const root = path.resolve(currentDir, '..');
 const clientDir = path.resolve(root, 'client');
 const serverDir = path.resolve(root, 'server');
 const sharedDir = path.resolve(root, 'shared');

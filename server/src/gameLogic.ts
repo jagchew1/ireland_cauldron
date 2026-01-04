@@ -3,7 +3,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { randomUUID } from 'crypto';
 import { z } from 'zod';
-import { GameState, ActionPayloads, Card, Role, RoleTeam } from '@shared/schema';
+import { GameState, ActionPayloads, Card, Role, RoleTeam } from '@irish-potions/shared';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);

@@ -1,4 +1,4 @@
-import type { ShapedState } from '@shared/types';
+import type { ShapedState } from '@irish-potions/shared';
 import { CardImage } from './CardImage';
 
 type Props = {

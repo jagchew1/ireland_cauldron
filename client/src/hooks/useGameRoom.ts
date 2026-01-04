@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { getSocket, WS } from '../lib/websocket';
-import type { ShapedState } from '@shared/types';
+import type { ShapedState } from '@irish-potions/shared';
 
 export function useGameRoom(roomCode: string | null) {
   const socketRef = useRef(getSocket());

@@ -1,4 +1,4 @@
-import { Room, Player, GameState, GameConfig, Role } from '@shared/schema';
+import { Room, Player, GameState, GameConfig, Role } from '@irish-potions/shared';
 
 type RoomCode = string;
 
