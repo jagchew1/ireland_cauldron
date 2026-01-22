@@ -3,7 +3,7 @@ import express from 'express';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { AssetListResponse, HealthResponse } from '@irish-potions/shared';
+import { schemas } from '@irish-potions/shared';
 import { getRoomsSummary } from './storage';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -14,7 +14,7 @@ const assetsRoot = path.resolve(projectRoot, 'assets');
 
 export function registerRoutes(app: Express) {
   app.get('/health', (_req: Request, res: Response) => {
-    const payload = HealthResponse.parse({ ok: true, ts: Date.now() });
+    const payload = schemas.HealthResponse.parse({ ok: true, ts: Date.now() });
     res.json(payload);
   });
 
@@ -25,7 +25,7 @@ export function registerRoutes(app: Express) {
     const ingredients = fs.existsSync(ingredientsDir)
       ? fs.readdirSync(ingredientsDir).filter(isImage)
       : [];
-    const payload = AssetListResponse.parse({ heroes, ingredients });
+    const payload = schemas.AssetListResponse.parse({ heroes, ingredients });
     res.json(payload);
   });
 

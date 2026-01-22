@@ -1,7 +1,7 @@
 import type { Server as IOServer, Socket } from 'socket.io';
 import type { Express } from 'express';
 import { z } from 'zod';
-import { WS, RoomCreatePayload, RoomJoinPayload, GameActionPayload, ChatSendPayload } from '@irish-potions/shared';
+import { WS, schemas } from '@irish-potions/shared';
 import { ensureRoom, getRoom } from './storage';
 import { startGame, playCard, revealDay, nextRound, shapeStateFor } from './gameLogic';
 
@@ -12,7 +12,7 @@ export function initSockets(io: IOServer, _app: Express) {
     let playerName: string | null = null;
 
     socket.on(WS.ROOM_CREATE, (raw) => {
-      const payload = RoomCreatePayload.safeParse(raw);
+      const payload = schemas.RoomCreatePayload.safeParse(raw);
       if (!payload.success) return;
       const code = makeRoomCode();
       const room = ensureRoom(code, 10, {});
@@ -20,7 +20,7 @@ export function initSockets(io: IOServer, _app: Express) {
     });
 
     socket.on(WS.ROOM_JOIN, (raw) => {
-      const res = RoomJoinPayload.safeParse(raw);
+      const res = schemas.RoomJoinPayload.safeParse(raw);
       if (!res.success) return;
       const { roomCode, name, spectator } = res.data;
       const room = ensureRoom(roomCode, 10, {});
@@ -42,7 +42,7 @@ export function initSockets(io: IOServer, _app: Express) {
 
     socket.on(WS.GAME_ACTION, (raw) => {
       if (!currentRoom || !playerId) return;
-      const res = GameActionPayload.safeParse(raw);
+      const res = schemas.GameActionPayload.safeParse(raw);
       if (!res.success) return;
       const room = getRoom(currentRoom);
       if (!room) return;
@@ -72,7 +72,7 @@ export function initSockets(io: IOServer, _app: Express) {
 
     socket.on(WS.CHAT_SEND, (raw) => {
       if (!currentRoom || !playerId || !playerName) return;
-      const res = ChatSendPayload.safeParse(raw);
+      const res = schemas.ChatSendPayload.safeParse(raw);
       if (!res.success) return;
       io.to(currentRoom).emit(WS.CHAT_RECEIVE, {
         playerId,
