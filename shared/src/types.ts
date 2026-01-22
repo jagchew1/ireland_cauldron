@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import {
+  RoleTeam as RoleTeamZ,
   Player as PlayerZ,
   Role as RoleZ,
   Card as CardZ,
@@ -8,11 +9,14 @@ import {
   Deck as DeckZ,
   CenterDeck as CenterDeckZ,
   Room as RoomZ,
+  PlayedCard as PlayedCardZ,
+  GameConfig as GameConfigZ,
   GameState as GameStateZ,
   Phase as PhaseZ,
   ActionPayloads as ActionPayloadsZ,
 } from './schema';
 
+export type RoleTeam = z.infer<typeof RoleTeamZ>;
 export type Player = z.infer<typeof PlayerZ>;
 export type Role = z.infer<typeof RoleZ>;
 export type Card = z.infer<typeof CardZ>;
@@ -21,6 +25,8 @@ export type IngredientCard = z.infer<typeof IngredientCardZ>;
 export type Deck = z.infer<typeof DeckZ>;
 export type CenterDeck = z.infer<typeof CenterDeckZ>;
 export type Room = z.infer<typeof RoomZ>;
+export type PlayedCard = z.infer<typeof PlayedCardZ>;
+export type GameConfig = z.infer<typeof GameConfigZ>;
 export type GameState = z.infer<typeof GameStateZ>;
 export type Phase = z.infer<typeof PhaseZ>;
 export type ActionPayloads = z.infer<typeof ActionPayloadsZ>;
