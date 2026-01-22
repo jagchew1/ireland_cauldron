@@ -19,11 +19,12 @@ export function createRoom(code: string, maxPlayers: number, config: Partial<Gam
     spectators: [],
     roles: {},
     deck: { drawPile: [], discardPile: [] },
+    centerDeck: { cards: [], revealed: [], discarded: [] },
     hands: {},
     table: [],
-    track: { goodPoints: 0, evilPoints: 0 },
     config: { nightSeconds: 30, daySeconds: 15, handSize: 3, ...config },
     expiresAt: null,
+    pendingActions: [],
   };
   const data: RoomData = { state, socketsByPlayer: new Map(), roomBySocket: new Map() };
   rooms.set(code, data);

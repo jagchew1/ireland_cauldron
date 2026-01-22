@@ -10,8 +10,6 @@ import {
   Room as RoomZ,
   GameState as GameStateZ,
   Phase as PhaseZ,
-  Vote as VoteZ,
-  PolicyTrack as PolicyTrackZ,
   ActionPayloads as ActionPayloadsZ,
 } from './schema';
 
@@ -25,8 +23,6 @@ export type CenterDeck = z.infer<typeof CenterDeckZ>;
 export type Room = z.infer<typeof RoomZ>;
 export type GameState = z.infer<typeof GameStateZ>;
 export type Phase = z.infer<typeof PhaseZ>;
-export type Vote = z.infer<typeof VoteZ>;
-export type PolicyTrack = z.infer<typeof PolicyTrackZ>;
 export type ActionPayloads = z.infer<typeof ActionPayloadsZ>;
 
 export type ClientVisibleCard = Card & { image?: string };

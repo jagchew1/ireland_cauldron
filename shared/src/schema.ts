@@ -54,12 +54,6 @@ export const Player = z.object({
 });
 export type Player = z.infer<typeof Player>;
 
-export const Vote = z.object({
-  playerId: z.string(),
-  value: z.enum(['YES', 'NO']).nullable(),
-});
-export type Vote = z.infer<typeof Vote>;
-
 export const Room = z.object({
   code: z.string(),
   createdAt: z.number(),
@@ -74,12 +68,6 @@ export const PlayedCard = z.object({
   image: z.string().optional(),
 });
 export type PlayedCard = z.infer<typeof PlayedCard>;
-
-export const PolicyTrack = z.object({
-  goodPoints: z.number().default(0),
-  evilPoints: z.number().default(0),
-});
-export type PolicyTrack = z.infer<typeof PolicyTrack>;
 
 export const GameConfig = z.object({
   nightSeconds: z.number().default(30),
@@ -99,7 +87,6 @@ export const GameState = z.object({
   centerDeck: CenterDeck,
   hands: z.record(z.string(), z.array(Card)),
   table: z.array(PlayedCard),
-  track: PolicyTrack,
   config: GameConfig,
   expiresAt: z.number().nullable(),
   pendingActions: z.array(z.any()).default([]), // for storing pending player actions during resolution
