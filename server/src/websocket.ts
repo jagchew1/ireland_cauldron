@@ -65,7 +65,7 @@ export function initSockets(io: IOServer, _app: Express) {
       // Handle auto timeouts
       if (s.expiresAt && Date.now() > s.expiresAt) {
         if (s.phase === 'NIGHT') revealDay(s);
-        else if (s.phase === 'DAY') nextRound(s);
+        else if (s.phase === 'DAY' || s.phase === 'RESOLUTION') nextRound(s);
       }
       broadcastState(io, currentRoom);
     });

@@ -19,7 +19,14 @@ export const IngredientCard = z.object({
 });
 export type IngredientCard = z.infer<typeof IngredientCard>;
 
-export const Card = z.discriminatedUnion('kind', [IngredientCard]);
+export const CenterCard = z.object({
+  id: z.string(),
+  kind: z.literal('CENTER'),
+  type: z.enum(['MILK', 'BLOOD']),
+});
+export type CenterCard = z.infer<typeof CenterCard>;
+
+export const Card = z.discriminatedUnion('kind', [IngredientCard, CenterCard]);
 export type Card = z.infer<typeof Card>;
 
 export const Deck = z.object({
@@ -28,7 +35,14 @@ export const Deck = z.object({
 });
 export type Deck = z.infer<typeof Deck>;
 
-export const Phase = z.enum(['LOBBY', 'NIGHT', 'DAY', 'ENDED']);
+export const CenterDeck = z.object({
+  cards: z.array(CenterCard),
+  revealed: z.array(CenterCard),
+  discarded: z.array(CenterCard),
+});
+export type CenterDeck = z.infer<typeof CenterDeck>;
+
+export const Phase = z.enum(['LOBBY', 'NIGHT', 'RESOLUTION', 'DAY', 'ENDED']);
 export type Phase = z.infer<typeof Phase>;
 
 export const Player = z.object({
@@ -82,11 +96,13 @@ export const GameState = z.object({
   spectators: z.array(z.string()).default([]),
   roles: z.record(z.string(), Role),
   deck: Deck,
+  centerDeck: CenterDeck,
   hands: z.record(z.string(), z.array(Card)),
   table: z.array(PlayedCard),
   track: PolicyTrack,
   config: GameConfig,
   expiresAt: z.number().nullable(),
+  pendingActions: z.array(z.any()).default([]), // for storing pending player actions during resolution
 });
 export type GameState = z.infer<typeof GameState>;
 

@@ -1,6 +1,6 @@
-# Irish Potions
+# Ireland Cauldron
 
-Bluffing card game with hidden roles and a cauldron of ingredients. This monorepo contains a React client, Node/TypeScript server with WebSockets, and shared Zod schemas for type-safe end-to-end development.
+A secret identity bluffing card game where players vie to influence the contents of a mystical cauldron. This monorepo contains a React client, Node/TypeScript server with WebSockets, and shared Zod schemas for type-safe end-to-end development.
 
 ## Tech Stack
 - Client: React 18, Vite, TypeScript, Tailwind CSS, shadcn-style UI primitives, TanStack Query
@@ -18,16 +18,23 @@ Bluffing card game with hidden roles and a cauldron of ingredients. This monorep
 ## Assets
 This project uses artwork located under assets/:
 - assets/heroes/: hero role images
-- assets/ingredients/: ingredient card images (8 copies of each included in the deck)
+- assets/ingredients/: ingredient card images (10 copies of each in the deck)
 
 The server exposes these under /assets/* for the client. Ensure these directories contain your images.
 
 ## Gameplay Overview
-- Players: 2–10, hidden teams (Good vs Evil)
-- Phases per round: Lobby → Night (play one ingredient) → Day (reveal & discuss)
-- Deck: 8 copies of each ingredient card; players keep a hand of 3
-- Roles: Assigned from hero art; team derived from file names (good_* / evil_*)
-- Server-authoritative, per-player state shaping to protect hidden info
+- **Players:** 5–10, hidden teams (Good vs Evil)
+- **Center Deck:** 16 cards (8 Milk, 8 Blood) - game ends when 6 are revealed or 6 remain
+- **Ingredient Deck:** 10 copies each of 5 ingredients (Brigid's Blessing, Cailleach's Gaze, Ceol of the Midnight Cairn, Faerie Thistle, Wolfbane Root)
+- **Phases per round:** 
+  - **Night:** Each player plays 1 ingredient card face-down
+  - **Resolution:** Cards revealed, effects resolve based on primary/secondary ingredients
+  - **Day:** Discussion phase before next round
+- **Hand:** Players maintain 3 ingredient cards, draw from deck (reshuffled when empty)
+- **Roles:** Assigned from hero art; team derived from file names (good_* / evil_*)
+- **Server-authoritative:** Per-player state shaping to protect hidden info
+
+For detailed game rules, see [GAME_RULES.md](./GAME_RULES.md)
 
 ## Scripts
 At repo root:
