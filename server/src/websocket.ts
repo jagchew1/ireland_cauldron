@@ -2,8 +2,8 @@ import type { Server as IOServer, Socket } from 'socket.io';
 import type { Express } from 'express';
 import { z } from 'zod';
 import { WS, RoomCreatePayload, RoomJoinPayload, GameActionPayload, ChatSendPayload } from '@irish-potions/shared';
-import { ensureRoom, getRoom } from './storage';
-import { startGame, playCard, revealDay, nextRound, shapeStateFor } from './gameLogic';
+import { ensureRoom, getRoom } from './storage.js';
+import { startGame, playCard, revealDay, nextRound, shapeStateFor } from './gameLogic.js';
 
 export function initSockets(io: IOServer, _app: Express) {
   io.on('connection', (socket) => {

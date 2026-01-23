@@ -3,9 +3,9 @@ import http from 'http';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { Server as IOServer } from 'socket.io';
-import { registerRoutes } from './routes';
-import { initSockets } from './websocket';
-import { maybeAttachVite } from './vite';
+import { registerRoutes } from './routes.js';
+import { initSockets } from './websocket.js';
+import { maybeAttachVite } from './vite.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
