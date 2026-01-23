@@ -103,8 +103,10 @@ function broadcastState(io: IOServer, roomCode: string) {
     io.to(p.id).emit(WS.GAME_STATE, shaped);
   }
   // Spectators: send fully revealed table but hide hands
-  const shaped = shapeStateFor(room.state, '');
-  io.to(roomCode).emit(WS.GAME_STATE, shaped);
+  const spectatorState = shapeStateFor(room.state, '');
+  for (const spectatorId of room.state.spectators) {
+    io.to(spectatorId).emit(WS.GAME_STATE, spectatorState);
+  }
 }
 
 function makeRoomCode() {
