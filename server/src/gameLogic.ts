@@ -472,7 +472,7 @@ export function shapeStateFor(state: GameState, playerId: string) {
     discarded: state.centerDeck.discarded.map(() => ({ id: 'hidden', kind: 'CENTER', type: 'MILK' } as CenterCard)),
   };
   
-  return { ...state, hands, table, centerDeck };
+  return { ...state, currentPlayerId: playerId, hands, table, centerDeck };
 }
 
 function findCardImage(_state: GameState, cardId?: string) {

@@ -1,10 +1,10 @@
-type Props = { src?: string; alt?: string; onClick?: () => void };
+type Props = { src?: string; alt?: string; onClick?: () => void; className?: string };
 
-export function CardImage({ src, alt, onClick }: Props) {
+export function CardImage({ src, alt, onClick, className = '' }: Props) {
   return (
     <div
       onClick={onClick}
-      className="h-32 w-20 cursor-pointer overflow-hidden rounded-md border border-slate-800 bg-slate-800/50"
+      className={`h-32 w-20 overflow-hidden rounded-md border border-slate-800 bg-slate-800/50 ${className}`}
     >
       {src ? (
         <img src={src} alt={alt} className="h-full w-full object-cover" />

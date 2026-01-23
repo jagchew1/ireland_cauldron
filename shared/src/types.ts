@@ -33,6 +33,7 @@ export type ActionPayloads = z.infer<typeof ActionPayloadsZ>;
 
 export type ClientVisibleCard = Card & { image?: string };
 export interface ShapedState extends Omit<GameState, 'hands' | 'table'> {
+  currentPlayerId?: string;
   hands: Record<string, ClientVisibleCard[]>;
   table: Array<{ playerId: string; revealed: boolean; image?: string; cardId?: string }>;
 }
