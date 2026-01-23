@@ -33,13 +33,13 @@ export default function Home() {
         <label className="text-sm text-slate-400">Name</label>
         <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Your name" />
       </div>
-      <div className="flex gap-2">
-        <Button onClick={create}>Create Room</Button>
-      </div>
       <div className="space-y-2">
         <label className="text-sm text-slate-400">Room Code</label>
         <Input value={room} onChange={(e) => setRoom(e.target.value.toUpperCase())} placeholder="ABCD" />
-        <Button onClick={join}>Join Room</Button>
+      </div>
+      <div className="flex gap-2">
+        <Button onClick={create} className="flex-1">Create Room</Button>
+        <Button onClick={join} className="flex-1">Join Room</Button>
       </div>
     </div>
   );

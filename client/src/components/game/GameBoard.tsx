@@ -46,7 +46,8 @@ export function GameBoard({ state, onPlayCard }: Props) {
               {myHand.map((c) => (
                 <CardImage 
                   key={c.id} 
-                  src={(c as any).image} 
+                  src={(c as any).image}
+                  cardName={c.name}
                   onClick={() => !hasPlayedCard && state.phase === 'NIGHT' && onPlayCard(c.id)}
                   className={hasPlayedCard || state.phase !== 'NIGHT' ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:scale-105 transition-transform'}
                 />
