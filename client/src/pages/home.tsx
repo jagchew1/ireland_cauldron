@@ -10,8 +10,10 @@ export default function Home() {
   const nav = useNavigate();
 
   const create = () => {
+    const playerName = name || 'Player';
+    sessionStorage.setItem('name', playerName);
     const s = getSocket();
-    s.emit(WS.ROOM_CREATE, { name: name || 'Player' });
+    s.emit(WS.ROOM_CREATE, { name: playerName });
     s.once(WS.ROOM_CREATE, (payload: { code: string }) => {
       nav(`/lobby/${payload.code}`);
     });
@@ -19,6 +21,8 @@ export default function Home() {
 
   const join = () => {
     if (!room) return;
+    const playerName = name || 'Player';
+    sessionStorage.setItem('name', playerName);
     nav(`/lobby/${room}`);
   };
 
