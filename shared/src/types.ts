@@ -14,7 +14,7 @@ import {
   GameState as GameStateZ,
   Phase as PhaseZ,
   ActionPayloads as ActionPayloadsZ,
-} from './schema';
+} from './schema.js';
 
 export type RoleTeam = z.infer<typeof RoleTeamZ>;
 export type Player = z.infer<typeof PlayerZ>;

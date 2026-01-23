@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { ActionPayloads, GameState, Health, AssetList } from './schema';
+import { ActionPayloads, GameState, Health, AssetList } from './schema.js';
 
 // WebSocket event names
 export const WS = {
