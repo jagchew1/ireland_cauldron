@@ -24,11 +24,11 @@ async function main() {
   // WebSockets
   initSockets(io, app);
 
-  // Dev: Vite middlewares for client
+  // Dev: Vite middlewares for client (must be last for SPA fallback)
   if (process.env.NODE_ENV !== 'production') {
     await maybeAttachVite(app);
   } else {
-    // Serve built client from /client/dist
+    // Production: Serve built client
     const clientDist = path.resolve(__dirname, '../../client/dist');
     app.use(express.static(clientDist));
     app.get('*', (_req, res) => res.sendFile(path.join(clientDist, 'index.html')));

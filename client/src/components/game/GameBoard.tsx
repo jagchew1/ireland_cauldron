@@ -11,6 +11,14 @@ export function GameBoard({ state, onPlayCard }: Props) {
   const myHand = myId ? state.hands[myId] || [] : [];
   const hasPlayedCard = state.table.some(t => t.playerId === myId);
   
+  // Debug info
+  console.log('GameBoard render:', { 
+    myId, 
+    handCount: myHand.length, 
+    hands: Object.keys(state.hands),
+    firstCard: myHand[0]
+  });
+  
   return (
     <div className="mx-auto max-w-5xl space-y-6 p-4">
       <div className="flex items-center justify-between">
@@ -31,16 +39,20 @@ export function GameBoard({ state, onPlayCard }: Props) {
           {hasPlayedCard && state.phase === 'NIGHT' && (
             <div className="mb-2 text-sm text-green-400">✓ Card played - waiting for other players...</div>
           )}
-          <div className="flex gap-2">
-            {myHand.map((c) => (
-              <CardImage 
-                key={c.id} 
-                src={(c as any).image} 
-                onClick={() => !hasPlayedCard && state.phase === 'NIGHT' && onPlayCard(c.id)}
-                className={hasPlayedCard || state.phase !== 'NIGHT' ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:scale-105 transition-transform'}
-              />
-            ))}
-          </div>
+          {myHand.length === 0 ? (
+            <div className="text-sm text-slate-400">No cards in hand (Player ID: {myId || 'unknown'})</div>
+          ) : (
+            <div className="flex gap-2">
+              {myHand.map((c) => (
+                <CardImage 
+                  key={c.id} 
+                  src={(c as any).image} 
+                  onClick={() => !hasPlayedCard && state.phase === 'NIGHT' && onPlayCard(c.id)}
+                  className={hasPlayedCard || state.phase !== 'NIGHT' ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:scale-105 transition-transform'}
+                />
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </div>
