@@ -64,6 +64,38 @@ export const GameConfig = z.object({
   handSize: z.number().default(3),
 });
 
+export const ResolutionLogEntry = z.object({
+  type: z.enum(['primary', 'secondary', 'info']),
+  ingredient: z.string().optional(),
+  message: z.string(),
+  cardsShown: z.array(CenterCard).optional(), // For Brigid/Faerie showing cards
+});
+
+export const PlayerKnowledge = z.object({
+  playerId: z.string(),
+  cardId: z.string(),
+  type: z.enum(['MILK', 'BLOOD']),
+  location: z.enum(['deck', 'discard', 'revealed']),
+});
+
+export const PendingAction = z.discriminatedUnion('actionType', [
+  z.object({
+    actionType: z.literal('cailleach_primary'),
+    playerId: z.string(),
+    cardShown: CenterCard,
+    cardIndex: z.number(), // original position in deck
+  }),
+  z.object({
+    actionType: z.literal('wolfbane_primary'),
+    playerId: z.string(),
+  }),
+  z.object({
+    actionType: z.literal('ceol_primary'),
+    playerId: z.string(),
+    newRoleId: z.string(), // The role they swapped to
+  }),
+]);
+
 export const GameState = z.object({
   room: Room,
   phase: Phase,
@@ -77,7 +109,9 @@ export const GameState = z.object({
   table: z.array(PlayedCard),
   config: GameConfig,
   expiresAt: z.number().nullable(),
-  pendingActions: z.array(z.any()).default([]), // for storing pending player actions during resolution
+  pendingActions: z.array(PendingAction).default([]), // for storing pending player actions during resolution
+  resolutionLog: z.array(ResolutionLogEntry).default([]), // Log of what happened this round
+  playerKnowledge: z.array(PlayerKnowledge).default([]), // Track what each player knows about center deck
 });
 
 // REST schemas
@@ -91,4 +125,13 @@ export const AssetList = z.object({
 export const ActionPlayCard = z.object({ type: z.literal('play_card'), cardId: z.string() });
 export const ActionReady = z.object({ type: z.literal('ready'), ready: z.boolean() });
 export const ActionStart = z.object({ type: z.literal('start') });
-export const ActionPayloads = z.discriminatedUnion('type', [ActionPlayCard, ActionReady, ActionStart]);
+export const ActionResolution = z.object({ 
+  type: z.literal('resolution_action'), 
+  choice: z.enum(['keep', 'discard', 'confirm']) 
+});
+export const ActionPayloads = z.discriminatedUnion('type', [
+  ActionPlayCard, 
+  ActionReady, 
+  ActionStart,
+  ActionResolution,
+]);

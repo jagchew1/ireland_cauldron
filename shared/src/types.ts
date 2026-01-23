@@ -14,6 +14,9 @@ import {
   GameState as GameStateZ,
   Phase as PhaseZ,
   ActionPayloads as ActionPayloadsZ,
+  ResolutionLogEntry as ResolutionLogEntryZ,
+  PlayerKnowledge as PlayerKnowledgeZ,
+  PendingAction as PendingActionZ,
 } from './schema.js';
 
 export type RoleTeam = z.infer<typeof RoleTeamZ>;
@@ -28,6 +31,9 @@ export type Room = z.infer<typeof RoomZ>;
 export type PlayedCard = z.infer<typeof PlayedCardZ>;
 export type GameConfig = z.infer<typeof GameConfigZ>;
 export type GameState = z.infer<typeof GameStateZ>;
+export type ResolutionLogEntry = z.infer<typeof ResolutionLogEntryZ>;
+export type PlayerKnowledge = z.infer<typeof PlayerKnowledgeZ>;
+export type PendingAction = z.infer<typeof PendingActionZ>;
 export type Phase = z.infer<typeof PhaseZ>;
 export type ActionPayloads = z.infer<typeof ActionPayloadsZ>;
 

@@ -3,7 +3,7 @@ import type { Express } from 'express';
 import { z } from 'zod';
 import { WS, RoomCreatePayload, RoomJoinPayload, GameActionPayload, ChatSendPayload } from '@irish-potions/shared';
 import { ensureRoom, getRoom } from './storage.js';
-import { startGame, playCard, revealDay, nextRound, shapeStateFor } from './gameLogic.js';
+import { startGame, playCard, revealDay, nextRound, shapeStateFor, processResolutionAction, hasPendingActions } from './gameLogic.js';
 
 export function initSockets(io: IOServer, _app: Express) {
   io.on('connection', (socket) => {
@@ -61,11 +61,21 @@ export function initSockets(io: IOServer, _app: Express) {
         case 'play_card':
           playCard(s, playerId, res.data.cardId);
           break;
+        case 'resolution_action':
+          if (s.phase === 'DAY' && res.data.choice) {
+            processResolutionAction(s, playerId, res.data.choice);
+          }
+          break;
       }
       // Handle auto timeouts
       if (s.expiresAt && Date.now() > s.expiresAt) {
         if (s.phase === 'NIGHT') revealDay(s);
-        else if (s.phase === 'DAY' || s.phase === 'RESOLUTION') nextRound(s);
+        else if (s.phase === 'DAY' || s.phase === 'RESOLUTION') {
+          // Only advance if no pending actions
+          if (!hasPendingActions(s)) {
+            nextRound(s);
+          }
+        }
       }
       broadcastState(io, currentRoom);
     });

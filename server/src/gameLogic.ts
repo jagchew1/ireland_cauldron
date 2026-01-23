@@ -3,7 +3,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { randomUUID } from 'crypto';
 import { z } from 'zod';
-import { GameState, ActionPayloads, Card, Role, RoleTeam, CenterCard, IngredientCard } from '@irish-potions/shared';
+import { GameState, ActionPayloads, Card, Role, RoleTeam, CenterCard, IngredientCard, PendingAction, PlayerKnowledge } from '@irish-potions/shared';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -206,6 +206,9 @@ function determinePrimaryAndSecondary(
 function startResolution(state: GameState) {
   state.phase = 'RESOLUTION';
   
+  // Clear previous round's resolution log
+  state.resolutionLog = [];
+  
   // Reveal all cards on the table
   state.table = state.table.map((t) => ({ ...t, revealed: true }));
   
@@ -213,8 +216,36 @@ function startResolution(state: GameState) {
   const counts = getPlayedIngredients(state);
   const { primary, secondary } = determinePrimaryAndSecondary(counts);
   
+  // Log what was played
+  if (primary.length > 0) {
+    state.resolutionLog.push({
+      type: 'primary',
+      ingredient: primary[0],
+      message: `Primary ingredient: ${primary[0].replace(/_/g, ' ')}`,
+    });
+  } else if (secondary.length > 1) {
+    state.resolutionLog.push({
+      type: 'info',
+      message: `Tie for primary - both become secondary effects`,
+    });
+  }
+  
+  if (secondary.length > 0) {
+    state.resolutionLog.push({
+      type: 'secondary',
+      ingredient: secondary[0],
+      message: `Secondary ingredient: ${secondary[0].replace(/_/g, ' ')}`,
+    });
+  }
+  
   // Check if Faerie Thistle is secondary (blocks primary)
   const faerieBlocks = secondary.includes(INGREDIENTS.FAERIE);
+  if (faerieBlocks) {
+    state.resolutionLog.push({
+      type: 'info',
+      message: 'Faerie Thistle blocks the primary effect!',
+    });
+  }
   
   // Apply secondary effects first (Wolfbane Root discards from center deck)
   for (const ingredient of secondary) {
@@ -292,40 +323,56 @@ function applySecondaryEffect(
 function applyBrigidPrimary(state: GameState) {
   if (state.centerDeck.cards.length < 2) return;
   
-  const card1 = state.centerDeck.cards[state.centerDeck.cards.length - 1];
-  const card2 = state.centerDeck.cards[state.centerDeck.cards.length - 2];
+  const card1 = state.centerDeck.cards.pop()!;
+  const card2 = state.centerDeck.cards.pop()!;
+  
+  // Log cards shown to all players
+  state.resolutionLog.push({
+    type: 'info',
+    message: `Brigid's Blessing reveals 2 cards: ${card1.type} and ${card2.type}`,
+    cardsShown: [card1, card2],
+  });
   
   if (card1.type === 'MILK' && card2.type === 'MILK') {
     // Play one face up, return other to bottom
-    const revealed = state.centerDeck.cards.pop()!;
-    state.centerDeck.revealed.push(revealed);
-    // The other stays at top, move to bottom
-    const bottom = state.centerDeck.cards.pop()!;
-    state.centerDeck.cards.unshift(bottom);
+    state.centerDeck.revealed.push(card1);
+    state.centerDeck.cards.unshift(card2);
+    state.resolutionLog.push({
+      type: 'info',
+      message: `Both milk! One played face up, one returned to bottom.`,
+    });
+  } else {
+    // Return both to bottom
+    state.centerDeck.cards.unshift(card2, card1);
+    state.resolutionLog.push({
+      type: 'info',
+      message: `Not both milk - both cards returned to bottom of deck.`,
+    });
   }
-  // Otherwise, both stay on top (no action needed)
 }
 
 function applyCailleachPrimary(state: GameState, playerIds: string[]) {
   // Each player who played this card may look at 1 random card from deck
   // and decide to place at bottom or discard
-  // This requires player interaction - for now, simulate randomly
+  // Create pending actions for each player
   for (const playerId of playerIds) {
     if (state.centerDeck.cards.length === 0) break;
     
     const randomIndex = Math.floor(Math.random() * state.centerDeck.cards.length);
     const card = state.centerDeck.cards[randomIndex];
     
-    // Randomly decide: 50% discard, 50% to bottom
-    const shouldDiscard = Math.random() < 0.5;
-    state.centerDeck.cards.splice(randomIndex, 1);
-    
-    if (shouldDiscard) {
-      state.centerDeck.discarded.push(card);
-    } else {
-      state.centerDeck.cards.unshift(card);
-    }
+    state.pendingActions.push({
+      actionType: 'cailleach_primary',
+      playerId,
+      cardShown: card,
+      cardIndex: randomIndex,
+    });
   }
+  
+  state.resolutionLog.push({
+    type: 'info',
+    message: `${playerIds.length} player(s) viewing cards from the deck...`,
+  });
 }
 
 function applyCeolPrimary(state: GameState, playerIds: string[]) {
@@ -355,12 +402,23 @@ function applyCeolPrimary(state: GameState, playerIds: string[]) {
   
   shuffle(rolePool);
   
-  // Redistribute to Ceol players
+  // Redistribute to Ceol players and create pending actions
   playerIds.forEach((pid, idx) => {
     const player = state.players.find((p) => p.id === pid);
     if (player && rolePool[idx]) {
       player.roleId = rolePool[idx];
+      
+      state.pendingActions.push({
+        actionType: 'ceol_primary',
+        playerId: pid,
+        newRoleId: rolePool[idx],
+      });
     }
+  });
+  
+  state.resolutionLog.push({
+    type: 'info',
+    message: `${playerIds.length} player(s) swapped roles. Viewing new roles...`,
   });
 }
 
@@ -370,6 +428,13 @@ function applyFaeriePrimary(state: GameState, count: number) {
   const card1 = state.centerDeck.cards.pop()!;
   const card2 = state.centerDeck.cards.pop()!;
   
+  // Log cards shown
+  state.resolutionLog.push({
+    type: 'info',
+    message: `Faerie Thistle reveals 2 cards: ${card1.type} and ${card2.type}`,
+    cardsShown: [card1, card2],
+  });
+  
   if (count > 3) {
     // Discard milk, shuffle blood back
     if (card1.type === 'MILK') state.centerDeck.discarded.push(card1);
@@ -377,6 +442,11 @@ function applyFaeriePrimary(state: GameState, count: number) {
     
     if (card2.type === 'MILK') state.centerDeck.discarded.push(card2);
     else state.centerDeck.cards.push(card2);
+    
+    state.resolutionLog.push({
+      type: 'info',
+      message: `>3 Faerie Thistles played - milk discarded, blood shuffled back.`,
+    });
   } else {
     // Discard blood, shuffle milk back
     if (card1.type === 'BLOOD') state.centerDeck.discarded.push(card1);
@@ -384,6 +454,11 @@ function applyFaeriePrimary(state: GameState, count: number) {
     
     if (card2.type === 'BLOOD') state.centerDeck.discarded.push(card2);
     else state.centerDeck.cards.push(card2);
+    
+    state.resolutionLog.push({
+      type: 'info',
+      message: `≤3 Faerie Thistles played - blood discarded, milk shuffled back.`,
+    });
   }
   
   state.centerDeck.cards = shuffle(state.centerDeck.cards);
@@ -391,16 +466,18 @@ function applyFaeriePrimary(state: GameState, count: number) {
 
 function applyWolfbanePrimary(state: GameState) {
   // Each player discards one card at random from their hand
+  // Create pending actions for each player
   for (const player of state.players) {
-    const hand = state.hands[player.id];
-    if (hand && hand.length > 0) {
-      const randomIndex = Math.floor(Math.random() * hand.length);
-      const [discarded] = hand.splice(randomIndex, 1);
-      if (discarded.kind === 'INGREDIENT') {
-        state.deck.discardPile.push(discarded);
-      }
-    }
+    state.pendingActions.push({
+      actionType: 'wolfbane_primary',
+      playerId: player.id,
+    });
   }
+  
+  state.resolutionLog.push({
+    type: 'info',
+    message: `All players must discard 1 random card from their hand.`,
+  });
 }
 
 // Secondary Effects
@@ -494,3 +571,60 @@ function shuffle<T>(arr: T[]): T[] {
 function sample<T>(arr: T[], count: number): T[] {
   return shuffle([...arr]).slice(0, Math.max(0, Math.min(count, arr.length)));
 }
+
+export function processResolutionAction(state: GameState, playerId: string, choice: 'keep' | 'discard' | 'confirm') {
+  const actionIndex = state.pendingActions.findIndex(a => a.playerId === playerId);
+  if (actionIndex === -1) return;
+  
+  const action = state.pendingActions[actionIndex];
+  
+  if (action.actionType === 'cailleach_primary') {
+    // Remove the card from its original position
+    state.centerDeck.cards.splice(action.cardIndex, 1);
+    
+    if (choice === 'discard') {
+      state.centerDeck.discarded.push(action.cardShown);
+      // Track player knowledge
+      state.playerKnowledge.push({
+        playerId,
+        cardId: action.cardShown.id,
+        type: action.cardShown.type,
+        location: 'discard',
+      });
+    } else {
+      // Keep - place at bottom
+      state.centerDeck.cards.unshift(action.cardShown);
+      state.playerKnowledge.push({
+        playerId,
+        cardId: action.cardShown.id,
+        type: action.cardShown.type,
+        location: 'deck',
+      });
+    }
+  } else if (action.actionType === 'wolfbane_primary') {
+    // Discard random card from hand
+    const hand = state.hands[playerId];
+    if (hand && hand.length > 0) {
+      const randomIndex = Math.floor(Math.random() * hand.length);
+      const [discarded] = hand.splice(randomIndex, 1);
+      if (discarded.kind === 'INGREDIENT') {
+        state.deck.discardPile.push(discarded);
+      }
+    }
+  } else if (action.actionType === 'ceol_primary') {
+    // Just confirmation, role already swapped
+    // No additional action needed
+  }
+  
+  // Remove the action
+  state.pendingActions.splice(actionIndex, 1);
+}
+
+export function hasPendingActions(state: GameState): boolean {
+  return state.pendingActions.length > 0;
+}
+
+export function getPendingActionFor(state: GameState, playerId: string): PendingAction | undefined {
+  return state.pendingActions.find(a => a.playerId === playerId);
+}
+

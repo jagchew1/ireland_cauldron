@@ -5,7 +5,7 @@ import { GameBoard } from '../components/game/GameBoard';
 
 export default function Game() {
   const { roomCode = '' } = useParams();
-  const { state, joinRoom, playCard } = useGameRoom(roomCode);
+  const { state, joinRoom, playCard, resolutionChoice } = useGameRoom(roomCode);
 
   useEffect(() => {
     const name = sessionStorage.getItem('name') || 'Player';
@@ -13,5 +13,5 @@ export default function Game() {
   }, [roomCode, joinRoom]);
 
   if (!state) return <div className="p-4">Connecting...</div>;
-  return <GameBoard state={state} onPlayCard={playCard} />;
+  return <GameBoard state={state} onPlayCard={playCard} onResolutionChoice={resolutionChoice} />;
 }

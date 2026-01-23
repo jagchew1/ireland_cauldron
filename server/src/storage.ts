@@ -25,6 +25,8 @@ export function createRoom(code: string, maxPlayers: number, config: Partial<Gam
     config: { nightSeconds: 30, daySeconds: 15, handSize: 3, ...config },
     expiresAt: null,
     pendingActions: [],
+    resolutionLog: [],
+    playerKnowledge: [],
   };
   const data: RoomData = { state, socketsByPlayer: new Map(), roomBySocket: new Map() };
   rooms.set(code, data);
