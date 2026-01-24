@@ -626,7 +626,7 @@ export function revealDay(state: GameState) {
       state.deck.discardPile.push(card);
     }
   }
-  state.table = [];
+  // Keep cards on table during day phase for visibility
   
   // Players draw up to 3 cards from discard pile
   console.log('Dealing cards from discard to hands...');
@@ -644,8 +644,9 @@ export function revealDay(state: GameState) {
 
 export function nextRound(state: GameState) {
   console.log('=== NEXT ROUND ===');
-  // Table should already be cleared and cards already in discard from revealDay
-  // Just advance to night phase
+  // Clear table from previous round (cards already in discard from revealDay)
+  state.table = [];
+  // Advance to night phase
   state.phase = 'NIGHT';
   state.round += 1;
   state.expiresAt = Date.now() + state.config.nightSeconds * 1000;

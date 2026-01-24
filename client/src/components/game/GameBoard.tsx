@@ -48,6 +48,17 @@ export function GameBoard({ state, onPlayCard, onResolutionChoice, onEndDiscussi
   // Filter for event log
   const [logFilter, setLogFilter] = React.useState<'current' | 'all'>('current');
   
+  // Shuffle table cards for display (but keep original order in state)
+  const shuffledTable = React.useMemo(() => {
+    const shuffled = [...state.table];
+    // Fisher-Yates shuffle
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    return shuffled;
+  }, [state.table.length, state.round]); // Re-shuffle when table changes or round changes
+  
   // Check for pending action for this player
   const myPendingAction = myId && state.pendingActions 
     ? state.pendingActions.find(a => a.playerId === myId)
@@ -266,7 +277,7 @@ export function GameBoard({ state, onPlayCard, onResolutionChoice, onEndDiscussi
         <div className="col-span-2 md:col-span-3">
           <h2 className="mb-2 text-sm text-slate-400">Table</h2>
           <div className="flex flex-wrap gap-2">
-            {state.table.map((t, i) => (
+            {shuffledTable.map((t, i) => (
               <CardImage key={i} src={t.image} />
             ))}
           </div>
