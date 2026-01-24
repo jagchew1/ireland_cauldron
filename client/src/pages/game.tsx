@@ -13,5 +13,17 @@ export default function Game() {
   }, [roomCode, joinRoom]);
 
   if (!state) return <div className="p-4">Connecting...</div>;
-  return <GameBoard state={state} onPlayCard={playCard} onResolutionChoice={resolutionChoice} onEndDiscussion={endDiscussion} />;
+  
+  // Different background based on phase
+  const bgClass = state.phase === 'NIGHT' 
+    ? 'bg-slate-950' // Darker for night
+    : state.phase === 'DAY' 
+    ? 'bg-slate-900' // Lighter for day
+    : 'bg-slate-925'; // Default for other phases
+  
+  return (
+    <div className={`min-h-screen transition-colors duration-1000 ${bgClass}`}>
+      <GameBoard state={state} onPlayCard={playCard} onResolutionChoice={resolutionChoice} onEndDiscussion={endDiscussion} />
+    </div>
+  );
 }
