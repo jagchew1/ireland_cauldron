@@ -117,6 +117,7 @@ export const GameState = z.object({
   pendingActions: z.array(PendingAction).default([]), // for storing pending player actions during resolution
   resolutionLog: z.array(ResolutionLogEntry).default([]), // Log of what happened this round
   playerKnowledge: z.array(PlayerKnowledge).default([]), // Track what each player knows about center deck
+  winner: z.enum(['GOOD', 'EVIL', 'TIE']).nullable().default(null), // Winner when game ends
 });
 
 // REST schemas

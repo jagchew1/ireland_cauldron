@@ -98,6 +98,95 @@ export function GameBoard({ state, onPlayCard, onResolutionChoice, onEndDiscussi
     firstCard: myHand[0]
   });
   
+  // End game screen
+  if (state.phase === 'ENDED') {
+    const allFinalCards = [...state.centerDeck.cards, ...state.centerDeck.revealed];
+    const milkCount = allFinalCards.filter(c => c.type === 'MILK').length;
+    const bloodCount = allFinalCards.filter(c => c.type === 'BLOOD').length;
+    
+    return (
+      <div className="mx-auto max-w-5xl space-y-6 p-4">
+        <div className="flex items-center justify-between">
+          <div>Room {state.room.code}</div>
+          <div>Game Over</div>
+        </div>
+        
+        {/* Winner Banner */}
+        <div className={`rounded-lg border-4 p-8 text-center ${
+          state.winner === 'GOOD' 
+            ? 'border-green-500 bg-green-900/30' 
+            : state.winner === 'EVIL'
+            ? 'border-red-500 bg-red-900/30'
+            : 'border-yellow-500 bg-yellow-900/30'
+        }`}>
+          <h1 className={`mb-4 text-4xl font-bold ${
+            state.winner === 'GOOD' 
+              ? 'text-green-400' 
+              : state.winner === 'EVIL'
+              ? 'text-red-400'
+              : 'text-yellow-400'
+          }`}>
+            {state.winner === 'GOOD' ? 'Good Wins!' : state.winner === 'EVIL' ? 'Evil Wins!' : "It's a Tie!"}
+          </h1>
+          <div className="text-xl text-slate-300">
+            Final Count: {milkCount} Milk vs {bloodCount} Blood
+          </div>
+        </div>
+        
+        {/* Final Cards */}
+        <div className="rounded-lg border border-slate-700 bg-slate-800 p-4">
+          <h2 className="mb-3 text-lg font-semibold text-slate-200">Final Cards (Deck + Revealed)</h2>
+          <div className="flex flex-wrap gap-2">
+            {allFinalCards.map((card, i) => (
+              <div key={i} className={`h-32 w-24 rounded-md border-2 overflow-hidden ${
+                card.type === 'MILK' ? 'border-green-500' : 'border-red-500'
+              }`}>
+                <img 
+                  src={`/assets/center_deck/${card.type.toLowerCase()}.png`} 
+                  alt={card.type}
+                  className="h-full w-full object-cover"
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+        
+        {/* All Players and Roles */}
+        <div className="rounded-lg border border-slate-700 bg-slate-800 p-4">
+          <h2 className="mb-3 text-lg font-semibold text-slate-200">Players & Roles</h2>
+          <div className="space-y-4">
+            {state.players.map(player => {
+              const role = player.roleId ? state.roles[player.roleId] : undefined;
+              return (
+                <div key={player.id} className="flex items-center gap-4 rounded-lg border border-slate-700 bg-slate-900 p-3">
+                  <div className="flex-1">
+                    <div className="font-semibold text-slate-200">{player.name}</div>
+                    {role && (
+                      <div className={`text-sm font-medium ${
+                        role.team === 'GOOD' ? 'text-green-400' : 'text-red-400'
+                      }`}>
+                        {formatRoleName(role.name)} ({role.team})
+                      </div>
+                    )}
+                  </div>
+                  {role?.image && (
+                    <div className="h-24 w-20 rounded-md border-2 border-slate-600 overflow-hidden">
+                      <img 
+                        src={role.image} 
+                        alt={role.name}
+                        className="h-full w-full object-cover"
+                      />
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+    );
+  }
+  
   return (
     <div className="mx-auto max-w-5xl space-y-6 p-4">
       {/* Resolution Modal */}

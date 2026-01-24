@@ -125,8 +125,19 @@ export function createCenterDeck(): { cards: CenterCard[]; revealed: CenterCard[
 export function checkWinCondition(state: GameState): boolean {
   const revealedCount = state.centerDeck.revealed.length;
   const remainingCount = state.centerDeck.cards.length;
-  // Game ends when 6 cards are revealed OR only 6 cards remain
-  return revealedCount >= 6 || remainingCount <= 6;
+  // Game ends when deck + revealed = 6 total
+  return revealedCount + remainingCount <= 6;
+}
+
+export function calculateWinner(state: GameState): 'GOOD' | 'EVIL' | 'TIE' {
+  // Count milk vs blood in remaining deck + revealed cards
+  const allCards = [...state.centerDeck.cards, ...state.centerDeck.revealed];
+  const milkCount = allCards.filter(c => c.type === 'MILK').length;
+  const bloodCount = allCards.filter(c => c.type === 'BLOOD').length;
+  
+  if (milkCount > bloodCount) return 'GOOD';
+  if (bloodCount > milkCount) return 'EVIL';
+  return 'TIE';
 }
 
 export function startGame(state: GameState) {
@@ -635,7 +646,9 @@ export function revealDay(state: GameState) {
   // Check win condition
   if (checkWinCondition(state)) {
     state.phase = 'ENDED';
+    state.winner = calculateWinner(state);
     state.expiresAt = null;
+    console.log(`=== GAME ENDED - Winner: ${state.winner} ===`);
     return;
   }
   
@@ -669,12 +682,14 @@ export function shapeStateFor(state: GameState, playerId: string) {
     cardId: t.revealed ? t.cardId : undefined,
   }));
   
-  // Show center deck counts but not the actual cards (except revealed ones)
-  const centerDeck = {
-    cards: state.centerDeck.cards.map(() => ({ id: 'hidden', kind: 'CENTER', type: 'MILK' } as CenterCard)),
-    revealed: state.centerDeck.revealed,
-    discarded: state.centerDeck.discarded.map(() => ({ id: 'hidden', kind: 'CENTER', type: 'MILK' } as CenterCard)),
-  };
+  // Show center deck - if game ended, reveal all cards, otherwise hide them
+  const centerDeck = state.phase === 'ENDED' 
+    ? state.centerDeck // Show all cards when game ends
+    : {
+        cards: state.centerDeck.cards.map(() => ({ id: 'hidden', kind: 'CENTER', type: 'MILK' } as CenterCard)),
+        revealed: state.centerDeck.revealed,
+        discarded: state.centerDeck.discarded.map(() => ({ id: 'hidden', kind: 'CENTER', type: 'MILK' } as CenterCard)),
+      };
   
   return { ...state, currentPlayerId: playerId, hands, table, centerDeck };
 }
