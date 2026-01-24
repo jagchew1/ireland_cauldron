@@ -529,6 +529,22 @@ export declare const GameState: z.ZodObject<{
         team: "GOOD" | "EVIL";
         image?: string | undefined;
     }>>;
+    heroDeck: z.ZodDefault<z.ZodArray<z.ZodObject<{
+        id: z.ZodString;
+        name: z.ZodString;
+        team: z.ZodEnum<["GOOD", "EVIL"]>;
+        image: z.ZodOptional<z.ZodString>;
+    }, "strip", z.ZodTypeAny, {
+        id: string;
+        name: string;
+        team: "GOOD" | "EVIL";
+        image?: string | undefined;
+    }, {
+        id: string;
+        name: string;
+        team: "GOOD" | "EVIL";
+        image?: string | undefined;
+    }>, "many">>;
     deck: z.ZodObject<{
         drawPile: z.ZodArray<z.ZodDiscriminatedUnion<"kind", [z.ZodObject<{
             id: z.ZodString;
@@ -968,6 +984,12 @@ export declare const GameState: z.ZodObject<{
         team: "GOOD" | "EVIL";
         image?: string | undefined;
     }>;
+    heroDeck: {
+        id: string;
+        name: string;
+        team: "GOOD" | "EVIL";
+        image?: string | undefined;
+    }[];
     centerDeck: {
         cards: {
             id: string;
@@ -1146,6 +1168,12 @@ export declare const GameState: z.ZodObject<{
     expiresAt: number | null;
     round?: number | undefined;
     spectators?: string[] | undefined;
+    heroDeck?: {
+        id: string;
+        name: string;
+        team: "GOOD" | "EVIL";
+        image?: string | undefined;
+    }[] | undefined;
     pendingActions?: ({
         playerId: string;
         actionType: "cailleach_primary";

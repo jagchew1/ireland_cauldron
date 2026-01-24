@@ -97,8 +97,11 @@ export function assignRoles(state: GameState) {
   // fallback if not enough assets
   while (chosen.length < n) {
     chosen.push({ id: randomUUID(), name: 'Villager', team: 'GOOD' });
-  }
-  state.roles = {};
+  }  
+  // Store all available roles in heroDeck (the ones not dealt to players)
+  const allRoles = [...goodRoles, ...evilRoles];
+  state.heroDeck = allRoles.filter(role => !chosen.some(c => c.id === role.id));
+    state.roles = {};
   shuffle(chosen);
   state.players.forEach((p, i) => {
     p.roleId = chosen[i].id;
@@ -369,17 +372,6 @@ function applyBrigidPrimary(state: GameState) {
     state.centerDeck.revealed.push(card1);
     state.centerDeck.cards.unshift(card2);
     
-    // Track public knowledge - everyone knows card2 is at bottom of deck
-    for (const player of state.players) {
-      state.playerKnowledge.push({
-        playerId: player.id,
-        cardId: card2.id,
-        type: card2.type,
-        location: 'deck',
-        isPublic: true,
-      });
-    }
-    
     addLogEntry(state, {
       type: 'info',
       message: `Both milk! One played face up, one returned to bottom.`,
@@ -387,24 +379,6 @@ function applyBrigidPrimary(state: GameState) {
   } else {
     // Return both to bottom
     state.centerDeck.cards.unshift(card2, card1);
-    
-    // Track public knowledge - everyone knows both cards are at bottom
-    for (const player of state.players) {
-      state.playerKnowledge.push({
-        playerId: player.id,
-        cardId: card1.id,
-        type: card1.type,
-        location: 'deck',
-        isPublic: true,
-      });
-      state.playerKnowledge.push({
-        playerId: player.id,
-        cardId: card2.id,
-        type: card2.type,
-        location: 'deck',
-        isPublic: true,
-      });
-    }
     
     addLogEntry(state, {
       type: 'info',
@@ -438,49 +412,71 @@ function applyCailleachPrimary(state: GameState, playerIds: string[]) {
 }
 
 function applyCeolPrimary(state: GameState, playerIds: string[]) {
-  // Take one random hero card and shuffle with Ceol players' hero cards
-  // Give random card to each Ceol player, discard the remaining one
+  // Shuffle role cards from Ceol players with one undealt role from hero deck
+  // Reassign randomly; put the extra card back in the hero deck
   
-  // Get all hero role IDs
-  const allRoleIds = Object.keys(state.roles);
-  if (allRoleIds.length === 0) return;
-  
-  // Pick a random unused role (or from any role)
-  const usedRoleIds = state.players.map((p) => p.roleId).filter((r): r is string => !!r);
-  const unusedRoles = allRoleIds.filter((r) => !usedRoleIds.includes(r));
-  
-  let extraRole: string;
-  if (unusedRoles.length > 0) {
-    extraRole = unusedRoles[Math.floor(Math.random() * unusedRoles.length)];
-  } else {
-    extraRole = allRoleIds[Math.floor(Math.random() * allRoleIds.length)];
+  if (state.heroDeck.length === 0) {
+    addLogEntry(state, {
+      type: 'info',
+      message: `No undealt roles available - Ceol effect fizzled.`,
+    });
+    return;
   }
   
-  // Collect all roles (Ceol players' + extra)
-  const rolePool = [
-    ...playerIds.map((pid) => state.players.find((p) => p.id === pid)?.roleId).filter((r): r is string => !!r),
-    extraRole,
-  ];
+  // Collect roles from Ceol players
+  const playerRoles = playerIds
+    .map((pid) => state.players.find((p) => p.id === pid))
+    .filter((p): p is NonNullable<typeof p> => !!p && !!p.roleId)
+    .map((p) => ({ playerId: p.id, roleId: p.roleId!, role: state.roles[p.roleId!] }));
   
+  if (playerRoles.length === 0) return;
+  
+  // Take one random role from hero deck
+  const randomIndex = Math.floor(Math.random() * state.heroDeck.length);
+  const extraRole = state.heroDeck.splice(randomIndex, 1)[0];
+  
+  // Create pool of all roles (player roles + extra from deck)
+  const rolePool = [...playerRoles.map(pr => pr.role), extraRole];
   shuffle(rolePool);
   
-  // Redistribute to Ceol players and create pending actions
-  playerIds.forEach((pid, idx) => {
-    const player = state.players.find((p) => p.id === pid);
+  // Redistribute to Ceol players
+  playerRoles.forEach((pr, idx) => {
+    const player = state.players.find((p) => p.id === pr.playerId);
     if (player && rolePool[idx]) {
-      player.roleId = rolePool[idx];
+      const newRole = rolePool[idx];
+      
+      // Remove old role from state.roles if no other player has it
+      const oldRoleId = player.roleId!;
+      const otherPlayerHasOldRole = state.players.some(p => p.id !== player.id && p.roleId === oldRoleId);
+      if (!otherPlayerHasOldRole && state.roles[oldRoleId]) {
+        // Put old role back in hero deck (unless it's the one we just drew)
+        if (oldRoleId !== extraRole.id) {
+          state.heroDeck.push(state.roles[oldRoleId]);
+        }
+        delete state.roles[oldRoleId];
+      }
+      
+      // Assign new role
+      player.roleId = newRole.id;
+      state.roles[newRole.id] = newRole;
       
       state.pendingActions.push({
         actionType: 'ceol_primary',
-        playerId: pid,
-        newRoleId: rolePool[idx],
+        playerId: pr.playerId,
+        newRoleId: newRole.id,
       });
     }
   });
   
+  // Put the leftover role back in hero deck
+  const leftoverRole = rolePool[playerRoles.length];
+  if (leftoverRole && !state.heroDeck.some(r => r.id === leftoverRole.id)) {
+    state.heroDeck.push(leftoverRole);
+  }
+  
   addLogEntry(state, {
     type: 'info',
-    message: `${playerIds.length} player(s) swapped roles. Viewing new roles...`,
+    message: `${playerRoles.length} player(s) swapped roles. Viewing new roles...`,
   });
 }
 
@@ -513,16 +509,6 @@ function applyFaeriePrimary(state: GameState, count: number) {
       }
     } else {
       state.centerDeck.cards.push(card1);
-      // Track public knowledge of blood shuffled back
-      for (const player of state.players) {
-        state.playerKnowledge.push({
-          playerId: player.id,
-          cardId: card1.id,
-          type: card1.type,
-          location: 'deck',
-          isPublic: true,
-        });
-      }
     }
     
     if (card2.type === 'MILK') {
@@ -539,16 +525,6 @@ function applyFaeriePrimary(state: GameState, count: number) {
       }
     } else {
       state.centerDeck.cards.push(card2);
-      // Track public knowledge
-      for (const player of state.players) {
-        state.playerKnowledge.push({
-          playerId: player.id,
-          cardId: card2.id,
-          type: card2.type,
-          location: 'deck',
-          isPublic: true,
-        });
-      }
     }
     
     addLogEntry(state, {
@@ -571,16 +547,6 @@ function applyFaeriePrimary(state: GameState, count: number) {
       }
     } else {
       state.centerDeck.cards.push(card1);
-      // Track public knowledge
-      for (const player of state.players) {
-        state.playerKnowledge.push({
-          playerId: player.id,
-          cardId: card1.id,
-          type: card1.type,
-          location: 'deck',
-          isPublic: true,
-        });
-      }
     }
     
     if (card2.type === 'BLOOD') {
@@ -597,16 +563,6 @@ function applyFaeriePrimary(state: GameState, count: number) {
       }
     } else {
       state.centerDeck.cards.push(card2);
-      // Track public knowledge
-      for (const player of state.players) {
-        state.playerKnowledge.push({
-          playerId: player.id,
-          cardId: card2.id,
-          type: card2.type,
-          location: 'deck',
-          isPublic: true,
-        });
-      }
     }
     
     addLogEntry(state, {
@@ -656,6 +612,10 @@ export function revealDay(state: GameState) {
   
   // Reset endedDiscussion flags
   state.players.forEach(p => p.endedDiscussion = false);
+  console.log('Player states after reset:');
+  state.players.forEach(p => {
+    console.log(`  - ${p.name} (${p.id}): endedDiscussion=${p.endedDiscussion}, connected=${p.connected}, isReady=${p.isReady}`);
+  });
   
   // Move played cards from table to ingredient discard pile
   console.log('Moving played cards to discard...');
@@ -761,13 +721,6 @@ export function processResolutionAction(state: GameState, playerId: string, choi
     } else {
       // Keep - place at bottom
       state.centerDeck.cards.unshift(action.cardShown);
-      state.playerKnowledge.push({
-        playerId,
-        cardId: action.cardShown.id,
-        type: action.cardShown.type,
-        location: 'deck',
-        isPublic: false,
-      });
     }
   } else if (action.actionType === 'wolfbane_primary') {
     // Discard random card from hand
@@ -795,10 +748,17 @@ export function endDiscussion(state: GameState, playerId: string) {
   if (!player) return;
   
   player.endedDiscussion = true;
-  console.log(`Player ${player.name} ended discussion`);
+  console.log(`Player ${player.name} (${player.id}) ended discussion`);
   
   // Check if all players have ended discussion
+  console.log('Current player states:');
+  state.players.forEach(p => {
+    console.log(`  - ${p.name} (${p.id}): endedDiscussion=${p.endedDiscussion}, connected=${p.connected}`);
+  });
+  
   const allEnded = state.players.every(p => p.endedDiscussion);
+  console.log(`All ended check: ${allEnded} (${state.players.filter(p => p.endedDiscussion).length}/${state.players.length} players)`);
+  
   if (allEnded) {
     console.log('All players ended discussion - starting next round');
     nextRound(state);

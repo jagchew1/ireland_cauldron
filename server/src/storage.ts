@@ -18,6 +18,7 @@ export function createRoom(code: string, maxPlayers: number, config: Partial<Gam
     players: [],
     spectators: [],
     roles: {},
+    heroDeck: [],
     deck: { drawPile: [], discardPile: [] },
     centerDeck: { cards: [], revealed: [], discarded: [] },
     hands: {},

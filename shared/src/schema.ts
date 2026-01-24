@@ -107,6 +107,7 @@ export const GameState = z.object({
   players: z.array(Player),
   spectators: z.array(z.string()).default([]),
   roles: z.record(z.string(), Role),
+  heroDeck: z.array(Role).default([]), // Undealt hero roles available for Ceol swaps
   deck: Deck,
   centerDeck: CenterDeck,
   hands: z.record(z.string(), z.array(Card)),
