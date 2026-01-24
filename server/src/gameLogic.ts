@@ -3,7 +3,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { randomUUID } from 'crypto';
 import { z } from 'zod';
-import { GameState, ActionPayloads, Card, Role, RoleTeam, CenterCard, IngredientCard, PendingAction, PlayerKnowledge } from '@irish-potions/shared';
+import { GameState, ActionPayloads, Card, Role, RoleTeam, CenterCard, IngredientCard, PendingAction, PlayerKnowledge, ResolutionLogEntry } from '@irish-potions/shared';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -50,7 +50,7 @@ function formatIngredientName(name: string): string {
 }
 
 // Helper to add log entry with current round number
-function addLogEntry(state: GameState, entry: Omit<z.infer<typeof import('@irish-potions/shared').ResolutionLogEntry>, 'round'>) {
+function addLogEntry(state: GameState, entry: Omit<ResolutionLogEntry, 'round'>) {
   state.resolutionLog.push({
     ...entry,
     round: state.round,
