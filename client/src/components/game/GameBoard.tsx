@@ -191,37 +191,95 @@ export function GameBoard({ state, onPlayCard, onResolutionChoice, onEndDiscussi
       
       <div className="grid grid-cols-2 gap-6 md:grid-cols-3">
         <div className="col-span-2 md:col-span-3">
-          <h2 className="mb-2 text-sm text-slate-400">Center Deck</h2>
+          <h2 className="mb-2 text-sm text-slate-400">Game Decks</h2>
           <div className="flex flex-wrap gap-4 items-start">
-            {/* Deck */}
+            {/* Blood/Milk Center Deck */}
             <div className="flex flex-col items-center gap-1 relative group">
-              <div className="h-40 w-28 rounded-md border-2 border-blue-600 bg-slate-800 flex items-center justify-center">
+              <div className="h-40 w-28 rounded-md border-2 border-purple-600 bg-slate-800 flex items-center justify-center">
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-blue-400">{state.centerDeck.cards.length}</div>
+                  <div className="text-2xl font-bold text-purple-400">{state.centerDeck.cards.length}</div>
                   <div className="text-xs text-slate-400">Cards</div>
                 </div>
               </div>
-              <div className="text-xs text-slate-400">Deck</div>
+              <div className="text-xs text-slate-400">Blood/Milk</div>
               
-              {/* Deck Knowledge Tooltip */}
-              {(deckCounts.MILK > 0 || deckCounts.BLOOD > 0) && (
-                <div className="absolute bottom-full left-0 md:left-1/2 mb-2 hidden group-hover:block z-10 w-48 max-w-[90vw] md:-translate-x-1/2 rounded-lg border border-slate-700 bg-slate-900 p-3 shadow-xl">
-                  <div className="mb-1 text-xs font-semibold text-slate-300">Cards you know in deck:</div>
-                  <div className="space-y-1">
-                    {deckCounts.MILK > 0 && (
-                      <div className="text-xs text-green-400">
-                        MILK ({deckCounts.MILK})
-                      </div>
-                    )}
-                    {deckCounts.BLOOD > 0 && (
-                      <div className="text-xs text-red-400">
-                        BLOOD ({deckCounts.BLOOD})
-                      </div>
-                    )}
-                  </div>
-                  <div className="absolute left-8 md:left-1/2 top-full h-0 w-0 md:-translate-x-1/2 border-8 border-transparent border-t-slate-900"></div>
+              {/* Center Deck Initial Info Tooltip */}
+              <div className="absolute bottom-full left-0 md:left-1/2 mb-2 hidden group-hover:block z-10 w-48 max-w-[90vw] md:-translate-x-1/2 rounded-lg border border-slate-700 bg-slate-900 p-3 shadow-xl">
+                <div className="mb-1 text-xs font-semibold text-slate-300">Initial deck composition:</div>
+                <div className="space-y-1">
+                  <div className="text-xs text-green-400">8 MILK cards</div>
+                  <div className="text-xs text-red-400">8 BLOOD cards</div>
                 </div>
-              )}
+                {(deckCounts.MILK > 0 || deckCounts.BLOOD > 0) && (
+                  <>
+                    <div className="my-2 border-t border-slate-700"></div>
+                    <div className="mb-1 text-xs font-semibold text-slate-300">You know in deck:</div>
+                    <div className="space-y-1">
+                      {deckCounts.MILK > 0 && (
+                        <div className="text-xs text-green-400">MILK ({deckCounts.MILK})</div>
+                      )}
+                      {deckCounts.BLOOD > 0 && (
+                        <div className="text-xs text-red-400">BLOOD ({deckCounts.BLOOD})</div>
+                      )}
+                    </div>
+                  </>
+                )}
+                <div className="absolute left-8 md:left-1/2 top-full h-0 w-0 md:-translate-x-1/2 border-8 border-transparent border-t-slate-900"></div>
+              </div>
+            </div>
+            
+            {/* Hero Deck */}
+            <div className="flex flex-col items-center gap-1 relative group">
+              <div className="h-40 w-28 rounded-md border-2 border-yellow-600 bg-slate-800 flex items-center justify-center">
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-yellow-400">{state.heroDeck.length}</div>
+                  <div className="text-xs text-slate-400">Roles</div>
+                </div>
+              </div>
+              <div className="text-xs text-slate-400">Heroes</div>
+              
+              {/* Hero Deck Tooltip */}
+              <div className="absolute bottom-full left-0 md:left-1/2 mb-2 hidden group-hover:block z-10 w-56 max-w-[90vw] md:-translate-x-1/2 rounded-lg border border-slate-700 bg-slate-900 p-3 shadow-xl max-h-64 overflow-y-auto">
+                <div className="mb-2">
+                  <div className="text-xs font-semibold text-green-400 mb-1">Good Heroes:</div>
+                  <div className="space-y-0.5">
+                    {Object.values(state.roles).filter(r => r.team === 'GOOD').concat(state.heroDeck.filter(r => r.team === 'GOOD')).filter((r, i, arr) => arr.findIndex(x => x.id === r.id) === i).map(role => (
+                      <div key={role.id} className="text-xs text-slate-300">• {formatRoleName(role.name)}</div>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <div className="text-xs font-semibold text-red-400 mb-1">Evil Heroes:</div>
+                  <div className="space-y-0.5">
+                    {Object.values(state.roles).filter(r => r.team === 'EVIL').concat(state.heroDeck.filter(r => r.team === 'EVIL')).filter((r, i, arr) => arr.findIndex(x => x.id === r.id) === i).map(role => (
+                      <div key={role.id} className="text-xs text-slate-300">• {formatRoleName(role.name)}</div>
+                    ))}
+                  </div>
+                </div>
+                <div className="absolute left-8 md:left-1/2 top-full h-0 w-0 md:-translate-x-1/2 border-8 border-transparent border-t-slate-900"></div>
+              </div>
+            </div>
+            
+            {/* Ingredient Deck */}
+            <div className="flex flex-col items-center gap-1 relative group">
+              <div className="h-40 w-28 rounded-md border-2 border-green-600 bg-slate-800 flex items-center justify-center">
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-green-400">{state.deck.drawPile.length + state.deck.discardPile.length}</div>
+                  <div className="text-xs text-slate-400">Cards</div>
+                </div>
+              </div>
+              <div className="text-xs text-slate-400">Ingredients</div>
+              
+              {/* Ingredient Deck Tooltip */}
+              <div className="absolute bottom-full left-0 md:left-1/2 mb-2 hidden group-hover:block z-10 w-56 max-w-[90vw] md:-translate-x-1/2 rounded-lg border border-slate-700 bg-slate-900 p-3 shadow-xl max-h-64 overflow-y-auto">
+                <div className="mb-1 text-xs font-semibold text-slate-300">Initial deck (10 of each):</div>
+                <div className="space-y-0.5">
+                  {Array.from(new Set([...state.deck.drawPile, ...state.deck.discardPile].map(c => c.name))).sort().map(name => (
+                    <div key={name} className="text-xs text-slate-300">• {formatIngredientName(name)}</div>
+                  ))}
+                </div>
+                <div className="absolute left-8 md:left-1/2 top-full h-0 w-0 md:-translate-x-1/2 border-8 border-transparent border-t-slate-900"></div>
+              </div>
             </div>
             
             {/* Revealed Cards */}
