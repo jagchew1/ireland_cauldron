@@ -34,7 +34,7 @@ export function ResolutionModal({ state, myPendingAction, onChoice }: Props) {
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70">
         <div className="rounded-lg border border-slate-700 bg-slate-900 p-6 shadow-2xl max-w-md">
-          <h2 className="mb-4 text-xl font-bold text-purple-400">Cailleach's Gaze</h2>
+          <h2 className="mb-4 text-xl font-bold text-purple-400">Cailleach's Gaze (Primary)</h2>
           <p className="mb-4 text-slate-300">
             You may look at this card from the deck:
           </p>
@@ -64,6 +64,40 @@ export function ResolutionModal({ state, myPendingAction, onChoice }: Props) {
               Discard
             </Button>
           </div>
+        </div>
+      </div>
+    );
+  }
+  
+  if (myPendingAction.actionType === 'cailleach_secondary') {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70">
+        <div className="rounded-lg border border-slate-700 bg-slate-900 p-6 shadow-2xl max-w-md">
+          <h2 className="mb-4 text-xl font-bold text-purple-400">Cailleach's Gaze (Secondary)</h2>
+          <p className="mb-4 text-slate-300">
+            You can see the top card of the deck:
+          </p>
+          
+          {/* Show the card */}
+          <div className="mb-6 flex justify-center">
+            <div className={`h-40 w-28 rounded-md border-2 overflow-hidden ${
+              myPendingAction.cardShown.type === 'MILK' ? 'border-green-500' : 'border-red-500'
+            }`}>
+              <img 
+                src={`/assets/center_deck/${myPendingAction.cardShown.type.toLowerCase()}.png`} 
+                alt={myPendingAction.cardShown.type}
+                className="h-full w-full object-cover"
+              />
+            </div>
+          </div>
+          
+          <p className="mb-4 text-sm text-slate-400">
+            This card will remain on top of the deck.
+          </p>
+          
+          <Button onClick={() => onChoice('confirm')} className="w-full">
+            Acknowledge
+          </Button>
         </div>
       </div>
     );

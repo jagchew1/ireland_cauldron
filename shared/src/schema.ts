@@ -90,6 +90,11 @@ export const PendingAction = z.discriminatedUnion('actionType', [
     cardIndex: z.number(), // original position in deck
   }),
   z.object({
+    actionType: z.literal('cailleach_secondary'),
+    playerId: z.string(),
+    cardShown: CenterCard, // Top card of deck (just shown, no choice)
+  }),
+  z.object({
     actionType: z.literal('wolfbane_primary'),
     playerId: z.string(),
   }),

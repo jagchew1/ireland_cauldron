@@ -125,8 +125,8 @@ export function createCenterDeck(): { cards: CenterCard[]; revealed: CenterCard[
 export function checkWinCondition(state: GameState): boolean {
   const revealedCount = state.centerDeck.revealed.length;
   const remainingCount = state.centerDeck.cards.length;
-  // Game ends when deck + revealed = 6 total
-  return revealedCount + remainingCount <= 6;
+  // Game ends when deck + revealed = 5 total
+  return revealedCount + remainingCount <= 5;
 }
 
 export function calculateWinner(state: GameState): 'GOOD' | 'EVIL' | 'TIE' {
@@ -177,9 +177,10 @@ export function playCard(state: GameState, playerId: string, cardId: string) {
   if (idx < 0) return;
   const [card] = hand!.splice(idx, 1);
   state.table.push({ playerId, cardId: card.id, card, revealed: false });
-  // If all players have played, advance to resolution
-  const activePlayers = state.players.length;
-  if (state.table.length >= activePlayers) {
+  // If all connected players have played, advance to resolution
+  const connectedPlayers = state.players.filter(p => p.connected).length;
+  console.log(`Cards played: ${state.table.length}/${connectedPlayers} connected players`);
+  if (state.table.length >= connectedPlayers) {
     startResolution(state);
   }
 }
@@ -605,7 +606,24 @@ function applyWolfbanePrimary(state: GameState) {
 function applyCailleachSecondary(state: GameState, playerIds: string[]) {
   // Each player who played Cailleach may look at top card of center deck
   // Card is returned to top without changing position
-  // This is information-only, so no state change needed in this simple implementation
+  for (const playerId of playerIds) {
+    if (state.centerDeck.cards.length === 0) break;
+    
+    const topCard = state.centerDeck.cards[state.centerDeck.cards.length - 1];
+    
+    state.pendingActions.push({
+      actionType: 'cailleach_secondary',
+      playerId,
+      cardShown: topCard,
+    });
+  }
+  
+  if (playerIds.length > 0) {
+    addLogEntry(state, {
+      type: 'info',
+      message: `${playerIds.length} player(s) viewing top card of deck...`,
+    });
+  }
 }
 
 function applyWolfbaneSecondary(state: GameState) {
@@ -738,6 +756,9 @@ export function processResolutionAction(state: GameState, playerId: string, choi
       // Keep - place at bottom
       state.centerDeck.cards.unshift(action.cardShown);
     }
+  } else if (action.actionType === 'cailleach_secondary') {
+    // Just viewing the top card - no action needed, just acknowledge
+    // No state change required
   } else if (action.actionType === 'wolfbane_primary') {
     // Discard random card from hand
     const hand = state.hands[playerId];

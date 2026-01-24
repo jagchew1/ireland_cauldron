@@ -32,13 +32,12 @@ Ireland Cauldron is a secret identity card game for 5-10 players. Players receiv
 - Each player starts with **3 ingredient cards**
 
 ## Win Condition
-The game ends when either:
-1. **6 cards from the center deck are revealed face-up**, OR
-2. **Only 6 cards remain** in the center deck (after discards)
+The game ends when the **center deck + revealed cards = 5 cards total**.
 
-When the game ends, count the revealed cards to determine which team wins:
+When the game ends, count all remaining cards (in deck + revealed):
 - More **Milk** = Good team wins
 - More **Blood** = Evil team wins
+- **Tie** = Draw (both teams tie)
 
 ## Game Flow
 
@@ -62,11 +61,13 @@ Effects are resolved in this order:
 
 1. **Secondary effects are applied first**
 2. **Primary effect is applied** (unless blocked by Faerie Thistle secondary)
+3. **Pending actions are resolved** (e.g., players make choices for Cailleach's Gaze, Wolfbane Root, or view their new role from Ceol)
 
 ### Phase 4: Day (Discussion)
-- Players can see what ingredients were played
-- Players discuss and prepare for the next round
-- After the timer, a new Night phase begins
+- Played ingredient cards remain visible (shuffled order) throughout the day phase
+- Players discuss and strategize
+- Each player must click **"End Discussion"** when ready
+- Once all players have clicked End Discussion, a new Night phase begins
 
 ### New Round
 - All played ingredient cards are discarded
@@ -89,10 +90,11 @@ Each player who played this ingredient:
   - Place it at the **bottom** of the center deck, OR
   - **Discard** it (removed from game)
 
-#### Ceol of the Midnight Cairn
-Identity swap mechanic:
-- Take **1 random hero card** from unused roles
+#### Ceol of the Mundealt hero card** from the hero deck (roles not given to any player)
 - **Shuffle** it with the hero cards of all players who played Ceol
+- Give a **random hero card** from this pool to each Ceol player
+- The **leftover card** is returned to the hero deck
+- Players who swap roles will see their new identity in a modalof all players who played Ceol
 - Give a **random hero card** from this pool to each Ceol player
 - **Discard** the remaining hero card
 
@@ -105,7 +107,7 @@ Draw **two cards** from the top of the center deck and reveal them publicly:
   - Discard any **Blood** cards
   - Shuffle any **Milk** cards back into the deck
 
-#### Wolfbane Root
+#### Wolfbanwho played this card e Root
 Each player **discards 1 random card** from their remaining 2 cards in hand
 
 ### Secondary Effects
@@ -153,8 +155,16 @@ Each player who played Cailleach's Gaze:
 
 ## Phase Timers
 - **Night Phase:** 30 seconds (configurable)
-- **Day Phase:** 15 seconds (configurable)
-- **Resolution:** Automatic (processes effects immediately)
+- **Day Phase:** 15 seconds (configurable) - *does not end until all players click "End Discussion"*
+- **Resolution:** Automatic (processes effects, then waits for player actions like Cailleach choices)
+
+## End Game
+When the game ends:
+- All remaining center deck cards and revealed cards are shown
+- All player identities and roles are revealed
+- The winning team is displayed batil game end (or until you swap via Ceol)
+- Played cards remain visible on the table during day phase to help with discussion
+- Players can hover over decks to see initial composition and what they know about cards
 
 ## Notes
 - When the ingredient draw pile is empty, the discard pile is automatically reshuffled
