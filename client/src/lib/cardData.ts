@@ -17,12 +17,12 @@ export const CARD_EFFECTS = {
   "faerie_thistle": {
     name: "Faerie Thistle",
     primary: "Reveal top 2 cards from deck. If >3 Faeries played: discard milk, shuffle blood back. If ≤3 played: discard blood, shuffle milk back.",
-    secondary: "Blocks the primary effect"
+    secondary: "Discard the top card from the deck without revealing it"
   },
   "wolfbane_root": {
     name: "Wolfbane Root",
     primary: "Each player discards 1 random card from their hand (from their remaining 2 cards)",
-    secondary: "Discard the top card from the deck without revealing it"
+    secondary: "Blocks the primary effect"
   }
 } as const;
 
