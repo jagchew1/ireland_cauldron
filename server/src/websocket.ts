@@ -73,9 +73,17 @@ export function initSockets(io: IOServer, _app: Express) {
       // Handle auto timeouts
       if (s.expiresAt && Date.now() > s.expiresAt) {
         if (s.phase === 'NIGHT') revealDay(s);
-        else if (s.phase === 'DAY' || s.phase === 'RESOLUTION') {
+        else if (s.phase === 'RESOLUTION') {
           // Only advance if no pending actions
           if (!hasPendingActions(s)) {
+            nextRound(s);
+          }
+        }
+        else if (s.phase === 'DAY') {
+          // During day phase, respect End Discussion voting
+          // Only auto-advance if all players have ended discussion
+          const allEnded = s.players.every(p => p.endedDiscussion);
+          if (allEnded) {
             nextRound(s);
           }
         }
