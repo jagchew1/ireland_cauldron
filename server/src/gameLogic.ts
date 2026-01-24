@@ -278,13 +278,13 @@ function startResolution(state: GameState) {
     });
   }
   
-  // Check if Faerie Thistle is secondary (blocks primary)
-  const faerieBlocks = secondary.includes(INGREDIENTS.FAERIE);
-  if (faerieBlocks) {
-    console.log('Faerie Thistle blocks primary effect!');
+  // Check if Wolfbane Root is secondary (blocks primary)
+  const wolfbaneBlocks = secondary.includes(INGREDIENTS.WOLFBANE);
+  if (wolfbaneBlocks) {
+    console.log('Wolfbane Root blocks primary effect!');
     addLogEntry(state, {
       type: 'info',
-      message: 'Faerie Thistle blocks the primary effect!',
+      message: 'Wolfbane Root blocks the primary effect!',
     });
   }
   
@@ -295,7 +295,7 @@ function startResolution(state: GameState) {
   }
   
   // Apply primary effect (unless blocked)
-  if (!faerieBlocks && primary.length > 0) {
+  if (!wolfbaneBlocks && primary.length > 0) {
     console.log('Applying primary effect:', primary[0]);
     applyPrimaryEffect(state, primary[0], counts);
   }
@@ -357,10 +357,10 @@ function applySecondaryEffect(
       // Nothing happens
       break;
     case INGREDIENTS.FAERIE:
-      // Blocks primary (handled in startResolution)
+      applyFaerieSecondary(state);
       break;
     case INGREDIENTS.WOLFBANE:
-      applyWolfbaneSecondary(state);
+      // Blocks primary (handled in startResolution)
       break;
   }
 }
@@ -626,7 +626,7 @@ function applyCailleachSecondary(state: GameState, playerIds: string[]) {
   }
 }
 
-function applyWolfbaneSecondary(state: GameState) {
+function applyFaerieSecondary(state: GameState) {
   // Discard top card from center deck without revealing
   if (state.centerDeck.cards.length > 0) {
     const card = state.centerDeck.cards.pop()!;

@@ -126,11 +126,11 @@ Each player who played Cailleach's Gaze:
 **Nothing happens**
 
 #### Faerie Thistle (Secondary)
-**Blocks the primary effect completely**
-- No matter what the primary ingredient is, its effect does not activate
+**Discard the top card** from the center deck **without revealing it**
 
 #### Wolfbane Root (Secondary)
-**Discard the top card** from the center deck **without revealing it**
+**Blocks the primary effect completely**
+- No matter what the primary ingredient is, its effect does not activate
 
 ## Strategy Tips
 
