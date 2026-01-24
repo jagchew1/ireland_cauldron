@@ -347,6 +347,18 @@ function applyBrigidPrimary(state: GameState) {
     // Play one face up, return other to bottom
     state.centerDeck.revealed.push(card1);
     state.centerDeck.cards.unshift(card2);
+    
+    // Track public knowledge - everyone knows card2 is at bottom of deck
+    for (const player of state.players) {
+      state.playerKnowledge.push({
+        playerId: player.id,
+        cardId: card2.id,
+        type: card2.type,
+        location: 'deck',
+        isPublic: true,
+      });
+    }
+    
     state.resolutionLog.push({
       type: 'info',
       message: `Both milk! One played face up, one returned to bottom.`,
@@ -354,6 +366,25 @@ function applyBrigidPrimary(state: GameState) {
   } else {
     // Return both to bottom
     state.centerDeck.cards.unshift(card2, card1);
+    
+    // Track public knowledge - everyone knows both cards are at bottom
+    for (const player of state.players) {
+      state.playerKnowledge.push({
+        playerId: player.id,
+        cardId: card1.id,
+        type: card1.type,
+        location: 'deck',
+        isPublic: true,
+      });
+      state.playerKnowledge.push({
+        playerId: player.id,
+        cardId: card2.id,
+        type: card2.type,
+        location: 'deck',
+        isPublic: true,
+      });
+    }
+    
     state.resolutionLog.push({
       type: 'info',
       message: `Not both milk - both cards returned to bottom of deck.`,
@@ -447,11 +478,57 @@ function applyFaeriePrimary(state: GameState, count: number) {
   
   if (count > 3) {
     // Discard milk, shuffle blood back
-    if (card1.type === 'MILK') state.centerDeck.discarded.push(card1);
-    else state.centerDeck.cards.push(card1);
+    if (card1.type === 'MILK') {
+      state.centerDeck.discarded.push(card1);
+      // Track public knowledge of discarded milk
+      for (const player of state.players) {
+        state.playerKnowledge.push({
+          playerId: player.id,
+          cardId: card1.id,
+          type: card1.type,
+          location: 'discard',
+          isPublic: true,
+        });
+      }
+    } else {
+      state.centerDeck.cards.push(card1);
+      // Track public knowledge of blood shuffled back
+      for (const player of state.players) {
+        state.playerKnowledge.push({
+          playerId: player.id,
+          cardId: card1.id,
+          type: card1.type,
+          location: 'deck',
+          isPublic: true,
+        });
+      }
+    }
     
-    if (card2.type === 'MILK') state.centerDeck.discarded.push(card2);
-    else state.centerDeck.cards.push(card2);
+    if (card2.type === 'MILK') {
+      state.centerDeck.discarded.push(card2);
+      // Track public knowledge
+      for (const player of state.players) {
+        state.playerKnowledge.push({
+          playerId: player.id,
+          cardId: card2.id,
+          type: card2.type,
+          location: 'discard',
+          isPublic: true,
+        });
+      }
+    } else {
+      state.centerDeck.cards.push(card2);
+      // Track public knowledge
+      for (const player of state.players) {
+        state.playerKnowledge.push({
+          playerId: player.id,
+          cardId: card2.id,
+          type: card2.type,
+          location: 'deck',
+          isPublic: true,
+        });
+      }
+    }
     
     state.resolutionLog.push({
       type: 'info',
@@ -459,11 +536,57 @@ function applyFaeriePrimary(state: GameState, count: number) {
     });
   } else {
     // Discard blood, shuffle milk back
-    if (card1.type === 'BLOOD') state.centerDeck.discarded.push(card1);
-    else state.centerDeck.cards.push(card1);
+    if (card1.type === 'BLOOD') {
+      state.centerDeck.discarded.push(card1);
+      // Track public knowledge
+      for (const player of state.players) {
+        state.playerKnowledge.push({
+          playerId: player.id,
+          cardId: card1.id,
+          type: card1.type,
+          location: 'discard',
+          isPublic: true,
+        });
+      }
+    } else {
+      state.centerDeck.cards.push(card1);
+      // Track public knowledge
+      for (const player of state.players) {
+        state.playerKnowledge.push({
+          playerId: player.id,
+          cardId: card1.id,
+          type: card1.type,
+          location: 'deck',
+          isPublic: true,
+        });
+      }
+    }
     
-    if (card2.type === 'BLOOD') state.centerDeck.discarded.push(card2);
-    else state.centerDeck.cards.push(card2);
+    if (card2.type === 'BLOOD') {
+      state.centerDeck.discarded.push(card2);
+      // Track public knowledge
+      for (const player of state.players) {
+        state.playerKnowledge.push({
+          playerId: player.id,
+          cardId: card2.id,
+          type: card2.type,
+          location: 'discard',
+          isPublic: true,
+        });
+      }
+    } else {
+      state.centerDeck.cards.push(card2);
+      // Track public knowledge
+      for (const player of state.players) {
+        state.playerKnowledge.push({
+          playerId: player.id,
+          cardId: card2.id,
+          type: card2.type,
+          location: 'deck',
+          isPublic: true,
+        });
+      }
+    }
     
     state.resolutionLog.push({
       type: 'info',
@@ -606,12 +729,13 @@ export function processResolutionAction(state: GameState, playerId: string, choi
     
     if (choice === 'discard') {
       state.centerDeck.discarded.push(action.cardShown);
-      // Track player knowledge
+      // Track player knowledge (private)
       state.playerKnowledge.push({
         playerId,
         cardId: action.cardShown.id,
         type: action.cardShown.type,
         location: 'discard',
+        isPublic: false,
       });
     } else {
       // Keep - place at bottom
@@ -621,6 +745,7 @@ export function processResolutionAction(state: GameState, playerId: string, choi
         cardId: action.cardShown.id,
         type: action.cardShown.type,
         location: 'deck',
+        isPublic: false,
       });
     }
   } else if (action.actionType === 'wolfbane_primary') {

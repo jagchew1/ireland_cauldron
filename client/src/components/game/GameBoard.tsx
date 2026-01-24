@@ -23,13 +23,31 @@ export function GameBoard({ state, onPlayCard, onResolutionChoice, onEndDiscussi
     ? state.pendingActions.find(a => a.playerId === myId)
     : undefined;
   
-  // Get cards this player knows about
+  // Get cards this player knows about (private + public knowledge)
   const myKnowledge = myId && state.playerKnowledge
-    ? state.playerKnowledge.filter(k => k.playerId === myId)
+    ? state.playerKnowledge.filter(k => k.playerId === myId || k.isPublic)
     : [];
+  
+  // Aggregate knowledge by location and type
+  const aggregateKnowledge = (knowledge: typeof myKnowledge) => {
+    const counts: Record<'MILK' | 'BLOOD', number> = { MILK: 0, BLOOD: 0 };
+    const seen = new Set<string>(); // Track unique cardIds to avoid double counting
+    
+    for (const k of knowledge) {
+      if (!seen.has(k.cardId)) {
+        counts[k.type]++;
+        seen.add(k.cardId);
+      }
+    }
+    
+    return counts;
+  };
   
   const deckKnowledge = myKnowledge.filter(k => k.location === 'deck');
   const discardKnowledge = myKnowledge.filter(k => k.location === 'discard');
+  
+  const deckCounts = aggregateKnowledge(deckKnowledge);
+  const discardCounts = aggregateKnowledge(discardKnowledge);
   
   // Debug info
   console.log('GameBoard render:', { 
@@ -130,15 +148,20 @@ export function GameBoard({ state, onPlayCard, onResolutionChoice, onEndDiscussi
               <div className="text-xs text-slate-400">Deck</div>
               
               {/* Deck Knowledge Tooltip */}
-              {deckKnowledge.length > 0 && (
+              {(deckCounts.MILK > 0 || deckCounts.BLOOD > 0) && (
                 <div className="absolute bottom-full left-0 md:left-1/2 mb-2 hidden group-hover:block z-10 w-48 max-w-[90vw] md:-translate-x-1/2 rounded-lg border border-slate-700 bg-slate-900 p-3 shadow-xl">
                   <div className="mb-1 text-xs font-semibold text-slate-300">Cards you know in deck:</div>
                   <div className="space-y-1">
-                    {deckKnowledge.map((k, i) => (
-                      <div key={i} className={`text-xs ${k.type === 'MILK' ? 'text-green-400' : 'text-red-400'}`}>
-                        • {k.type}
+                    {deckCounts.MILK > 0 && (
+                      <div className="text-xs text-green-400">
+                        MILK ({deckCounts.MILK})
                       </div>
-                    ))}
+                    )}
+                    {deckCounts.BLOOD > 0 && (
+                      <div className="text-xs text-red-400">
+                        BLOOD ({deckCounts.BLOOD})
+                      </div>
+                    )}
                   </div>
                   <div className="absolute left-8 md:left-1/2 top-full h-0 w-0 md:-translate-x-1/2 border-8 border-transparent border-t-slate-900"></div>
                 </div>
@@ -173,15 +196,20 @@ export function GameBoard({ state, onPlayCard, onResolutionChoice, onEndDiscussi
                 <div className="text-xs text-slate-400">Discard</div>
                 
                 {/* Discard Knowledge Tooltip */}
-                {discardKnowledge.length > 0 && (
+                {(discardCounts.MILK > 0 || discardCounts.BLOOD > 0) && (
                   <div className="absolute bottom-full left-0 md:left-1/2 mb-2 hidden group-hover:block z-10 w-48 max-w-[90vw] md:-translate-x-1/2 rounded-lg border border-slate-700 bg-slate-900 p-3 shadow-xl">
                     <div className="mb-1 text-xs font-semibold text-slate-300">Cards you know were discarded:</div>
                     <div className="space-y-1">
-                      {discardKnowledge.map((k, i) => (
-                        <div key={i} className={`text-xs ${k.type === 'MILK' ? 'text-green-400' : 'text-red-400'}`}>
-                          • {k.type}
+                      {discardCounts.MILK > 0 && (
+                        <div className="text-xs text-green-400">
+                          MILK ({discardCounts.MILK})
                         </div>
-                      ))}
+                      )}
+                      {discardCounts.BLOOD > 0 && (
+                        <div className="text-xs text-red-400">
+                          BLOOD ({discardCounts.BLOOD})
+                        </div>
+                      )}
                     </div>
                     <div className="absolute left-8 md:left-1/2 top-full h-0 w-0 md:-translate-x-1/2 border-8 border-transparent border-t-slate-900"></div>
                   </div>

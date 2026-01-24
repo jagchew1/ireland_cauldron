@@ -78,6 +78,7 @@ export const PlayerKnowledge = z.object({
   cardId: z.string(),
   type: z.enum(['MILK', 'BLOOD']),
   location: z.enum(['deck', 'discard', 'revealed']),
+  isPublic: z.boolean().default(false), // true if all players know this information
 });
 
 export const PendingAction = z.discriminatedUnion('actionType', [
