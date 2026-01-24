@@ -27,8 +27,12 @@ export default function Home() {
   };
 
   return (
-    <div className="mx-auto mt-24 max-w-md space-y-6 p-4">
-      <div className="text-center text-3xl font-bold">Irish Potions</div>
+    <div 
+      className="min-h-screen bg-cover bg-center bg-no-repeat"
+      style={{ backgroundImage: 'url(/assets/cauldron background.png)' }}
+    >
+      <div className="mx-auto max-w-md space-y-6 p-4 pt-24">
+        <div className="text-center text-3xl font-bold">Irish Potions</div>
       <div className="space-y-2">
         <label className="text-sm text-slate-400">Name</label>
         <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Your name" />
@@ -40,6 +44,7 @@ export default function Home() {
       <div className="flex gap-2">
         <Button onClick={create} className="flex-1">Create Room</Button>
         <Button onClick={join} className="flex-1">Join Room</Button>
+      </div>
       </div>
     </div>
   );
