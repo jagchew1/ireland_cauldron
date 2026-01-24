@@ -39,9 +39,13 @@ export function useGameRoom(roomCode: string | null) {
     socketRef.current.emit(WS.GAME_ACTION, { type: 'resolution_action', choice });
   }, []);
 
+  const endDiscussion = useCallback(() => {
+    socketRef.current.emit(WS.GAME_ACTION, { type: 'end_discussion' });
+  }, []);
+
   const sendChat = useCallback((room: string, message: string) => {
     socketRef.current.emit(WS.CHAT_SEND, { roomCode: room, message });
   }, []);
 
-  return { state, createRoom, joinRoom, start, ready, playCard, resolutionChoice, sendChat };
+  return { state, createRoom, joinRoom, start, ready, playCard, resolutionChoice, endDiscussion, sendChat };
 }

@@ -43,6 +43,7 @@ export const Player = z.object({
   roleId: z.string().optional(), // hidden from others
   isReady: z.boolean().default(false),
   connected: z.boolean().default(true),
+  endedDiscussion: z.boolean().default(false), // for day phase voting
 });
 
 export const Room = z.object({
@@ -54,6 +55,7 @@ export const Room = z.object({
 export const PlayedCard = z.object({
   playerId: z.string(),
   cardId: z.string(),
+  card: Card,
   revealed: z.boolean(),
   image: z.string().optional(),
 });
@@ -129,9 +131,11 @@ export const ActionResolution = z.object({
   type: z.literal('resolution_action'), 
   choice: z.enum(['keep', 'discard', 'confirm']) 
 });
+export const ActionEndDiscussion = z.object({ type: z.literal('end_discussion') });
 export const ActionPayloads = z.discriminatedUnion('type', [
   ActionPlayCard, 
   ActionReady, 
   ActionStart,
   ActionResolution,
+  ActionEndDiscussion,
 ]);

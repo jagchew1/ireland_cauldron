@@ -6,12 +6,17 @@ type Props = {
   state: ShapedState;
   onPlayCard: (cardId: string) => void;
   onResolutionChoice: (choice: 'keep' | 'discard' | 'confirm') => void;
+  onEndDiscussion: () => void;
 };
 
-export function GameBoard({ state, onPlayCard, onResolutionChoice }: Props) {
+export function GameBoard({ state, onPlayCard, onResolutionChoice, onEndDiscussion }: Props) {
   const myId = state.currentPlayerId;
   const myHand = myId ? state.hands[myId] || [] : [];
   const hasPlayedCard = state.table.some(t => t.playerId === myId);
+  
+  // Get player's current role
+  const myPlayer = state.players.find(p => p.id === myId);
+  const myRole = myPlayer?.roleId ? state.roles[myPlayer.roleId] : undefined;
   
   // Check for pending action for this player
   const myPendingAction = myId && state.pendingActions 
@@ -47,6 +52,32 @@ export function GameBoard({ state, onPlayCard, onResolutionChoice }: Props) {
         <div>Room {state.room.code}</div>
         <div>Phase: {state.phase} | Round {state.round}</div>
       </div>
+      
+      {/* Player's Current Role */}
+      {myRole && (
+        <div className="rounded-lg border border-slate-700 bg-slate-800 p-4">
+          <h2 className="mb-3 text-lg font-semibold text-slate-200">Your Role</h2>
+          <div className="flex items-center gap-4">
+            {myRole.image && (
+              <div className="h-32 w-24 rounded-md border-2 border-slate-600 overflow-hidden">
+                <img 
+                  src={myRole.image} 
+                  alt={myRole.name}
+                  className="h-full w-full object-cover"
+                />
+              </div>
+            )}
+            <div>
+              <div className="text-xl font-semibold text-slate-200">{myRole.name}</div>
+              <div className={`text-sm font-medium ${
+                myRole.team === 'GOOD' ? 'text-green-400' : 'text-red-400'
+              }`}>
+                Team: {myRole.team}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
       
       {/* Resolution Log */}
       {state.resolutionLog && state.resolutionLog.length > 0 && (
@@ -172,6 +203,26 @@ export function GameBoard({ state, onPlayCard, onResolutionChoice }: Props) {
           {hasPlayedCard && state.phase === 'NIGHT' && (
             <div className="mb-2 text-sm text-green-400">✓ Card played - waiting for other players...</div>
           )}
+          
+          {/* End Discussion Button */}
+          {state.phase === 'DAY' && (
+            <div className="mb-3">
+              {myPlayer?.endedDiscussion ? (
+                <div className="text-sm text-green-400">✓ Ready to end discussion - waiting for others...</div>
+              ) : (
+                <button
+                  onClick={onEndDiscussion}
+                  className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 transition-colors"
+                >
+                  End Discussion
+                </button>
+              )}
+              <div className="mt-1 text-xs text-slate-400">
+                {state.players.filter(p => p.endedDiscussion).length} / {state.players.length} players ready
+              </div>
+            </div>
+          )}
+          
           {myHand.length === 0 ? (
             <div className="text-sm text-slate-400">No cards in hand (Player ID: {myId || 'unknown'})</div>
           ) : (

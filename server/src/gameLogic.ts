@@ -140,7 +140,7 @@ export function playCard(state: GameState, playerId: string, cardId: string) {
   const idx = hand?.findIndex((c) => c.id === cardId) ?? -1;
   if (idx < 0) return;
   const [card] = hand!.splice(idx, 1);
-  state.table.push({ playerId, cardId: card.id, revealed: false });
+  state.table.push({ playerId, cardId: card.id, card, revealed: false });
   // If all players have played, advance to resolution
   const activePlayers = state.players.length;
   if (state.table.length >= activePlayers) {
@@ -151,18 +151,16 @@ export function playCard(state: GameState, playerId: string, cardId: string) {
 function getPlayedIngredients(state: GameState): Map<string, { count: number; playerIds: string[] }> {
   const counts = new Map<string, { count: number; playerIds: string[] }>();
   
+  console.log('Getting played ingredients from table...');
   for (const played of state.table) {
-    // Find the card in all possible locations
-    let card: Card | undefined;
-    const allCards = [
-      ...state.deck.drawPile,
-      ...state.deck.discardPile,
-      ...Object.values(state.hands).flat(),
-    ];
-    card = allCards.find((c) => c.id === played.cardId);
+    console.log(`Looking at card: ${played.cardId}`);
+    const card = played.card;
+    
+    console.log(`Card:`, card);
     
     if (card && card.kind === 'INGREDIENT') {
       const normalized = normalizeIngredientName(card.name);
+      console.log(`Normalized name: ${normalized}`);
       const existing = counts.get(normalized) || { count: 0, playerIds: [] };
       existing.count++;
       existing.playerIds.push(played.playerId);
@@ -204,6 +202,8 @@ function determinePrimaryAndSecondary(
 }
 
 function startResolution(state: GameState) {
+  console.log('=== RESOLUTION PHASE STARTING ===');
+  console.log('Table contents:', JSON.stringify(state.table, null, 2));
   state.phase = 'RESOLUTION';
   
   // Clear previous round's resolution log
@@ -215,6 +215,10 @@ function startResolution(state: GameState) {
   // Determine primary and secondary ingredients
   const counts = getPlayedIngredients(state);
   const { primary, secondary } = determinePrimaryAndSecondary(counts);
+  
+  console.log('Ingredient counts:', Array.from(counts.entries()).map(([name, data]) => `${name}: ${data.count}`));
+  console.log('Primary:', primary);
+  console.log('Secondary:', secondary);
   
   // Log what was played
   if (primary.length > 0) {
@@ -241,6 +245,7 @@ function startResolution(state: GameState) {
   // Check if Faerie Thistle is secondary (blocks primary)
   const faerieBlocks = secondary.includes(INGREDIENTS.FAERIE);
   if (faerieBlocks) {
+    console.log('Faerie Thistle blocks primary effect!');
     state.resolutionLog.push({
       type: 'info',
       message: 'Faerie Thistle blocks the primary effect!',
@@ -248,14 +253,19 @@ function startResolution(state: GameState) {
   }
   
   // Apply secondary effects first (Wolfbane Root discards from center deck)
+  console.log('Applying secondary effects...');
   for (const ingredient of secondary) {
     applySecondaryEffect(state, ingredient, counts);
   }
   
   // Apply primary effect (unless blocked)
   if (!faerieBlocks && primary.length > 0) {
+    console.log('Applying primary effect:', primary[0]);
     applyPrimaryEffect(state, primary[0], counts);
   }
+  
+  console.log('Pending actions created:', state.pendingActions.length);
+  console.log('=== MOVING TO DAY PHASE ===');
   
   // Move to day phase immediately
   revealDay(state);
@@ -496,8 +506,27 @@ function applyWolfbaneSecondary(state: GameState) {
 }
 
 export function revealDay(state: GameState) {
+  console.log('=== DAY PHASE STARTING ===');
   state.phase = 'DAY';
   state.expiresAt = Date.now() + state.config.daySeconds * 1000;
+  
+  // Reset endedDiscussion flags
+  state.players.forEach(p => p.endedDiscussion = false);
+  
+  // Move played cards from table to ingredient discard pile
+  console.log('Moving played cards to discard...');
+  for (const t of state.table) {
+    const card = t.card;
+    if (card && card.kind === 'INGREDIENT' && !state.deck.discardPile.find((c) => c.id === card.id)) {
+      console.log(`Discarding card: ${card.name} (${card.id})`);
+      state.deck.discardPile.push(card);
+    }
+  }
+  state.table = [];
+  
+  // Players draw up to 3 cards from discard pile
+  console.log('Dealing cards from discard to hands...');
+  dealToHandSize(state);
   
   // Check win condition
   if (checkWinCondition(state)) {
@@ -505,25 +534,18 @@ export function revealDay(state: GameState) {
     state.expiresAt = null;
     return;
   }
+  
+  console.log('=== DAY PHASE - Discussion Open ===');
 }
 
 export function nextRound(state: GameState) {
-  // Discard all played cards
-  for (const t of state.table) {
-    // Cards are already removed from hands during playCard
-    // Just move them to discard pile
-    const allCards = [...state.deck.drawPile, ...state.deck.discardPile, ...Object.values(state.hands).flat()];
-    const card = allCards.find((c) => c.id === t.cardId);
-    if (card && card.kind === 'INGREDIENT' && !state.deck.discardPile.find((c) => c.id === card.id)) {
-      state.deck.discardPile.push(card);
-    }
-  }
-  
-  state.table = [];
-  dealToHandSize(state);
+  console.log('=== NEXT ROUND ===');
+  // Table should already be cleared and cards already in discard from revealDay
+  // Just advance to night phase
   state.phase = 'NIGHT';
   state.round += 1;
   state.expiresAt = Date.now() + state.config.nightSeconds * 1000;
+  console.log(`=== STARTING ROUND ${state.round} ===`);
 }
 
 export function shapeStateFor(state: GameState, playerId: string) {
@@ -618,6 +640,23 @@ export function processResolutionAction(state: GameState, playerId: string, choi
   
   // Remove the action
   state.pendingActions.splice(actionIndex, 1);
+}
+
+export function endDiscussion(state: GameState, playerId: string) {
+  if (state.phase !== 'DAY') return;
+  
+  const player = state.players.find(p => p.id === playerId);
+  if (!player) return;
+  
+  player.endedDiscussion = true;
+  console.log(`Player ${player.name} ended discussion`);
+  
+  // Check if all players have ended discussion
+  const allEnded = state.players.every(p => p.endedDiscussion);
+  if (allEnded) {
+    console.log('All players ended discussion - starting next round');
+    nextRound(state);
+  }
 }
 
 export function hasPendingActions(state: GameState): boolean {
