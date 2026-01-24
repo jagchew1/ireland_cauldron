@@ -9,6 +9,32 @@ type Props = {
   onEndDiscussion: () => void;
 };
 
+function formatRoleName(name: string): string {
+  // Convert "evil_fair_dohrik" to "Fair Dohrik"
+  // Remove team prefix
+  const withoutTeam = name.replace(/^(evil|good)_/i, '');
+  // Replace underscores with spaces and capitalize each word
+  return withoutTeam
+    .split('_')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+}
+
+function formatIngredientName(name: string): string {
+  // Convert "brigids_blessing" to "Brigid's Blessing"
+  // Convert "cailleachs_gaze" to "Cailleach's Gaze"
+  const formatted = name
+    .replace(/_/g, ' ')
+    .split(' ')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+  
+  // Add apostrophes where needed
+  return formatted
+    .replace(/Brigids/g, "Brigid's")
+    .replace(/Cailleachs/g, "Cailleach's");
+}
+
 export function GameBoard({ state, onPlayCard, onResolutionChoice, onEndDiscussion }: Props) {
   const myId = state.currentPlayerId;
   const myHand = myId ? state.hands[myId] || [] : [];
@@ -86,7 +112,7 @@ export function GameBoard({ state, onPlayCard, onResolutionChoice, onEndDiscussi
               </div>
             )}
             <div>
-              <div className="text-xl font-semibold text-slate-200">{myRole.name}</div>
+              <div className="text-xl font-semibold text-slate-200">{formatRoleName(myRole.name)}</div>
               <div className={`text-sm font-medium ${
                 myRole.team === 'GOOD' ? 'text-green-400' : 'text-red-400'
               }`}>

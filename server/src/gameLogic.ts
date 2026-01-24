@@ -35,6 +35,20 @@ function normalizeIngredientName(name: string): string {
   return lower; // fallback to normalized version
 }
 
+function formatIngredientName(name: string): string {
+  // Convert "brigids_blessing" to "Brigid's Blessing"
+  const formatted = name
+    .replace(/_/g, ' ')
+    .split(' ')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+  
+  // Add apostrophes where needed
+  return formatted
+    .replace(/Brigids/g, "Brigid's")
+    .replace(/Cailleachs/g, "Cailleach's");
+}
+
 export function buildDeckFromAssets(): Card[] {
   const ingredientsDir = path.join(assetsRoot, 'ingredients');
   const images = fs.existsSync(ingredientsDir) ? fs.readdirSync(ingredientsDir).filter((n) => IMAGE_RE.test(n)) : [];
@@ -225,7 +239,7 @@ function startResolution(state: GameState) {
     state.resolutionLog.push({
       type: 'primary',
       ingredient: primary[0],
-      message: `Primary ingredient: ${primary[0].replace(/_/g, ' ')}`,
+      message: `Primary ingredient: ${formatIngredientName(primary[0])}`,
     });
   } else if (secondary.length > 1) {
     state.resolutionLog.push({
@@ -238,7 +252,7 @@ function startResolution(state: GameState) {
     state.resolutionLog.push({
       type: 'secondary',
       ingredient: secondary[0],
-      message: `Secondary ingredient: ${secondary[0].replace(/_/g, ' ')}`,
+      message: `Secondary ingredient: ${formatIngredientName(secondary[0])}`,
     });
   }
   
