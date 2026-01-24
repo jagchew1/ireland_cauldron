@@ -87,11 +87,13 @@ export declare const GameStatePayload: z.ZodObject<{
         roleId: z.ZodOptional<z.ZodString>;
         isReady: z.ZodDefault<z.ZodBoolean>;
         connected: z.ZodDefault<z.ZodBoolean>;
+        endedDiscussion: z.ZodDefault<z.ZodBoolean>;
     }, "strip", z.ZodTypeAny, {
         id: string;
         name: string;
         isReady: boolean;
         connected: boolean;
+        endedDiscussion: boolean;
         roleId?: string | undefined;
     }, {
         id: string;
@@ -99,6 +101,7 @@ export declare const GameStatePayload: z.ZodObject<{
         roleId?: string | undefined;
         isReady?: boolean | undefined;
         connected?: boolean | undefined;
+        endedDiscussion?: boolean | undefined;
     }>, "many">;
     spectators: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
     roles: z.ZodRecord<z.ZodString, z.ZodObject<{
@@ -321,17 +324,65 @@ export declare const GameStatePayload: z.ZodObject<{
     table: z.ZodArray<z.ZodObject<{
         playerId: z.ZodString;
         cardId: z.ZodString;
+        card: z.ZodDiscriminatedUnion<"kind", [z.ZodObject<{
+            id: z.ZodString;
+            kind: z.ZodLiteral<"INGREDIENT">;
+            name: z.ZodString;
+            image: z.ZodString;
+        }, "strip", z.ZodTypeAny, {
+            id: string;
+            name: string;
+            image: string;
+            kind: "INGREDIENT";
+        }, {
+            id: string;
+            name: string;
+            image: string;
+            kind: "INGREDIENT";
+        }>, z.ZodObject<{
+            id: z.ZodString;
+            kind: z.ZodLiteral<"CENTER">;
+            type: z.ZodEnum<["MILK", "BLOOD"]>;
+        }, "strip", z.ZodTypeAny, {
+            id: string;
+            type: "MILK" | "BLOOD";
+            kind: "CENTER";
+        }, {
+            id: string;
+            type: "MILK" | "BLOOD";
+            kind: "CENTER";
+        }>]>;
         revealed: z.ZodBoolean;
         image: z.ZodOptional<z.ZodString>;
     }, "strip", z.ZodTypeAny, {
         revealed: boolean;
         playerId: string;
         cardId: string;
+        card: {
+            id: string;
+            name: string;
+            image: string;
+            kind: "INGREDIENT";
+        } | {
+            id: string;
+            type: "MILK" | "BLOOD";
+            kind: "CENTER";
+        };
         image?: string | undefined;
     }, {
         revealed: boolean;
         playerId: string;
         cardId: string;
+        card: {
+            id: string;
+            name: string;
+            image: string;
+            kind: "INGREDIENT";
+        } | {
+            id: string;
+            type: "MILK" | "BLOOD";
+            kind: "CENTER";
+        };
         image?: string | undefined;
     }>, "many">;
     config: z.ZodObject<{
@@ -422,9 +473,11 @@ export declare const GameStatePayload: z.ZodObject<{
             type: "MILK" | "BLOOD";
             kind: "CENTER";
         }>, "many">>;
+        round: z.ZodNumber;
     }, "strip", z.ZodTypeAny, {
         message: string;
         type: "primary" | "secondary" | "info";
+        round: number;
         ingredient?: string | undefined;
         cardsShown?: {
             id: string;
@@ -434,6 +487,7 @@ export declare const GameStatePayload: z.ZodObject<{
     }, {
         message: string;
         type: "primary" | "secondary" | "info";
+        round: number;
         ingredient?: string | undefined;
         cardsShown?: {
             id: string;
@@ -446,18 +500,22 @@ export declare const GameStatePayload: z.ZodObject<{
         cardId: z.ZodString;
         type: z.ZodEnum<["MILK", "BLOOD"]>;
         location: z.ZodEnum<["deck", "discard", "revealed"]>;
+        isPublic: z.ZodDefault<z.ZodBoolean>;
     }, "strip", z.ZodTypeAny, {
         type: "MILK" | "BLOOD";
         playerId: string;
         cardId: string;
         location: "revealed" | "deck" | "discard";
+        isPublic: boolean;
     }, {
         type: "MILK" | "BLOOD";
         playerId: string;
         cardId: string;
         location: "revealed" | "deck" | "discard";
+        isPublic?: boolean | undefined;
     }>, "many">>;
 }, "strip", z.ZodTypeAny, {
+    round: number;
     deck: {
         drawPile: ({
             id: string;
@@ -486,12 +544,12 @@ export declare const GameStatePayload: z.ZodObject<{
         maxPlayers: number;
     };
     phase: "LOBBY" | "NIGHT" | "RESOLUTION" | "DAY" | "ENDED";
-    round: number;
     players: {
         id: string;
         name: string;
         isReady: boolean;
         connected: boolean;
+        endedDiscussion: boolean;
         roleId?: string | undefined;
     }[];
     spectators: string[];
@@ -532,6 +590,16 @@ export declare const GameStatePayload: z.ZodObject<{
         revealed: boolean;
         playerId: string;
         cardId: string;
+        card: {
+            id: string;
+            name: string;
+            image: string;
+            kind: "INGREDIENT";
+        } | {
+            id: string;
+            type: "MILK" | "BLOOD";
+            kind: "CENTER";
+        };
         image?: string | undefined;
     }[];
     config: {
@@ -560,6 +628,7 @@ export declare const GameStatePayload: z.ZodObject<{
     resolutionLog: {
         message: string;
         type: "primary" | "secondary" | "info";
+        round: number;
         ingredient?: string | undefined;
         cardsShown?: {
             id: string;
@@ -572,6 +641,7 @@ export declare const GameStatePayload: z.ZodObject<{
         playerId: string;
         cardId: string;
         location: "revealed" | "deck" | "discard";
+        isPublic: boolean;
     }[];
 }, {
     deck: {
@@ -608,6 +678,7 @@ export declare const GameStatePayload: z.ZodObject<{
         roleId?: string | undefined;
         isReady?: boolean | undefined;
         connected?: boolean | undefined;
+        endedDiscussion?: boolean | undefined;
     }[];
     roles: Record<string, {
         id: string;
@@ -646,6 +717,16 @@ export declare const GameStatePayload: z.ZodObject<{
         revealed: boolean;
         playerId: string;
         cardId: string;
+        card: {
+            id: string;
+            name: string;
+            image: string;
+            kind: "INGREDIENT";
+        } | {
+            id: string;
+            type: "MILK" | "BLOOD";
+            kind: "CENTER";
+        };
         image?: string | undefined;
     }[];
     config: {
@@ -676,6 +757,7 @@ export declare const GameStatePayload: z.ZodObject<{
     resolutionLog?: {
         message: string;
         type: "primary" | "secondary" | "info";
+        round: number;
         ingredient?: string | undefined;
         cardsShown?: {
             id: string;
@@ -688,6 +770,7 @@ export declare const GameStatePayload: z.ZodObject<{
         playerId: string;
         cardId: string;
         location: "revealed" | "deck" | "discard";
+        isPublic?: boolean | undefined;
     }[] | undefined;
 }>;
 export declare const GameActionPayload: z.ZodDiscriminatedUnion<"type", [z.ZodObject<{
@@ -723,6 +806,12 @@ export declare const GameActionPayload: z.ZodDiscriminatedUnion<"type", [z.ZodOb
 }, {
     type: "resolution_action";
     choice: "discard" | "keep" | "confirm";
+}>, z.ZodObject<{
+    type: z.ZodLiteral<"end_discussion">;
+}, "strip", z.ZodTypeAny, {
+    type: "end_discussion";
+}, {
+    type: "end_discussion";
 }>]>;
 export declare const ChatSendPayload: z.ZodObject<{
     roomCode: z.ZodString;

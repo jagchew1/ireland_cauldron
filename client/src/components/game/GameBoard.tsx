@@ -12,12 +12,12 @@ type Props = {
 
 function formatRoleName(name: string): string {
   // Convert "evil_fair_dohrik" to "Fair Dohrik"
-  // Remove team prefix
-  const withoutTeam = name.replace(/^(evil|good)_/i, '');
+  // Remove team prefix (case insensitive)
+  const withoutTeam = name.replace(/^(evil_|good_)/i, '');
   // Replace underscores with spaces and capitalize each word
   return withoutTeam
     .split('_')
-    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
     .join(' ');
 }
 

@@ -9,4 +9,15 @@ export default defineConfig({
       '@shared': path.resolve(__dirname, '../shared/src'),
     },
   },
+  server: {
+    proxy: {
+      '/health': 'http://localhost:3000',
+      '/assets': 'http://localhost:3000',
+      '/rooms': 'http://localhost:3000',
+      '/socket.io': {
+        target: 'http://localhost:3000',
+        ws: true,
+      },
+    },
+  },
 });

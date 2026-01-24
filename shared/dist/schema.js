@@ -34,6 +34,7 @@ export const Player = z.object({
     roleId: z.string().optional(), // hidden from others
     isReady: z.boolean().default(false),
     connected: z.boolean().default(true),
+    endedDiscussion: z.boolean().default(false), // for day phase voting
 });
 export const Room = z.object({
     code: z.string(),
@@ -43,6 +44,7 @@ export const Room = z.object({
 export const PlayedCard = z.object({
     playerId: z.string(),
     cardId: z.string(),
+    card: Card,
     revealed: z.boolean(),
     image: z.string().optional(),
 });
@@ -56,12 +58,14 @@ export const ResolutionLogEntry = z.object({
     ingredient: z.string().optional(),
     message: z.string(),
     cardsShown: z.array(CenterCard).optional(), // For Brigid/Faerie showing cards
+    round: z.number(), // Which round this event occurred in
 });
 export const PlayerKnowledge = z.object({
     playerId: z.string(),
     cardId: z.string(),
     type: z.enum(['MILK', 'BLOOD']),
     location: z.enum(['deck', 'discard', 'revealed']),
+    isPublic: z.boolean().default(false), // true if all players know this information
 });
 export const PendingAction = z.discriminatedUnion('actionType', [
     z.object({
@@ -111,9 +115,11 @@ export const ActionResolution = z.object({
     type: z.literal('resolution_action'),
     choice: z.enum(['keep', 'discard', 'confirm'])
 });
+export const ActionEndDiscussion = z.object({ type: z.literal('end_discussion') });
 export const ActionPayloads = z.discriminatedUnion('type', [
     ActionPlayCard,
     ActionReady,
     ActionStart,
     ActionResolution,
+    ActionEndDiscussion,
 ]);
