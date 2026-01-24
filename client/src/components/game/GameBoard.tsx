@@ -1,6 +1,7 @@
 import type { ShapedState } from '@irish-potions/shared';
 import { CardImage } from './CardImage';
 import { ResolutionModal } from './ResolutionModal';
+import React from 'react';
 
 type Props = {
   state: ShapedState;
@@ -43,6 +44,9 @@ export function GameBoard({ state, onPlayCard, onResolutionChoice, onEndDiscussi
   // Get player's current role
   const myPlayer = state.players.find(p => p.id === myId);
   const myRole = myPlayer?.roleId ? state.roles[myPlayer.roleId] : undefined;
+  
+  // Filter for event log
+  const [logFilter, setLogFilter] = React.useState<'current' | 'all'>('current');
   
   // Check for pending action for this player
   const myPendingAction = myId && state.pendingActions 
@@ -123,19 +127,34 @@ export function GameBoard({ state, onPlayCard, onResolutionChoice, onEndDiscussi
         </div>
       )}
       
-      {/* Resolution Log */}
+      {/* Event Log */}
       {state.resolutionLog && state.resolutionLog.length > 0 && (
         <div className="rounded-lg border border-slate-700 bg-slate-800 p-4">
-          <h2 className="mb-3 text-lg font-semibold text-slate-200">Resolution</h2>
-          <div className="space-y-2">
-            {state.resolutionLog.map((entry, i) => (
+          <div className="mb-3 flex items-center justify-between">
+            <h2 className="text-lg font-semibold text-slate-200">Event Log</h2>
+            <select 
+              value={logFilter} 
+              onChange={(e) => setLogFilter(e.target.value as 'current' | 'all')}
+              className="rounded-md border border-slate-600 bg-slate-700 px-3 py-1 text-sm text-slate-200"
+            >
+              <option value="current">Current Round</option>
+              <option value="all">All Rounds</option>
+            </select>
+          </div>
+          <div className="max-h-64 space-y-2 overflow-y-auto">
+            {state.resolutionLog
+              .filter(entry => logFilter === 'all' || entry.round === state.round)
+              .map((entry, i) => (
               <div key={i} className="text-sm">
-                <div className={`${
-                  entry.type === 'primary' ? 'text-blue-400 font-semibold' :
-                  entry.type === 'secondary' ? 'text-purple-400 font-semibold' :
-                  'text-slate-300'
-                }`}>
-                  {entry.message}
+                <div className="mb-1 flex items-center gap-2">
+                  <span className="text-xs text-slate-500">Round {entry.round}</span>
+                  <div className={`flex-1 ${
+                    entry.type === 'primary' ? 'text-blue-400 font-semibold' :
+                    entry.type === 'secondary' ? 'text-purple-400 font-semibold' :
+                    'text-slate-300'
+                  }`}>
+                    {entry.message}
+                  </div>
                 </div>
                 {/* Show cards if any */}
                 {entry.cardsShown && entry.cardsShown.length > 0 && (

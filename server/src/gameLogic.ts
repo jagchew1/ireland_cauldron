@@ -49,6 +49,14 @@ function formatIngredientName(name: string): string {
     .replace(/Cailleachs/g, "Cailleach's");
 }
 
+// Helper to add log entry with current round number
+function addLogEntry(state: GameState, entry: Omit<z.infer<typeof import('@irish-potions/shared').ResolutionLogEntry>, 'round'>) {
+  state.resolutionLog.push({
+    ...entry,
+    round: state.round,
+  });
+}
+
 export function buildDeckFromAssets(): Card[] {
   const ingredientsDir = path.join(assetsRoot, 'ingredients');
   const images = fs.existsSync(ingredientsDir) ? fs.readdirSync(ingredientsDir).filter((n) => IMAGE_RE.test(n)) : [];
@@ -220,8 +228,7 @@ function startResolution(state: GameState) {
   console.log('Table contents:', JSON.stringify(state.table, null, 2));
   state.phase = 'RESOLUTION';
   
-  // Clear previous round's resolution log
-  state.resolutionLog = [];
+  // Keep previous rounds in log - just add to it with current round number
   
   // Reveal all cards on the table
   state.table = state.table.map((t) => ({ ...t, revealed: true }));
@@ -236,20 +243,20 @@ function startResolution(state: GameState) {
   
   // Log what was played
   if (primary.length > 0) {
-    state.resolutionLog.push({
+    addLogEntry(state, {
       type: 'primary',
       ingredient: primary[0],
       message: `Primary ingredient: ${formatIngredientName(primary[0])}`,
     });
   } else if (secondary.length > 1) {
-    state.resolutionLog.push({
+    addLogEntry(state, {
       type: 'info',
       message: `Tie for primary - both become secondary effects`,
     });
   }
   
   if (secondary.length > 0) {
-    state.resolutionLog.push({
+    addLogEntry(state, {
       type: 'secondary',
       ingredient: secondary[0],
       message: `Secondary ingredient: ${formatIngredientName(secondary[0])}`,
@@ -260,7 +267,7 @@ function startResolution(state: GameState) {
   const faerieBlocks = secondary.includes(INGREDIENTS.FAERIE);
   if (faerieBlocks) {
     console.log('Faerie Thistle blocks primary effect!');
-    state.resolutionLog.push({
+    addLogEntry(state, {
       type: 'info',
       message: 'Faerie Thistle blocks the primary effect!',
     });
@@ -351,7 +358,7 @@ function applyBrigidPrimary(state: GameState) {
   const card2 = state.centerDeck.cards.pop()!;
   
   // Log cards shown to all players
-  state.resolutionLog.push({
+  addLogEntry(state, {
     type: 'info',
     message: `Brigid's Blessing reveals 2 cards: ${card1.type} and ${card2.type}`,
     cardsShown: [card1, card2],
@@ -373,7 +380,7 @@ function applyBrigidPrimary(state: GameState) {
       });
     }
     
-    state.resolutionLog.push({
+    addLogEntry(state, {
       type: 'info',
       message: `Both milk! One played face up, one returned to bottom.`,
     });
@@ -399,7 +406,7 @@ function applyBrigidPrimary(state: GameState) {
       });
     }
     
-    state.resolutionLog.push({
+    addLogEntry(state, {
       type: 'info',
       message: `Not both milk - both cards returned to bottom of deck.`,
     });
@@ -424,7 +431,7 @@ function applyCailleachPrimary(state: GameState, playerIds: string[]) {
     });
   }
   
-  state.resolutionLog.push({
+  addLogEntry(state, {
     type: 'info',
     message: `${playerIds.length} player(s) viewing cards from the deck...`,
   });
@@ -471,7 +478,7 @@ function applyCeolPrimary(state: GameState, playerIds: string[]) {
     }
   });
   
-  state.resolutionLog.push({
+  addLogEntry(state, {
     type: 'info',
     message: `${playerIds.length} player(s) swapped roles. Viewing new roles...`,
   });
@@ -484,7 +491,7 @@ function applyFaeriePrimary(state: GameState, count: number) {
   const card2 = state.centerDeck.cards.pop()!;
   
   // Log cards shown
-  state.resolutionLog.push({
+  addLogEntry(state, {
     type: 'info',
     message: `Faerie Thistle reveals 2 cards: ${card1.type} and ${card2.type}`,
     cardsShown: [card1, card2],
@@ -544,7 +551,7 @@ function applyFaeriePrimary(state: GameState, count: number) {
       }
     }
     
-    state.resolutionLog.push({
+    addLogEntry(state, {
       type: 'info',
       message: `>3 Faerie Thistles played - milk discarded, blood shuffled back.`,
     });
@@ -602,7 +609,7 @@ function applyFaeriePrimary(state: GameState, count: number) {
       }
     }
     
-    state.resolutionLog.push({
+    addLogEntry(state, {
       type: 'info',
       message: `≤3 Faerie Thistles played - blood discarded, milk shuffled back.`,
     });
@@ -621,7 +628,7 @@ function applyWolfbanePrimary(state: GameState) {
     });
   }
   
-  state.resolutionLog.push({
+  addLogEntry(state, {
     type: 'info',
     message: `All players must discard 1 random card from their hand.`,
   });

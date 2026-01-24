@@ -71,6 +71,7 @@ export const ResolutionLogEntry = z.object({
   ingredient: z.string().optional(),
   message: z.string(),
   cardsShown: z.array(CenterCard).optional(), // For Brigid/Faerie showing cards
+  round: z.number(), // Which round this event occurred in
 });
 
 export const PlayerKnowledge = z.object({
