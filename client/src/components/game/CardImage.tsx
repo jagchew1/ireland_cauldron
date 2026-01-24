@@ -70,7 +70,7 @@ export function CardImage({ src, alt, onClick, className = '', cardName }: Props
       </div>
       
       {showTooltip && cardEffect && (
-        <div className="absolute bottom-full left-1/2 z-50 mb-2 w-64 -translate-x-1/2 rounded-lg border border-slate-700 bg-slate-900 p-3 text-sm shadow-xl">
+        <div className="absolute bottom-full left-0 md:left-1/2 z-50 mb-2 w-64 max-w-[90vw] md:-translate-x-1/2 rounded-lg border border-slate-700 bg-slate-900 p-3 text-sm shadow-xl">
           <div className="mb-2 font-bold text-slate-200">{cardEffect.name}</div>
           <div className="space-y-1 text-slate-300">
             <div>
@@ -81,7 +81,7 @@ export function CardImage({ src, alt, onClick, className = '', cardName }: Props
             </div>
           </div>
           {/* Arrow pointer */}
-          <div className="absolute left-1/2 top-full h-0 w-0 -translate-x-1/2 border-8 border-transparent border-t-slate-900"></div>
+          <div className="absolute left-8 md:left-1/2 top-full h-0 w-0 md:-translate-x-1/2 border-8 border-transparent border-t-slate-900"></div>
         </div>
       )}
     </div>

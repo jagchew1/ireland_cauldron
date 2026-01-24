@@ -131,7 +131,7 @@ export function GameBoard({ state, onPlayCard, onResolutionChoice, onEndDiscussi
               
               {/* Deck Knowledge Tooltip */}
               {deckKnowledge.length > 0 && (
-                <div className="absolute bottom-full left-1/2 mb-2 hidden group-hover:block z-10 w-48 -translate-x-1/2 rounded-lg border border-slate-700 bg-slate-900 p-3 shadow-xl">
+                <div className="absolute bottom-full left-0 md:left-1/2 mb-2 hidden group-hover:block z-10 w-48 max-w-[90vw] md:-translate-x-1/2 rounded-lg border border-slate-700 bg-slate-900 p-3 shadow-xl">
                   <div className="mb-1 text-xs font-semibold text-slate-300">Cards you know in deck:</div>
                   <div className="space-y-1">
                     {deckKnowledge.map((k, i) => (
@@ -140,7 +140,7 @@ export function GameBoard({ state, onPlayCard, onResolutionChoice, onEndDiscussi
                       </div>
                     ))}
                   </div>
-                  <div className="absolute left-1/2 top-full h-0 w-0 -translate-x-1/2 border-8 border-transparent border-t-slate-900"></div>
+                  <div className="absolute left-8 md:left-1/2 top-full h-0 w-0 md:-translate-x-1/2 border-8 border-transparent border-t-slate-900"></div>
                 </div>
               )}
             </div>
@@ -174,7 +174,7 @@ export function GameBoard({ state, onPlayCard, onResolutionChoice, onEndDiscussi
                 
                 {/* Discard Knowledge Tooltip */}
                 {discardKnowledge.length > 0 && (
-                  <div className="absolute bottom-full left-1/2 mb-2 hidden group-hover:block z-10 w-48 -translate-x-1/2 rounded-lg border border-slate-700 bg-slate-900 p-3 shadow-xl">
+                  <div className="absolute bottom-full left-0 md:left-1/2 mb-2 hidden group-hover:block z-10 w-48 max-w-[90vw] md:-translate-x-1/2 rounded-lg border border-slate-700 bg-slate-900 p-3 shadow-xl">
                     <div className="mb-1 text-xs font-semibold text-slate-300">Cards you know were discarded:</div>
                     <div className="space-y-1">
                       {discardKnowledge.map((k, i) => (
@@ -183,7 +183,7 @@ export function GameBoard({ state, onPlayCard, onResolutionChoice, onEndDiscussi
                         </div>
                       ))}
                     </div>
-                    <div className="absolute left-1/2 top-full h-0 w-0 -translate-x-1/2 border-8 border-transparent border-t-slate-900"></div>
+                    <div className="absolute left-8 md:left-1/2 top-full h-0 w-0 md:-translate-x-1/2 border-8 border-transparent border-t-slate-900"></div>
                   </div>
                 )}
               </div>
