@@ -58,8 +58,8 @@ export function HelpButton() {
               Count remaining cards:
             </p>
             <ul className="mt-1 space-y-1 text-sm text-slate-300">
-              <li>• More <span className="text-green-400 font-semibold">Milk</span> = Good team wins</li>
-              <li>• More <span className="text-red-400 font-semibold">Blood</span> = Evil team wins</li>
+              <li>• More <span className="font-semibold text-green-400">Milk</span> = Good team wins</li>
+              <li>• More <span className="font-semibold text-red-400">Blood</span> = Evil team wins</li>
               <li>• Tie = Draw (both teams tie)</li>
             </ul>
           </div>

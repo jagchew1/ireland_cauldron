@@ -166,5 +166,56 @@ export function ResolutionModal({ state, myPendingAction, onChoice }: Props) {
     );
   }
   
+  if (myPendingAction.actionType === 'ceol_secondary') {
+    const revealedRole = state.roles[myPendingAction.revealedRoleId];
+    
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70">
+        <div className="rounded-lg border border-slate-700 bg-slate-900 p-6 shadow-2xl max-w-md">
+          <h2 className="mb-4 text-xl font-bold text-blue-400">Ceol of the Midnight Cairn (Secondary)</h2>
+          <p className="mb-4 text-slate-300">
+            You can see the role of one other player who played Ceol:
+          </p>
+          
+          {/* Show revealed role */}
+          {revealedRole && (
+            <div className="mb-6">
+              <div className="mb-2 text-center">
+                <div className="text-sm text-slate-400">Another Ceol player's role:</div>
+                <div className={`text-lg font-bold ${
+                  revealedRole.team === 'GOOD' ? 'text-green-400' : 'text-red-400'
+                }`}>
+                  {revealedRole.name}
+                </div>
+                <div className={`text-sm ${
+                  revealedRole.team === 'GOOD' ? 'text-green-500' : 'text-red-500'
+                }`}>
+                  Team: {revealedRole.team}
+                </div>
+              </div>
+              {revealedRole.image && (
+                <div className="flex justify-center">
+                  <img 
+                    src={revealedRole.image} 
+                    alt={revealedRole.name}
+                    className="h-40 w-28 rounded-md border-2 border-slate-600 object-cover"
+                  />
+                </div>
+              )}
+            </div>
+          )}
+          
+          <p className="mb-4 text-xs text-slate-400 italic">
+            Note: You don't know which specific player has this role.
+          </p>
+          
+          <Button onClick={() => onChoice('confirm')} className="w-full">
+            Acknowledge
+          </Button>
+        </div>
+      </div>
+    );
+  }
+  
   return null;
 }

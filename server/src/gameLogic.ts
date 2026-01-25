@@ -354,7 +354,7 @@ function applySecondaryEffect(
       applyCailleachSecondary(state, data.playerIds);
       break;
     case INGREDIENTS.CEOL:
-      // Nothing happens
+      applyCeolSecondary(state, data.playerIds);
       break;
     case INGREDIENTS.FAERIE:
       applyFaerieSecondary(state);
@@ -624,6 +624,37 @@ function applyCailleachSecondary(state: GameState, playerIds: string[]) {
       message: `${playerIds.length} player(s) viewing top card of deck...`,
     });
   }
+}
+
+function applyCeolSecondary(state: GameState, playerIds: string[]) {
+  // Each player who played Ceol sees the role of one other random Ceol player
+  // Do nothing if only one player played Ceol
+  if (playerIds.length <= 1) {
+    return;
+  }
+  
+  // For each Ceol player, show them one random OTHER Ceol player's role
+  for (const playerId of playerIds) {
+    // Get all other Ceol players
+    const otherPlayerIds = playerIds.filter(id => id !== playerId);
+    
+    // Pick a random other player
+    const randomOtherPlayerId = otherPlayerIds[Math.floor(Math.random() * otherPlayerIds.length)];
+    const otherPlayer = state.players.find(p => p.id === randomOtherPlayerId);
+    
+    if (otherPlayer && otherPlayer.roleId) {
+      state.pendingActions.push({
+        actionType: 'ceol_secondary',
+        playerId,
+        revealedRoleId: otherPlayer.roleId,
+      });
+    }
+  }
+  
+  addLogEntry(state, {
+    type: 'info',
+    message: `${playerIds.length} player(s) viewing another player's role...`,
+  });
 }
 
 function applyFaerieSecondary(state: GameState) {

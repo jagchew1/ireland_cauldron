@@ -103,6 +103,11 @@ export const PendingAction = z.discriminatedUnion('actionType', [
     playerId: z.string(),
     newRoleId: z.string(), // The role they swapped to
   }),
+  z.object({
+    actionType: z.literal('ceol_secondary'),
+    playerId: z.string(),
+    revealedRoleId: z.string(), // Role of another Ceol player (identity unknown)
+  }),
 ]);
 
 export const GameState = z.object({
