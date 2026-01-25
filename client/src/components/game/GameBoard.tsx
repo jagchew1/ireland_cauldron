@@ -1,6 +1,7 @@
 import type { ShapedState } from '@irish-potions/shared';
 import { CardImage } from './CardImage';
 import { ResolutionModal } from './ResolutionModal';
+import { HelpButton } from './HelpButton';
 import React from 'react';
 
 type Props = {
@@ -198,7 +199,10 @@ export function GameBoard({ state, onPlayCard, onResolutionChoice, onEndDiscussi
       
       <div className="flex items-center justify-between">
         <div>Room {state.room.code}</div>
-        <div>Phase: {state.phase} | Round {state.round}</div>
+        <div className="flex items-center gap-4">
+          <div>Phase: {state.phase} | Round {state.round}</div>
+          <HelpButton />
+        </div>
       </div>
       
       {/* Player's Current Role */}
