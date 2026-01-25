@@ -11,7 +11,7 @@ export const CARD_EFFECTS = {
   },
   "ceol_of_the_midnight_cairn": {
     name: "Ceol of the Midnight Cairn",
-    primary: "Randomly swap roles among all players who played this card (1 extra role is discarded)",
+    primary: "Randomly swap roles among all players who played this card, along with one bonus card from the deck (the extra role is discarded)",
     secondary: "Each player who played this sees the role of one other random player who played it (without revealing their name). Does nothing if only one player played it."
   },
   "faerie_thistle": {

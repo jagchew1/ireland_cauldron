@@ -7,6 +7,17 @@ type Props = {
   onChoice: (choice: 'keep' | 'discard' | 'confirm') => void;
 };
 
+function formatRoleName(name: string): string {
+  // Convert "evil_fair_dohrik" to "Fair Dohrik"
+  // Remove team prefix (case insensitive)
+  const withoutTeam = name.replace(/^(evil_|good_)/i, '');
+  // Replace underscores with spaces and capitalize each word
+  return withoutTeam
+    .split('_')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(' ');
+}
+
 export function ResolutionModal({ state, myPendingAction, onChoice }: Props) {
   const hasPendingActions = state.pendingActions && state.pendingActions.length > 0;
   
@@ -143,7 +154,7 @@ export function ResolutionModal({ state, myPendingAction, onChoice }: Props) {
                 <div className={`text-lg font-bold ${
                   newRole.team === 'GOOD' ? 'text-green-400' : 'text-red-400'
                 }`}>
-                  {newRole.name}
+                  {formatRoleName(newRole.name)}
                 </div>
               </div>
               {newRole.image && (
@@ -185,7 +196,7 @@ export function ResolutionModal({ state, myPendingAction, onChoice }: Props) {
                 <div className={`text-lg font-bold ${
                   revealedRole.team === 'GOOD' ? 'text-green-400' : 'text-red-400'
                 }`}>
-                  {revealedRole.name}
+                  {formatRoleName(revealedRole.name)}
                 </div>
                 <div className={`text-sm ${
                   revealedRole.team === 'GOOD' ? 'text-green-500' : 'text-red-500'
