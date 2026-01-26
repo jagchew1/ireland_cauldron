@@ -30,7 +30,7 @@ export function initSockets(io: IOServer, _app: Express) {
         const id = playerId ?? socket.id;
         playerId = id;
         if (!room.state.players.find((p) => p.id === id)) {
-          room.state.players.push({ id, name, connected: true, isReady: false, endedDiscussion: false });
+          room.state.players.push({ id, name, connected: true, isReady: false, endedDiscussion: false, poisoned: false });
         }
       } else {
         room.state.spectators.push(socket.id);
