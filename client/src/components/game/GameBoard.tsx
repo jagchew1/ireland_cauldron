@@ -45,6 +45,10 @@ export function GameBoard({ state, onPlayCard, onUnplayCard, onClaimCard, onReso
   const myHand = myId ? state.hands[myId] || [] : [];
   const hasPlayedCard = state.table.some(t => t.playerId === myId);
   
+  // Drag and drop state
+  const [draggedCardId, setDraggedCardId] = React.useState<string | null>(null);
+  const [isDraggingOver, setIsDraggingOver] = React.useState(false);
+  
   // Get player's current role
   const myPlayer = state.players.find(p => p.id === myId);
   const myRole = myPlayer?.roleId ? state.roles[myPlayer.roleId] : undefined;
@@ -399,22 +403,36 @@ export function GameBoard({ state, onPlayCard, onUnplayCard, onClaimCard, onReso
           <div className="text-sm text-slate-400">No cards in hand (Player ID: {myId || 'unknown'})</div>
         ) : (
           <div className="flex gap-2">
-            {myHand.map((c) => (
-              <CardImage 
-                key={c.id} 
-                src={(c as any).image}
-                cardName={c.name}
-                playerCount={state.players.length}
-                onClick={() => !hasPlayedCard && state.phase === 'NIGHT' && onPlayCard(c.id)}
-                className={`${
-                  hasPlayedCard || state.phase !== 'NIGHT' 
-                    ? 'opacity-50 cursor-not-allowed' 
-                    : isTimeExpired && !hasPlayedCard && state.phase === 'NIGHT'
-                    ? 'cursor-pointer hover:scale-105 transition-transform animate-pulse ring-2 ring-yellow-500'
-                    : 'cursor-pointer hover:scale-105 transition-transform'
-                }`}
-              />
-            ))}
+            {myHand.map((c) => {
+              const canPlay = !hasPlayedCard && state.phase === 'NIGHT';
+              return (
+                <div
+                  key={c.id}
+                  draggable={canPlay}
+                  onDragStart={(e) => {
+                    if (canPlay) {
+                      setDraggedCardId(c.id);
+                      e.dataTransfer.effectAllowed = 'move';
+                    }
+                  }}
+                  onDragEnd={() => setDraggedCardId(null)}
+                >
+                  <CardImage 
+                    src={(c as any).image}
+                    cardName={c.name}
+                    playerCount={state.players.length}
+                    onClick={() => canPlay && onPlayCard(c.id)}
+                    className={`${
+                      !canPlay
+                        ? 'opacity-50 cursor-not-allowed' 
+                        : isTimeExpired && !hasPlayedCard && state.phase === 'NIGHT'
+                        ? 'cursor-pointer hover:scale-105 transition-transform animate-pulse ring-2 ring-yellow-500'
+                        : 'cursor-grab active:cursor-grabbing hover:scale-105 transition-transform'
+                    }`}
+                  />
+                </div>
+              );
+            })}
           </div>
         )}
       </div>
@@ -568,7 +586,28 @@ export function GameBoard({ state, onPlayCard, onUnplayCard, onClaimCard, onReso
           {/* Cauldron Container */}
           <div className="relative mx-auto max-w-4xl">
             {/* Cauldron Shape with CSS */}
-            <div className="relative rounded-b-full border-4 border-amber-800 bg-gradient-to-b from-slate-900 via-slate-800 to-amber-950 p-8 pt-12 shadow-2xl">
+            <div 
+              className={`relative rounded-b-full border-4 bg-gradient-to-b from-slate-900 via-slate-800 to-amber-950 p-8 pt-12 shadow-2xl transition-all ${
+                isDraggingOver 
+                  ? 'border-yellow-400 shadow-yellow-400/50' 
+                  : 'border-amber-800'
+              }`}
+              onDragOver={(e) => {
+                if (draggedCardId && !hasPlayedCard && state.phase === 'NIGHT') {
+                  e.preventDefault();
+                  setIsDraggingOver(true);
+                }
+              }}
+              onDragLeave={() => setIsDraggingOver(false)}
+              onDrop={(e) => {
+                e.preventDefault();
+                setIsDraggingOver(false);
+                if (draggedCardId && !hasPlayedCard && state.phase === 'NIGHT') {
+                  onPlayCard(draggedCardId);
+                  setDraggedCardId(null);
+                }
+              }}
+            >
               {/* Cauldron Rim */}
               <div className="absolute -top-4 left-0 right-0 h-8 rounded-t-lg border-4 border-amber-800 bg-gradient-to-b from-amber-900 to-amber-950 shadow-lg"></div>
               
@@ -576,6 +615,13 @@ export function GameBoard({ state, onPlayCard, onUnplayCard, onClaimCard, onReso
               <div className="absolute inset-0 overflow-hidden rounded-b-full opacity-30">
                 <div className="absolute inset-0 bg-gradient-to-t from-green-900/40 via-purple-900/30 to-transparent animate-pulse"></div>
               </div>
+              
+              {/* Drop Zone Indicator */}
+              {isDraggingOver && (
+                <div className="absolute inset-0 rounded-b-full bg-yellow-400/20 border-4 border-dashed border-yellow-400 animate-pulse pointer-events-none z-10 flex items-center justify-center">
+                  <div className="text-2xl font-bold text-yellow-400 drop-shadow-lg">Drop to Add Ingredient</div>
+                </div>
+              )}
               
               {/* Cards arranged in circular pattern inside cauldron */}
               <div className="relative flex flex-wrap justify-center gap-3 min-h-[200px]">
