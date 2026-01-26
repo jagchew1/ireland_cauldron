@@ -339,6 +339,86 @@ export function GameBoard({ state, onPlayCard, onUnplayCard, onClaimCard, onReso
         </div>
       )}
       
+      {/* Your Hand Section */}
+      <div className="rounded-lg border border-slate-700 bg-slate-800 p-4">
+        <h2 className="mb-2 text-sm text-slate-400">Your Hand</h2>
+        
+        {/* Player Status during Night Phase */}
+        {state.phase === 'NIGHT' && (
+          <div className="mb-3 rounded-lg border border-slate-700 bg-slate-900 p-3">
+            <div className="mb-2 text-xs font-semibold text-slate-400">Player Status:</div>
+            <div className="flex flex-wrap gap-x-4 gap-y-1">
+              {state.players.map(player => {
+                const hasPlayed = state.table.some(t => t.playerId === player.id);
+                return (
+                  <div key={player.id} className={`text-sm ${hasPlayed ? 'text-green-400' : 'text-slate-500'}`}>
+                    {hasPlayed ? '✓' : '⏳'} {player.name}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+        
+        {hasPlayedCard && state.phase === 'NIGHT' && (
+          <div className="mb-2 flex items-center gap-3">
+            <div className="text-sm text-green-400">✓ Card played - waiting for other players...</div>
+            <button
+              onClick={onUnplayCard}
+              className="rounded-md border border-slate-600 bg-slate-700 px-3 py-1 text-xs font-medium text-slate-300 hover:bg-slate-600 transition-colors"
+            >
+              Take Back
+            </button>
+          </div>
+        )}
+        
+        {/* End Discussion Button */}
+        {state.phase === 'DAY' && (
+          <div className="mb-3">
+            {myPlayer?.endedDiscussion ? (
+              <div className="text-sm text-green-400">✓ Ready to end discussion - waiting for others...</div>
+            ) : (
+              <button
+                onClick={onEndDiscussion}
+                className={`rounded-md px-4 py-2 text-sm font-medium text-white transition-colors ${
+                  isTimeExpired && state.phase === 'DAY'
+                    ? 'bg-blue-600 hover:bg-blue-700 animate-pulse ring-2 ring-yellow-500'
+                    : 'bg-blue-600 hover:bg-blue-700'
+                }`}
+              >
+                End Discussion
+              </button>
+            )}
+            <div className="mt-1 text-xs text-slate-400">
+              {state.players.filter(p => p.endedDiscussion).length} / {state.players.length} players ready
+            </div>
+          </div>
+        )}
+        
+        {myHand.length === 0 ? (
+          <div className="text-sm text-slate-400">No cards in hand (Player ID: {myId || 'unknown'})</div>
+        ) : (
+          <div className="flex gap-2">
+            {myHand.map((c) => (
+              <CardImage 
+                key={c.id} 
+                src={(c as any).image}
+                cardName={c.name}
+                playerCount={state.players.length}
+                onClick={() => !hasPlayedCard && state.phase === 'NIGHT' && onPlayCard(c.id)}
+                className={`${
+                  hasPlayedCard || state.phase !== 'NIGHT' 
+                    ? 'opacity-50 cursor-not-allowed' 
+                    : isTimeExpired && !hasPlayedCard && state.phase === 'NIGHT'
+                    ? 'cursor-pointer hover:scale-105 transition-transform animate-pulse ring-2 ring-yellow-500'
+                    : 'cursor-pointer hover:scale-105 transition-transform'
+                }`}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+      
       <div className="grid grid-cols-2 gap-6 md:grid-cols-3">
         <div className="col-span-2 md:col-span-3">
           <h2 className="mb-2 text-sm text-slate-400">Game Decks</h2>
@@ -483,118 +563,80 @@ export function GameBoard({ state, onPlayCard, onUnplayCard, onClaimCard, onReso
           </div>
         </div>
         <div className="col-span-2 md:col-span-3">
-          <h2 className="mb-2 text-sm text-slate-400">Table</h2>
-          <div className="flex flex-wrap gap-2">
-            {shuffledTable.map((t, i) => {
-              const cardId = t.cardId;
-              // Get all players who claimed this card
-              const claimerIds = cardId && state.cardClaims?.[cardId] ? state.cardClaims[cardId] : [];
-              const claimers = claimerIds
-                .map((pid: string) => state.players.find(p => p.id === pid)?.name)
-                .filter(Boolean);
-              const isClaimedByMe = cardId && claimerIds.includes(myId || '');
-              const isClickable = state.phase === 'DAY' && cardId;
+          <h2 className="mb-2 text-sm text-slate-400">The Cauldron</h2>
+          
+          {/* Cauldron Container */}
+          <div className="relative mx-auto max-w-4xl">
+            {/* Cauldron Shape with CSS */}
+            <div className="relative rounded-b-full border-4 border-amber-800 bg-gradient-to-b from-slate-900 via-slate-800 to-amber-950 p-8 pt-12 shadow-2xl">
+              {/* Cauldron Rim */}
+              <div className="absolute -top-4 left-0 right-0 h-8 rounded-t-lg border-4 border-amber-800 bg-gradient-to-b from-amber-900 to-amber-950 shadow-lg"></div>
               
-              return (
-                <div key={i} className="relative group">
-                  <CardImage 
-                    src={t.image} 
-                    cardName={t.cardName} 
-                    playerCount={state.players.length}
-                    onClick={isClickable ? () => onClaimCard(cardId) : undefined}
-                    className={`${
-                      isClickable ? 'cursor-pointer hover:scale-105 transition-transform' : ''
-                    } ${
-                      isClaimedByMe ? 'ring-4 ring-blue-500' : claimers.length > 0 ? 'ring-4 ring-purple-500' : ''
-                    }`}
-                  />
-                  {claimers.length > 0 && (
-                    <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 whitespace-nowrap rounded bg-blue-600 px-2 py-1 text-xs text-white opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
-                      Claimed by: {claimers.join(', ')}
-                    </div>
-                  )}
+              {/* Bubbling Effect Overlay */}
+              <div className="absolute inset-0 overflow-hidden rounded-b-full opacity-30">
+                <div className="absolute inset-0 bg-gradient-to-t from-green-900/40 via-purple-900/30 to-transparent animate-pulse"></div>
+              </div>
+              
+              {/* Cards arranged in circular pattern inside cauldron */}
+              <div className="relative flex flex-wrap justify-center gap-3 min-h-[200px]">
+                {shuffledTable.length === 0 ? (
+                  <div className="flex items-center justify-center text-slate-500 italic text-sm py-8">
+                    The cauldron awaits ingredients...
+                  </div>
+                ) : (
+                  shuffledTable.map((t, i) => {
+                    const cardId = t.cardId;
+                    // Get all players who claimed this card
+                    const claimerIds = cardId && state.cardClaims?.[cardId] ? state.cardClaims[cardId] : [];
+                    const claimers = claimerIds
+                      .map((pid: string) => state.players.find(p => p.id === pid)?.name)
+                      .filter(Boolean);
+                    const isClaimedByMe = cardId && claimerIds.includes(myId || '');
+                    const isClickable = state.phase === 'DAY' && cardId;
+                    
+                    // Slight rotation for organic feel
+                    const rotation = (i % 5 - 2) * 5; // Rotates between -10 to 10 degrees
+                    
+                    return (
+                      <div 
+                        key={i} 
+                        className="relative group"
+                        style={{ transform: `rotate(${rotation}deg)` }}
+                      >
+                        <CardImage 
+                          src={t.image} 
+                          cardName={t.cardName} 
+                          playerCount={state.players.length}
+                          onClick={isClickable ? () => onClaimCard(cardId) : undefined}
+                          className={`${
+                            isClickable ? 'cursor-pointer hover:scale-110 transition-transform' : ''
+                          } ${
+                            isClaimedByMe ? 'ring-4 ring-blue-500 shadow-lg shadow-blue-500/50' : 
+                            claimers.length > 0 ? 'ring-4 ring-purple-500 shadow-lg shadow-purple-500/50' : 
+                            'shadow-xl'
+                          }`}
+                        />
+                        {claimers.length > 0 && (
+                          <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 whitespace-nowrap rounded bg-blue-600 px-2 py-1 text-xs text-white opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
+                            Claimed by: {claimers.join(', ')}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+              
+              {/* Ingredient Count Badge */}
+              {shuffledTable.length > 0 && (
+                <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 rounded-full bg-amber-800 border-2 border-amber-600 px-4 py-1 shadow-lg">
+                  <div className="text-xs font-semibold text-amber-200">
+                    {shuffledTable.length} {shuffledTable.length === 1 ? 'Ingredient' : 'Ingredients'}
+                  </div>
                 </div>
-              );
-            })}
-          </div>
-        </div>
-        <div className="col-span-2 md:col-span-3">
-          <h2 className="mb-2 text-sm text-slate-400">Your Hand</h2>
-          
-          {/* Player Status during Night Phase */}
-          {state.phase === 'NIGHT' && (
-            <div className="mb-3 rounded-lg border border-slate-700 bg-slate-800 p-3">
-              <div className="mb-2 text-xs font-semibold text-slate-400">Player Status:</div>
-              <div className="flex flex-wrap gap-x-4 gap-y-1">
-                {state.players.map(player => {
-                  const hasPlayed = state.table.some(t => t.playerId === player.id);
-                  return (
-                    <div key={player.id} className={`text-sm ${hasPlayed ? 'text-green-400' : 'text-slate-500'}`}>
-                      {hasPlayed ? '✓' : '⏳'} {player.name}
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-          
-          {hasPlayedCard && state.phase === 'NIGHT' && (
-            <div className="mb-2 flex items-center gap-3">
-              <div className="text-sm text-green-400">✓ Card played - waiting for other players...</div>
-              <button
-                onClick={onUnplayCard}
-                className="rounded-md border border-slate-600 bg-slate-700 px-3 py-1 text-xs font-medium text-slate-300 hover:bg-slate-600 transition-colors"
-              >
-                Take Back
-              </button>
-            </div>
-          )}
-          
-          {/* End Discussion Button */}
-          {state.phase === 'DAY' && (
-            <div className="mb-3">
-              {myPlayer?.endedDiscussion ? (
-                <div className="text-sm text-green-400">✓ Ready to end discussion - waiting for others...</div>
-              ) : (
-                <button
-                  onClick={onEndDiscussion}
-                  className={`rounded-md px-4 py-2 text-sm font-medium text-white transition-colors ${
-                    isTimeExpired && state.phase === 'DAY'
-                      ? 'bg-blue-600 hover:bg-blue-700 animate-pulse ring-2 ring-yellow-500'
-                      : 'bg-blue-600 hover:bg-blue-700'
-                  }`}
-                >
-                  End Discussion
-                </button>
               )}
-              <div className="mt-1 text-xs text-slate-400">
-                {state.players.filter(p => p.endedDiscussion).length} / {state.players.length} players ready
-              </div>
             </div>
-          )}
-          
-          {myHand.length === 0 ? (
-            <div className="text-sm text-slate-400">No cards in hand (Player ID: {myId || 'unknown'})</div>
-          ) : (
-            <div className="flex gap-2">
-              {myHand.map((c) => (
-                <CardImage 
-                  key={c.id} 
-                  src={(c as any).image}
-                  cardName={c.name}
-                  playerCount={state.players.length}
-                  onClick={() => !hasPlayedCard && state.phase === 'NIGHT' && onPlayCard(c.id)}
-                  className={`${
-                    hasPlayedCard || state.phase !== 'NIGHT' 
-                      ? 'opacity-50 cursor-not-allowed' 
-                      : isTimeExpired && !hasPlayedCard && state.phase === 'NIGHT'
-                      ? 'cursor-pointer hover:scale-105 transition-transform animate-pulse ring-2 ring-yellow-500'
-                      : 'cursor-pointer hover:scale-105 transition-transform'
-                  }`}
-                />
-              ))}
-            </div>
-          )}
+          </div>
         </div>
       </div>
     </div>
