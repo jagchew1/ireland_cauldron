@@ -89,12 +89,8 @@ export function initSockets(io: IOServer, _app: Express) {
           }
         }
         else if (s.phase === 'DAY') {
-          // During day phase, respect End Discussion voting
-          // Only auto-advance if all players have ended discussion
-          const allEnded = s.players.every(p => p.endedDiscussion);
-          if (allEnded) {
-            nextRound(s);
-          }
+          // When day timer expires, force advance to night regardless of player readiness
+          nextRound(s);
         }
       }
       broadcastState(io, currentRoom);
