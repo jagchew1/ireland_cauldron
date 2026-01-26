@@ -320,6 +320,14 @@ function startResolution(state: GameState) {
   console.log('Table contents:', JSON.stringify(state.table, null, 2));
   state.phase = 'RESOLUTION';
   
+  // Clear poison status from all players (they've now skipped their turn)
+  for (const player of state.players) {
+    if (player.poisoned) {
+      console.log(`Clearing poison status from ${player.name}`);
+      player.poisoned = false;
+    }
+  }
+  
   // Keep previous rounds in log - just add to it with current round number
   
   // Reveal all cards on the table
@@ -838,14 +846,6 @@ export function nextRound(state: GameState) {
   // Clear table from previous round (cards already in discard from revealDay)
   state.table = [];
   state.cardClaims = {};
-  
-  // Clear poison status from all players who were poisoned
-  for (const player of state.players) {
-    if (player.poisoned) {
-      console.log(`Clearing poison status from ${player.name}`);
-      player.poisoned = false;
-    }
-  }
   
   // Advance to night phase
   state.phase = 'NIGHT';
