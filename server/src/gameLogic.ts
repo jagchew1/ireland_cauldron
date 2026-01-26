@@ -515,6 +515,10 @@ function applyCeolPrimary(state: GameState, playerIds: string[]) {
 function applyFaeriePrimary(state: GameState, count: number) {
   if (state.centerDeck.cards.length < 2) return;
   
+  // Calculate dynamic threshold: floor((playerCount - 1) / 2)
+  const playerCount = state.players.length;
+  const threshold = Math.floor((playerCount - 1) / 2);
+  
   const card1 = state.centerDeck.cards.pop()!;
   const card2 = state.centerDeck.cards.pop()!;
   
@@ -525,7 +529,7 @@ function applyFaeriePrimary(state: GameState, count: number) {
     cardsShown: [card1, card2],
   });
   
-  if (count > 3) {
+  if (count > threshold) {
     // Discard milk, shuffle blood back
     if (card1.type === 'MILK') {
       state.centerDeck.discarded.push(card1);
@@ -561,7 +565,7 @@ function applyFaeriePrimary(state: GameState, count: number) {
     
     addLogEntry(state, {
       type: 'info',
-      message: `>3 Faerie Thistles played - milk discarded, blood shuffled back.`,
+      message: `>${threshold} Faerie Thistles played - milk discarded, blood shuffled back.`,
     });
   } else {
     // Discard blood, shuffle milk back
@@ -599,7 +603,7 @@ function applyFaeriePrimary(state: GameState, count: number) {
     
     addLogEntry(state, {
       type: 'info',
-      message: `≤3 Faerie Thistles played - blood discarded, milk shuffled back.`,
+      message: `≤${threshold} Faerie Thistles played - blood discarded, milk shuffled back.`,
     });
   }
   

@@ -202,7 +202,7 @@ export function GameBoard({ state, onPlayCard, onUnplayCard, onResolutionChoice,
         <div>Room {state.room.code}</div>
         <div className="flex items-center gap-4">
           <div>Phase: {state.phase} | Round {state.round}</div>
-          <HelpButton />
+          <HelpButton playerCount={state.players.length} />
         </div>
       </div>
       
@@ -430,7 +430,7 @@ export function GameBoard({ state, onPlayCard, onUnplayCard, onResolutionChoice,
           <h2 className="mb-2 text-sm text-slate-400">Table</h2>
           <div className="flex flex-wrap gap-2">
             {shuffledTable.map((t, i) => (
-              <CardImage key={i} src={t.image} cardName={t.cardName} />
+              <CardImage key={i} src={t.image} cardName={t.cardName} playerCount={state.players.length} />
             ))}
           </div>
         </div>
@@ -476,6 +476,7 @@ export function GameBoard({ state, onPlayCard, onUnplayCard, onResolutionChoice,
                   key={c.id} 
                   src={(c as any).image}
                   cardName={c.name}
+                  playerCount={state.players.length}
                   onClick={() => !hasPlayedCard && state.phase === 'NIGHT' && onPlayCard(c.id)}
                   className={hasPlayedCard || state.phase !== 'NIGHT' ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:scale-105 transition-transform'}
                 />

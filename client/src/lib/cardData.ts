@@ -16,7 +16,10 @@ export const CARD_EFFECTS = {
   },
   "faerie_thistle": {
     name: "Faerie Thistle",
-    primary: "Reveal top 2 cards from deck. If >3 Faeries played: discard milk, shuffle blood back. If ≤3 played: discard blood, shuffle milk back.",
+    primary: (playerCount?: number) => {
+      const threshold = playerCount ? Math.floor((playerCount - 1) / 2) : 3;
+      return `Reveal top 2 cards from deck. If >${threshold} Faeries played: discard milk, shuffle blood back. If ≤${threshold} played: discard blood, shuffle milk back.`;
+    },
     secondary: "Discard the top card from the deck without revealing it"
   },
   "wolfbane_root": {
@@ -26,8 +29,19 @@ export const CARD_EFFECTS = {
   }
 } as const;
 
-export function getCardEffect(cardName: string) {
+export function getCardEffect(cardName: string, playerCount?: number) {
   // Normalize the card name to match keys
   const normalized = cardName.toLowerCase().trim().replace(/\s+/g, '_').replace(/'/g, '');
-  return CARD_EFFECTS[normalized as keyof typeof CARD_EFFECTS];
+  const effect = CARD_EFFECTS[normalized as keyof typeof CARD_EFFECTS];
+  if (!effect) return null;
+  
+  // Handle dynamic primary effect for Faerie Thistle
+  if (normalized === 'faerie_thistle' && typeof effect.primary === 'function') {
+    return {
+      ...effect,
+      primary: effect.primary(playerCount)
+    };
+  }
+  
+  return effect as { name: string; primary: string; secondary: string };
 }

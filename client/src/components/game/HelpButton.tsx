@@ -1,7 +1,11 @@
 import { useState, useRef, useEffect } from 'react';
-import { CARD_EFFECTS } from '../../lib/cardData';
+import { CARD_EFFECTS, getCardEffect } from '../../lib/cardData';
 
-export function HelpButton() {
+type Props = {
+  playerCount: number;
+};
+
+export function HelpButton({ playerCount }: Props) {
   const [showHelp, setShowHelp] = useState(false);
   const [isTouchDevice, setIsTouchDevice] = useState(false);
   const helpRef = useRef<HTMLDivElement>(null);
@@ -67,21 +71,25 @@ export function HelpButton() {
           {/* Ingredients */}
           <div className="max-h-[60vh] space-y-3 overflow-y-auto">
             <h4 className="font-semibold text-slate-200">Ingredient Effects</h4>
-            {Object.values(CARD_EFFECTS).map((effect) => (
-              <div key={effect.name} className="rounded-md border border-slate-700 bg-slate-800/50 p-3">
-                <div className="mb-2 font-semibold text-slate-200">{effect.name}</div>
-                <div className="space-y-2 text-xs text-slate-300">
-                  <div>
-                    <span className="font-semibold text-blue-400">Primary:</span>{' '}
-                    {effect.primary}
-                  </div>
-                  <div>
-                    <span className="font-semibold text-purple-400">Secondary:</span>{' '}
-                    {effect.secondary}
+            {Object.keys(CARD_EFFECTS).map((key) => {
+              const effect = getCardEffect(key, playerCount);
+              if (!effect) return null;
+              return (
+                <div key={effect.name} className="rounded-md border border-slate-700 bg-slate-800/50 p-3">
+                  <div className="mb-2 font-semibold text-slate-200">{effect.name}</div>
+                  <div className="space-y-2 text-xs text-slate-300">
+                    <div>
+                      <span className="font-semibold text-blue-400">Primary:</span>{' '}
+                      {effect.primary}
+                    </div>
+                    <div>
+                      <span className="font-semibold text-purple-400">Secondary:</span>{' '}
+                      {effect.secondary}
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
           
           {/* Arrow pointer */}

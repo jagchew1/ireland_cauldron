@@ -7,14 +7,15 @@ type Props = {
   onClick?: () => void; 
   className?: string;
   cardName?: string;
+  playerCount?: number;
 };
 
-export function CardImage({ src, alt, onClick, className = '', cardName }: Props) {
+export function CardImage({ src, alt, onClick, className = '', cardName, playerCount }: Props) {
   const [showTooltip, setShowTooltip] = useState(false);
   const [isTouchDevice, setIsTouchDevice] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
   
-  const cardEffect = cardName ? getCardEffect(cardName) : null;
+  const cardEffect = cardName ? getCardEffect(cardName, playerCount) : null;
 
   useEffect(() => {
     // Detect if device supports touch
