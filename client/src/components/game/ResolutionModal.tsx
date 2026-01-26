@@ -5,6 +5,7 @@ type Props = {
   state: ShapedState;
   myPendingAction?: PendingAction;
   onChoice: (choice: 'keep' | 'discard' | 'confirm') => void;
+  onYewTarget: (targetPlayerId: string) => void;
 };
 
 function formatRoleName(name: string): string {
@@ -18,7 +19,7 @@ function formatRoleName(name: string): string {
     .join(' ');
 }
 
-export function ResolutionModal({ state, myPendingAction, onChoice }: Props) {
+export function ResolutionModal({ state, myPendingAction, onChoice, onYewTarget }: Props) {
   const hasPendingActions = state.pendingActions && state.pendingActions.length > 0;
   
   if (!hasPendingActions) return null;
@@ -219,6 +220,63 @@ export function ResolutionModal({ state, myPendingAction, onChoice }: Props) {
           <p className="mb-4 text-xs text-slate-400 italic">
             Note: You don't know which specific player has this role.
           </p>
+          
+          <Button onClick={() => onChoice('confirm')} className="w-full">
+            Acknowledge
+          </Button>
+        </div>
+      </div>
+    );
+  }
+  
+  if (myPendingAction.actionType === 'yew_primary') {
+    const availablePlayers = state.players.filter(p => 
+      myPendingAction.availableTargets.includes(p.id)
+    );
+    
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70">
+        <div className="rounded-lg border border-slate-700 bg-slate-900 p-6 shadow-2xl max-w-md">
+          <h2 className="mb-4 text-xl font-bold text-green-600">Yew's Quiet Draught (Primary)</h2>
+          <p className="mb-4 text-slate-300">
+            Choose another player to poison. If a majority of Yew players choose the same target, that player cannot cast next round.
+          </p>
+          
+          <div className="space-y-2 max-h-64 overflow-y-auto">
+            {availablePlayers.map(player => (
+              <Button
+                key={player.id}
+                onClick={() => onYewTarget(player.id)}
+                variant="outline"
+                className="w-full justify-start text-left hover:bg-green-900/30 hover:border-green-500"
+              >
+                {player.name}
+              </Button>
+            ))}
+          </div>
+          
+          <p className="mt-4 text-xs text-slate-400 italic">
+            Your vote is secret. Results depend on majority consensus.
+          </p>
+        </div>
+      </div>
+    );
+  }
+  
+  if (myPendingAction.actionType === 'yew_secondary') {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70">
+        <div className="rounded-lg border border-slate-700 bg-slate-900 p-6 shadow-2xl max-w-md">
+          <h2 className="mb-4 text-xl font-bold text-green-600">Yew's Quiet Draught (Secondary)</h2>
+          <p className="mb-4 text-slate-300">
+            You poisoned yourself. You will not be able to cast an ingredient in the next round.
+          </p>
+          
+          <div className="mb-4 rounded-lg bg-red-900/30 border border-red-700 p-4 text-center">
+            <div className="text-2xl mb-2">☠️</div>
+            <div className="text-red-400 font-semibold">You are poisoned!</div>
+            <div className="text-sm text-red-300 mt-1">Skip next round</div>
+          </div>
           
           <Button onClick={() => onChoice('confirm')} className="w-full">
             Acknowledge

@@ -44,6 +44,7 @@ export const Player = z.object({
   isReady: z.boolean().default(false),
   connected: z.boolean().default(true),
   endedDiscussion: z.boolean().default(false), // for day phase voting
+  poisoned: z.boolean().default(false), // cannot play cards next round if true
 });
 
 export const Room = z.object({
@@ -108,6 +109,15 @@ export const PendingAction = z.discriminatedUnion('actionType', [
     playerId: z.string(),
     revealedRoleId: z.string(), // Role of another Ceol player (identity unknown)
   }),
+  z.object({
+    actionType: z.literal('yew_primary'),
+    playerId: z.string(),
+    availableTargets: z.array(z.string()), // Player IDs that can be targeted (everyone except self)
+  }),
+  z.object({
+    actionType: z.literal('yew_secondary'),
+    playerId: z.string(), // Player who poisoned themselves
+  }),
 ]);
 
 export const GameState = z.object({
@@ -142,6 +152,7 @@ export const AssetList = z.object({
 export const ActionPlayCard = z.object({ type: z.literal('play_card'), cardId: z.string() });
 export const ActionUnplayCard = z.object({ type: z.literal('unplay_card') });
 export const ActionClaimCard = z.object({ type: z.literal('claim_card'), cardId: z.string() });
+export const ActionYewTarget = z.object({ type: z.literal('yew_target'), targetPlayerId: z.string() });
 export const ActionReady = z.object({ type: z.literal('ready'), ready: z.boolean() });
 export const ActionStart = z.object({ type: z.literal('start') });
 export const ActionResolution = z.object({ 
@@ -153,6 +164,7 @@ export const ActionPayloads = z.discriminatedUnion('type', [
   ActionPlayCard,
   ActionUnplayCard,
   ActionClaimCard,
+  ActionYewTarget,
   ActionReady, 
   ActionStart,
   ActionResolution,

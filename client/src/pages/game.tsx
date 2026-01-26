@@ -5,7 +5,7 @@ import { GameBoard } from '../components/game/GameBoard';
 
 export default function Game() {
   const { roomCode = '' } = useParams();
-  const { state, joinRoom, playCard, unplayCard, claimCard, resolutionChoice, endDiscussion } = useGameRoom(roomCode);
+  const { state, joinRoom, playCard, unplayCard, claimCard, resolutionChoice, yewTarget, endDiscussion } = useGameRoom(roomCode);
 
   useEffect(() => {
     const name = sessionStorage.getItem('name') || 'Player';
@@ -23,7 +23,7 @@ export default function Game() {
   
   return (
     <div className={`min-h-screen transition-colors duration-1000 ${bgClass}`}>
-      <GameBoard state={state} onPlayCard={playCard} onUnplayCard={unplayCard} onClaimCard={claimCard} onResolutionChoice={resolutionChoice} onEndDiscussion={endDiscussion} />
+      <GameBoard state={state} onPlayCard={playCard} onUnplayCard={unplayCard} onClaimCard={claimCard} onResolutionChoice={resolutionChoice} onYewTarget={yewTarget} onEndDiscussion={endDiscussion} />
     </div>
   );
 }

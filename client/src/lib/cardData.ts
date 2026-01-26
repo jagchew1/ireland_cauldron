@@ -26,6 +26,11 @@ export const CARD_EFFECTS = {
     name: "Wolfbane Root",
     primary: "Each player discards 1 random card from their hand (from their remaining 2 cards)",
     secondary: "Blocks the primary effect"
+  },
+  "yews_quiet_draught": {
+    name: "Yew's Quiet Draught",
+    primary: "Each player who played this chooses another player to poison. If a majority chose the same target, that player cannot cast next round. On tie: reveal top card, play face up if blood or discard if milk.",
+    secondary: "Poison yourself. You cannot cast an ingredient in the next round."
   }
 } as const;
 

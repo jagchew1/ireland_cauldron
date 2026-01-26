@@ -11,6 +11,7 @@ type Props = {
   onUnplayCard: () => void;
   onClaimCard: (cardId: string) => void;
   onResolutionChoice: (choice: 'keep' | 'discard' | 'confirm') => void;
+  onYewTarget: (targetPlayerId: string) => void;
   onEndDiscussion: () => void;
 };
 
@@ -40,7 +41,7 @@ function formatIngredientName(name: string): string {
     .replace(/Cailleachs/g, "Cailleach's");
 }
 
-export function GameBoard({ state, onPlayCard, onUnplayCard, onClaimCard, onResolutionChoice, onEndDiscussion }: Props) {
+export function GameBoard({ state, onPlayCard, onUnplayCard, onClaimCard, onResolutionChoice, onYewTarget, onEndDiscussion }: Props) {
   const myId = state.currentPlayerId;
   const myHand = myId ? state.hands[myId] || [] : [];
   const hasPlayedCard = state.table.some(t => t.playerId === myId);
@@ -225,6 +226,7 @@ export function GameBoard({ state, onPlayCard, onUnplayCard, onClaimCard, onReso
         state={state} 
         myPendingAction={myPendingAction}
         onChoice={onResolutionChoice}
+        onYewTarget={onYewTarget}
       />
       
       <div className="flex items-center justify-between">
@@ -354,12 +356,29 @@ export function GameBoard({ state, onPlayCard, onUnplayCard, onClaimCard, onReso
             <div className="flex flex-wrap gap-x-4 gap-y-1">
               {state.players.map(player => {
                 const hasPlayed = state.table.some(t => t.playerId === player.id);
+                const isPoisoned = player.poisoned;
                 return (
-                  <div key={player.id} className={`text-sm ${hasPlayed ? 'text-green-400' : 'text-slate-500'}`}>
-                    {hasPlayed ? '✓' : '⏳'} {player.name}
+                  <div key={player.id} className={`text-sm flex items-center gap-1 ${
+                    isPoisoned ? 'text-purple-400 line-through' : 
+                    hasPlayed ? 'text-green-400' : 'text-slate-500'
+                  }`}>
+                    {isPoisoned ? '☠️' : hasPlayed ? '✓' : '⏳'} {player.name}
                   </div>
                 );
               })}
+            </div>
+          </div>
+        )}
+        
+        {/* Poison Warning */}
+        {myPlayer?.poisoned && state.phase === 'NIGHT' && (
+          <div className="mb-3 rounded-lg bg-purple-900/30 border-2 border-purple-500 p-3 animate-pulse">
+            <div className="flex items-center gap-2 text-purple-300">
+              <span className="text-xl">☠️</span>
+              <div>
+                <div className="font-semibold">You are poisoned!</div>
+                <div className="text-xs">You cannot play a card this round.</div>
+              </div>
             </div>
           </div>
         )}

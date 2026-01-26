@@ -19,6 +19,7 @@ const INGREDIENTS = {
   CEOL: "ceol_of_the_midnight_cairn",
   FAERIE: "faerie_thistle",
   WOLFBANE: "wolfbane_root",
+  YEW: "yews_quiet_draught",
 } as const;
 
 function normalizeIngredientName(name: string): string {
@@ -31,6 +32,7 @@ function normalizeIngredientName(name: string): string {
   if (lower === INGREDIENTS.CEOL || lower.includes('ceol')) return INGREDIENTS.CEOL;
   if (lower === INGREDIENTS.FAERIE || lower.includes('faerie') || lower.includes('thistle')) return INGREDIENTS.FAERIE;
   if (lower === INGREDIENTS.WOLFBANE || lower.includes('wolfbane') || lower.includes('wolf')) return INGREDIENTS.WOLFBANE;
+  if (lower === INGREDIENTS.YEW || lower.includes('yew') || lower.includes('quiet') || lower.includes('draught')) return INGREDIENTS.YEW;
   
   return lower; // fallback to normalized version
 }
@@ -46,7 +48,8 @@ function formatIngredientName(name: string): string {
   // Add apostrophes where needed
   return formatted
     .replace(/Brigids/g, "Brigid's")
-    .replace(/Cailleachs/g, "Cailleach's");
+    .replace(/Cailleachs/g, "Cailleach's")
+    .replace(/Yews/g, "Yew's");
 }
 
 // Helper to add log entry with current round number
@@ -177,15 +180,25 @@ export function dealToHandSize(state: GameState) {
 
 export function playCard(state: GameState, playerId: string, cardId: string) {
   if (state.phase !== 'NIGHT') return;
+  
+  // Check if player is poisoned
+  const player = state.players.find(p => p.id === playerId);
+  if (player?.poisoned) {
+    console.log(`Player ${playerId} is poisoned and cannot play a card`);
+    return;
+  }
+  
   const hand = state.hands[playerId];
   const idx = hand?.findIndex((c) => c.id === cardId) ?? -1;
   if (idx < 0) return;
   const [card] = hand!.splice(idx, 1);
   state.table.push({ playerId, cardId: card.id, card, revealed: false });
-  // If all connected players have played, advance to resolution
-  const connectedPlayers = state.players.filter(p => p.connected).length;
-  console.log(`Cards played: ${state.table.length}/${connectedPlayers} connected players`);
-  if (state.table.length >= connectedPlayers) {
+  
+  // Count expected players (connected and not poisoned)
+  const expectedPlayers = state.players.filter(p => p.connected && !p.poisoned).length;
+  console.log(`Cards played: ${state.table.length}/${expectedPlayers} active players (some may be poisoned)`);
+  
+  if (state.table.length >= expectedPlayers) {
     startResolution(state);
   }
 }
@@ -395,6 +408,9 @@ function applyPrimaryEffect(
     case INGREDIENTS.WOLFBANE:
       applyWolfbanePrimary(state);
       break;
+    case INGREDIENTS.YEW:
+      applyYewPrimary(state, data.playerIds);
+      break;
   }
 }
 
@@ -425,6 +441,9 @@ function applySecondaryEffect(
       break;
     case INGREDIENTS.WOLFBANE:
       // Blocks primary (handled in startResolution)
+      break;
+    case INGREDIENTS.YEW:
+      applyYewSecondary(state, data.playerIds);
       break;
   }
 }
@@ -733,6 +752,48 @@ function applyFaerieSecondary(state: GameState) {
   }
 }
 
+function applyYewPrimary(state: GameState, playerIds: string[]) {
+  // Each player who played Yew chooses another player to poison
+  for (const playerId of playerIds) {
+    const availableTargets = state.players
+      .filter(p => p.id !== playerId)
+      .map(p => p.id);
+    
+    state.pendingActions.push({
+      actionType: 'yew_primary',
+      playerId,
+      availableTargets,
+    });
+  }
+  
+  addLogEntry(state, {
+    type: 'primary',
+    message: `Yew's Quiet Draught: ${playerIds.length} player(s) choosing targets to poison...`,
+  });
+}
+
+function applyYewSecondary(state: GameState, playerIds: string[]) {
+  // Players who played Yew poison themselves
+  for (const playerId of playerIds) {
+    const player = state.players.find(p => p.id === playerId);
+    if (player) {
+      player.poisoned = true;
+      
+      state.pendingActions.push({
+        actionType: 'yew_secondary',
+        playerId,
+      });
+    }
+  }
+  
+  if (playerIds.length > 0) {
+    addLogEntry(state, {
+      type: 'secondary',
+      message: `Yew's Quiet Draught (Secondary): ${playerIds.length} player(s) poisoned themselves for next round.`,
+    });
+  }
+}
+
 export function revealDay(state: GameState) {
   console.log('=== DAY PHASE STARTING ===');
   state.phase = 'DAY';
@@ -777,6 +838,15 @@ export function nextRound(state: GameState) {
   // Clear table from previous round (cards already in discard from revealDay)
   state.table = [];
   state.cardClaims = {};
+  
+  // Clear poison status from all players who were poisoned
+  for (const player of state.players) {
+    if (player.poisoned) {
+      console.log(`Clearing poison status from ${player.name}`);
+      player.poisoned = false;
+    }
+  }
+  
   // Advance to night phase
   state.phase = 'NIGHT';
   state.round += 1;
@@ -873,10 +943,93 @@ export function processResolutionAction(state: GameState, playerId: string, choi
   } else if (action.actionType === 'ceol_primary') {
     // Just confirmation, role already swapped
     // No additional action needed
+  } else if (action.actionType === 'yew_secondary') {
+    // Just confirmation of self-poison
+    // Poison status already set
   }
   
   // Remove the action
   state.pendingActions.splice(actionIndex, 1);
+}
+
+export function processYewTarget(state: GameState, playerId: string, targetPlayerId: string) {
+  // Find and remove this player's pending yew action
+  const actionIndex = state.pendingActions.findIndex(
+    a => a.playerId === playerId && a.actionType === 'yew_primary'
+  );
+  if (actionIndex === -1) return;
+  
+  // Store the vote in a temporary map
+  if (!state.yewVotes) {
+    (state as any).yewVotes = {};
+  }
+  (state as any).yewVotes[playerId] = targetPlayerId;
+  
+  // Remove this player's pending action
+  state.pendingActions.splice(actionIndex, 1);
+  
+  // Check if all Yew players have voted
+  const remainingYewActions = state.pendingActions.filter(a => a.actionType === 'yew_primary');
+  if (remainingYewActions.length === 0) {
+    // All votes are in - process the results
+    resolveYewVotes(state);
+  }
+}
+
+function resolveYewVotes(state: GameState) {
+  const votes = (state as any).yewVotes || {};
+  const voteCount: Record<string, number> = {};
+  
+  // Count votes for each target
+  for (const targetId of Object.values(votes) as string[]) {
+    voteCount[targetId] = (voteCount[targetId] || 0) + 1;
+  }
+  
+  // Find the maximum vote count
+  const maxVotes = Math.max(...Object.values(voteCount), 0);
+  const winners = Object.entries(voteCount).filter(([_, count]) => count === maxVotes).map(([id]) => id);
+  
+  // Calculate majority threshold (more than half of voters)
+  const totalVoters = Object.keys(votes).length;
+  const majorityThreshold = Math.floor(totalVoters / 2) + 1;
+  
+  if (maxVotes >= majorityThreshold && winners.length === 1) {
+    // Majority achieved - poison the target
+    const targetPlayer = state.players.find(p => p.id === winners[0]);
+    if (targetPlayer) {
+      targetPlayer.poisoned = true;
+      addLogEntry(state, {
+        type: 'primary',
+        message: `Yew's Quiet Draught: ${targetPlayer.name} has been poisoned by majority vote and cannot play next round.`,
+      });
+    }
+  } else {
+    // Tie or no majority - reveal and handle top card
+    if (state.centerDeck.cards.length > 0) {
+      const topCard = state.centerDeck.cards.pop()!;
+      
+      if (topCard.type === 'BLOOD') {
+        // Play face up
+        state.centerDeck.revealed.push(topCard);
+        addLogEntry(state, {
+          type: 'primary',
+          message: `Yew's Quiet Draught: Vote tied. Top card revealed: ${topCard.type} (played face up).`,
+          cardsShown: [topCard],
+        });
+      } else {
+        // Milk - discard
+        state.centerDeck.discarded.push(topCard);
+        addLogEntry(state, {
+          type: 'primary',
+          message: `Yew's Quiet Draught: Vote tied. Top card revealed: ${topCard.type} (discarded).`,
+          cardsShown: [topCard],
+        });
+      }
+    }
+  }
+  
+  // Clear the votes
+  delete (state as any).yewVotes;
 }
 
 export function endDiscussion(state: GameState, playerId: string) {
