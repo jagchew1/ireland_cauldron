@@ -232,6 +232,36 @@ export function GameBoard({ state, onPlayCard, onUnplayCard, onClaimCard, onReso
         </div>
       </div>
       
+      {/* Game Progress Indicator */}
+      <div className="rounded-lg border border-slate-700 bg-slate-800 p-3">
+        <div className="flex items-center justify-between mb-2">
+          <div className="text-sm font-semibold text-slate-300">Game Progress</div>
+          <div className={`text-sm font-bold ${
+            state.centerDeck.cards.length <= 3 ? 'text-red-400 animate-pulse' :
+            state.centerDeck.cards.length <= 7 ? 'text-yellow-400' :
+            'text-green-400'
+          }`}>
+            {state.centerDeck.cards.length} / 16 cards remaining
+          </div>
+        </div>
+        <div className="w-full h-3 bg-slate-900 rounded-full overflow-hidden">
+          <div 
+            className={`h-full transition-all duration-500 ${
+              state.centerDeck.cards.length <= 3 ? 'bg-red-500' :
+              state.centerDeck.cards.length <= 7 ? 'bg-yellow-500' :
+              'bg-green-500'
+            }`}
+            style={{ width: `${(state.centerDeck.cards.length / 16) * 100}%` }}
+          />
+        </div>
+        <div className="mt-1 text-xs text-slate-400 text-center">
+          {state.centerDeck.cards.length === 0 ? 'Game Over!' :
+           state.centerDeck.cards.length <= 3 ? 'Final rounds approaching!' :
+           state.centerDeck.cards.length <= 7 ? 'Approaching endgame...' :
+           'Game in progress'}
+        </div>
+      </div>
+      
       {/* Player's Current Role */}
       {myRole && (
         <div className="rounded-lg border border-slate-700 bg-slate-800 p-4">
