@@ -122,7 +122,7 @@ export const GameState = z.object({
   centerDeck: CenterDeck,
   hands: z.record(z.string(), z.array(Card)),
   table: z.array(PlayedCard),
-  cardClaims: z.record(z.string(), z.string()).default({}), // cardId -> playerId mapping for claimed cards
+  cardClaims: z.record(z.string(), z.array(z.string())).default({}), // cardId -> array of playerIds (multiple players can claim same card)
   config: GameConfig,
   expiresAt: z.number().nullable(),
   pendingActions: z.array(PendingAction).default([]), // for storing pending player actions during resolution

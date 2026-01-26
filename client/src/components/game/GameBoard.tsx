@@ -487,8 +487,12 @@ export function GameBoard({ state, onPlayCard, onUnplayCard, onClaimCard, onReso
           <div className="flex flex-wrap gap-2">
             {shuffledTable.map((t, i) => {
               const cardId = t.cardId;
-              const claimedBy = cardId && state.cardClaims?.[cardId];
-              const claimerName = claimedBy ? state.players.find(p => p.id === claimedBy)?.name : undefined;
+              // Get all players who claimed this card
+              const claimerIds = cardId && state.cardClaims?.[cardId] ? state.cardClaims[cardId] : [];
+              const claimers = claimerIds
+                .map((pid: string) => state.players.find(p => p.id === pid)?.name)
+                .filter(Boolean);
+              const isClaimedByMe = cardId && claimerIds.includes(myId || '');
               const isClickable = state.phase === 'DAY' && cardId;
               
               return (
@@ -501,12 +505,12 @@ export function GameBoard({ state, onPlayCard, onUnplayCard, onClaimCard, onReso
                     className={`${
                       isClickable ? 'cursor-pointer hover:scale-105 transition-transform' : ''
                     } ${
-                      claimedBy ? 'ring-4 ring-blue-500' : ''
+                      isClaimedByMe ? 'ring-4 ring-blue-500' : claimers.length > 0 ? 'ring-4 ring-purple-500' : ''
                     }`}
                   />
-                  {claimerName && (
+                  {claimers.length > 0 && (
                     <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 whitespace-nowrap rounded bg-blue-600 px-2 py-1 text-xs text-white opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
-                      Claimed by {claimerName}
+                      Claimed by: {claimers.join(', ')}
                     </div>
                   )}
                 </div>

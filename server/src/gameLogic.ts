@@ -213,14 +213,40 @@ export function claimCard(state: GameState, playerId: string, cardId: string) {
   const cardOnTable = state.table.find(t => t.cardId === cardId);
   if (!cardOnTable) return;
   
-  // Toggle claim: if already claimed by this player, unclaim it; otherwise claim it
-  if (state.cardClaims[cardId] === playerId) {
-    delete state.cardClaims[cardId];
-    console.log(`Player ${playerId} unclaimed card ${cardId}`);
-  } else {
-    state.cardClaims[cardId] = playerId;
-    console.log(`Player ${playerId} claimed card ${cardId}`);
+  // Find if player has claimed any card
+  let currentlyClaimedCard: string | undefined;
+  for (const [cid, claimers] of Object.entries(state.cardClaims)) {
+    if (claimers.includes(playerId)) {
+      currentlyClaimedCard = cid;
+      break;
+    }
   }
+  
+  // If clicking the same card they already claimed, unclaim it
+  if (currentlyClaimedCard === cardId) {
+    state.cardClaims[cardId] = state.cardClaims[cardId].filter(pid => pid !== playerId);
+    if (state.cardClaims[cardId].length === 0) {
+      delete state.cardClaims[cardId];
+    }
+    console.log(`Player ${playerId} unclaimed card ${cardId}`);
+    return;
+  }
+  
+  // Remove previous claim if exists
+  if (currentlyClaimedCard) {
+    state.cardClaims[currentlyClaimedCard] = state.cardClaims[currentlyClaimedCard].filter(pid => pid !== playerId);
+    if (state.cardClaims[currentlyClaimedCard].length === 0) {
+      delete state.cardClaims[currentlyClaimedCard];
+    }
+    console.log(`Player ${playerId} removed previous claim on card ${currentlyClaimedCard}`);
+  }
+  
+  // Claim the new card (multiple players can claim the same card for bluffing)
+  if (!state.cardClaims[cardId]) {
+    state.cardClaims[cardId] = [];
+  }
+  state.cardClaims[cardId].push(playerId);
+  console.log(`Player ${playerId} claimed card ${cardId}`);
 }
 
 function getPlayedIngredients(state: GameState): Map<string, { count: number; playerIds: string[] }> {
