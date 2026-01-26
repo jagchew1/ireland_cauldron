@@ -3,7 +3,7 @@ import type { Express } from 'express';
 import { z } from 'zod';
 import { WS, RoomCreatePayload, RoomJoinPayload, GameActionPayload, ChatSendPayload } from '@irish-potions/shared';
 import { ensureRoom, getRoom } from './storage.js';
-import { startGame, playCard, revealDay, nextRound, shapeStateFor, processResolutionAction, hasPendingActions, endDiscussion } from './gameLogic.js';
+import { startGame, playCard, unplayCard, revealDay, nextRound, shapeStateFor, processResolutionAction, hasPendingActions, endDiscussion } from './gameLogic.js';
 
 export function initSockets(io: IOServer, _app: Express) {
   io.on('connection', (socket) => {
@@ -60,6 +60,9 @@ export function initSockets(io: IOServer, _app: Express) {
         }
         case 'play_card':
           playCard(s, playerId, res.data.cardId);
+          break;
+        case 'unplay_card':
+          unplayCard(s, playerId);
           break;
         case 'resolution_action':
           if (s.phase === 'DAY' && res.data.choice) {

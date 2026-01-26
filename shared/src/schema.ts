@@ -139,6 +139,7 @@ export const AssetList = z.object({
 
 // Action payloads
 export const ActionPlayCard = z.object({ type: z.literal('play_card'), cardId: z.string() });
+export const ActionUnplayCard = z.object({ type: z.literal('unplay_card') });
 export const ActionReady = z.object({ type: z.literal('ready'), ready: z.boolean() });
 export const ActionStart = z.object({ type: z.literal('start') });
 export const ActionResolution = z.object({ 
@@ -147,7 +148,8 @@ export const ActionResolution = z.object({
 });
 export const ActionEndDiscussion = z.object({ type: z.literal('end_discussion') });
 export const ActionPayloads = z.discriminatedUnion('type', [
-  ActionPlayCard, 
+  ActionPlayCard,
+  ActionUnplayCard,
   ActionReady, 
   ActionStart,
   ActionResolution,

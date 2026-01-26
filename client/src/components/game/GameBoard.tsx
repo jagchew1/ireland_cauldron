@@ -7,6 +7,7 @@ import React from 'react';
 type Props = {
   state: ShapedState;
   onPlayCard: (cardId: string) => void;
+  onUnplayCard: () => void;
   onResolutionChoice: (choice: 'keep' | 'discard' | 'confirm') => void;
   onEndDiscussion: () => void;
 };
@@ -37,7 +38,7 @@ function formatIngredientName(name: string): string {
     .replace(/Cailleachs/g, "Cailleach's");
 }
 
-export function GameBoard({ state, onPlayCard, onResolutionChoice, onEndDiscussion }: Props) {
+export function GameBoard({ state, onPlayCard, onUnplayCard, onResolutionChoice, onEndDiscussion }: Props) {
   const myId = state.currentPlayerId;
   const myHand = myId ? state.hands[myId] || [] : [];
   const hasPlayedCard = state.table.some(t => t.playerId === myId);
@@ -429,14 +430,22 @@ export function GameBoard({ state, onPlayCard, onResolutionChoice, onEndDiscussi
           <h2 className="mb-2 text-sm text-slate-400">Table</h2>
           <div className="flex flex-wrap gap-2">
             {shuffledTable.map((t, i) => (
-              <CardImage key={i} src={t.image} />
+              <CardImage key={i} src={t.image} cardName={t.cardName} />
             ))}
           </div>
         </div>
         <div className="col-span-2 md:col-span-3">
           <h2 className="mb-2 text-sm text-slate-400">Your Hand</h2>
           {hasPlayedCard && state.phase === 'NIGHT' && (
-            <div className="mb-2 text-sm text-green-400">✓ Card played - waiting for other players...</div>
+            <div className="mb-2 flex items-center gap-3">
+              <div className="text-sm text-green-400">✓ Card played - waiting for other players...</div>
+              <button
+                onClick={onUnplayCard}
+                className="rounded-md border border-slate-600 bg-slate-700 px-3 py-1 text-xs font-medium text-slate-300 hover:bg-slate-600 transition-colors"
+              >
+                Take Back
+              </button>
+            </div>
           )}
           
           {/* End Discussion Button */}

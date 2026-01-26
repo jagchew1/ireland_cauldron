@@ -85,8 +85,12 @@ export function loadHeroRoles(): Role[] {
 export function assignRoles(state: GameState) {
   const roles = loadHeroRoles();
   // basic ratio: floor(n/3) evil, rest good
+  // but always at least 2 evil players for 5+ player games
   const n = state.players.length;
-  const evilCount = Math.max(1, Math.floor(n / 3));
+  let evilCount = Math.max(1, Math.floor(n / 3));
+  if (n >= 5) {
+    evilCount = Math.max(2, evilCount);
+  }
   const goodCount = n - evilCount;
   const goodRoles = roles.filter((r) => r.team === 'GOOD');
   const evilRoles = roles.filter((r) => r.team === 'EVIL');
@@ -183,6 +187,22 @@ export function playCard(state: GameState, playerId: string, cardId: string) {
   if (state.table.length >= connectedPlayers) {
     startResolution(state);
   }
+}
+
+export function unplayCard(state: GameState, playerId: string) {
+  if (state.phase !== 'NIGHT') return;
+  
+  // Find the card on the table
+  const tableIndex = state.table.findIndex(t => t.playerId === playerId);
+  if (tableIndex === -1) return;
+  
+  // Remove the card from the table and return it to the player's hand
+  const [playedCard] = state.table.splice(tableIndex, 1);
+  const hand = state.hands[playerId];
+  if (hand) {
+    hand.push(playedCard.card);
+  }
+  console.log(`Player ${playerId} took back their card`);
 }
 
 function getPlayedIngredients(state: GameState): Map<string, { count: number; playerIds: string[] }> {
@@ -729,6 +749,7 @@ export function shapeStateFor(state: GameState, playerId: string) {
     revealed: t.revealed,
     image: t.revealed ? findCardImage(state, t.cardId) : undefined,
     cardId: t.revealed ? t.cardId : undefined,
+    cardName: t.revealed && t.card.kind === 'INGREDIENT' ? t.card.name : undefined,
   }));
   
   // Show center deck - if game ended, reveal all cards, otherwise hide them
