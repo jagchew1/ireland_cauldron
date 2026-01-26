@@ -62,7 +62,7 @@ export const PlayedCard = z.object({
 
 export const GameConfig = z.object({
   nightSeconds: z.number().default(30),
-  daySeconds: z.number().default(15),
+  daySeconds: z.number().default(30),
   handSize: z.number().default(3),
 });
 

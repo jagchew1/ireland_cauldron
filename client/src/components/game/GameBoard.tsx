@@ -2,6 +2,7 @@ import type { ShapedState } from '@irish-potions/shared';
 import { CardImage } from './CardImage';
 import { ResolutionModal } from './ResolutionModal';
 import { HelpButton } from './HelpButton';
+import { CountdownTimer } from './CountdownTimer';
 import React from 'react';
 
 type Props = {
@@ -49,6 +50,29 @@ export function GameBoard({ state, onPlayCard, onUnplayCard, onResolutionChoice,
   
   // Filter for event log
   const [logFilter, setLogFilter] = React.useState<'current' | 'all'>('current');
+  
+  // Track timer expiration for flashing effects
+  const [isTimeExpired, setIsTimeExpired] = React.useState(false);
+  
+  React.useEffect(() => {
+    if (!state.expiresAt) {
+      setIsTimeExpired(false);
+      return;
+    }
+    
+    const checkExpiration = () => {
+      const now = Date.now();
+      if (now > state.expiresAt!) {
+        setIsTimeExpired(true);
+      } else {
+        setIsTimeExpired(false);
+      }
+    };
+    
+    checkExpiration();
+    const interval = setInterval(checkExpiration, 500);
+    return () => clearInterval(interval);
+  }, [state.expiresAt]);
   
   // Shuffle table cards for display (but keep original order in state)
   const shuffledTable = React.useMemo(() => {
@@ -201,6 +225,7 @@ export function GameBoard({ state, onPlayCard, onUnplayCard, onResolutionChoice,
       <div className="flex items-center justify-between">
         <div>Room {state.room.code}</div>
         <div className="flex items-center gap-4">
+          <CountdownTimer expiresAt={state.expiresAt} phase={state.phase} />
           <div>Phase: {state.phase} | Round {state.round}</div>
           <HelpButton playerCount={state.players.length} />
         </div>
@@ -456,7 +481,11 @@ export function GameBoard({ state, onPlayCard, onUnplayCard, onResolutionChoice,
               ) : (
                 <button
                   onClick={onEndDiscussion}
-                  className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 transition-colors"
+                  className={`rounded-md px-4 py-2 text-sm font-medium text-white transition-colors ${
+                    isTimeExpired && state.phase === 'DAY'
+                      ? 'bg-blue-600 hover:bg-blue-700 animate-pulse ring-2 ring-yellow-500'
+                      : 'bg-blue-600 hover:bg-blue-700'
+                  }`}
                 >
                   End Discussion
                 </button>
@@ -478,7 +507,13 @@ export function GameBoard({ state, onPlayCard, onUnplayCard, onResolutionChoice,
                   cardName={c.name}
                   playerCount={state.players.length}
                   onClick={() => !hasPlayedCard && state.phase === 'NIGHT' && onPlayCard(c.id)}
-                  className={hasPlayedCard || state.phase !== 'NIGHT' ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:scale-105 transition-transform'}
+                  className={`${
+                    hasPlayedCard || state.phase !== 'NIGHT' 
+                      ? 'opacity-50 cursor-not-allowed' 
+                      : isTimeExpired && !hasPlayedCard && state.phase === 'NIGHT'
+                      ? 'cursor-pointer hover:scale-105 transition-transform animate-pulse ring-2 ring-yellow-500'
+                      : 'cursor-pointer hover:scale-105 transition-transform'
+                  }`}
                 />
               ))}
             </div>
