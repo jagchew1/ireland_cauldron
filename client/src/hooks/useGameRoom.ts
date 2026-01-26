@@ -39,6 +39,10 @@ export function useGameRoom(roomCode: string | null) {
     socketRef.current.emit(WS.GAME_ACTION, { type: 'unplay_card' });
   }, []);
 
+  const claimCard = useCallback((cardId: string) => {
+    socketRef.current.emit(WS.GAME_ACTION, { type: 'claim_card', cardId });
+  }, []);
+
   const resolutionChoice = useCallback((choice: 'keep' | 'discard' | 'confirm') => {
     socketRef.current.emit(WS.GAME_ACTION, { type: 'resolution_action', choice });
   }, []);
@@ -51,5 +55,5 @@ export function useGameRoom(roomCode: string | null) {
     socketRef.current.emit(WS.CHAT_SEND, { roomCode: room, message });
   }, []);
 
-  return { state, createRoom, joinRoom, start, ready, playCard, unplayCard, resolutionChoice, endDiscussion, sendChat };
+  return { state, createRoom, joinRoom, start, ready, playCard, unplayCard, claimCard, resolutionChoice, endDiscussion, sendChat };
 }

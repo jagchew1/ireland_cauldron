@@ -154,6 +154,7 @@ export function startGame(state: GameState) {
   state.phase = 'NIGHT';
   state.round = 1;
   state.table = [];
+  state.cardClaims = {};
   state.pendingActions = [];
   state.expiresAt = Date.now() + state.config.nightSeconds * 1000;
 }
@@ -203,6 +204,23 @@ export function unplayCard(state: GameState, playerId: string) {
     hand.push(playedCard.card);
   }
   console.log(`Player ${playerId} took back their card`);
+}
+
+export function claimCard(state: GameState, playerId: string, cardId: string) {
+  if (state.phase !== 'DAY') return;
+  
+  // Find the card on the table
+  const cardOnTable = state.table.find(t => t.cardId === cardId);
+  if (!cardOnTable) return;
+  
+  // Toggle claim: if already claimed by this player, unclaim it; otherwise claim it
+  if (state.cardClaims[cardId] === playerId) {
+    delete state.cardClaims[cardId];
+    console.log(`Player ${playerId} unclaimed card ${cardId}`);
+  } else {
+    state.cardClaims[cardId] = playerId;
+    console.log(`Player ${playerId} claimed card ${cardId}`);
+  }
 }
 
 function getPlayedIngredients(state: GameState): Map<string, { count: number; playerIds: string[] }> {
@@ -732,6 +750,7 @@ export function nextRound(state: GameState) {
   console.log('=== NEXT ROUND ===');
   // Clear table from previous round (cards already in discard from revealDay)
   state.table = [];
+  state.cardClaims = {};
   // Advance to night phase
   state.phase = 'NIGHT';
   state.round += 1;
@@ -752,7 +771,7 @@ export function shapeStateFor(state: GameState, playerId: string) {
     playerId: t.playerId,
     revealed: t.revealed,
     image: t.revealed ? findCardImage(state, t.cardId) : undefined,
-    cardId: t.revealed ? t.cardId : undefined,
+    cardId: t.cardId, // Always include cardId for claiming purposes
     cardName: t.revealed && t.card.kind === 'INGREDIENT' ? t.card.name : undefined,
   }));
   

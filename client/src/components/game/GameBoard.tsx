@@ -9,6 +9,7 @@ type Props = {
   state: ShapedState;
   onPlayCard: (cardId: string) => void;
   onUnplayCard: () => void;
+  onClaimCard: (cardId: string) => void;
   onResolutionChoice: (choice: 'keep' | 'discard' | 'confirm') => void;
   onEndDiscussion: () => void;
 };
@@ -39,7 +40,7 @@ function formatIngredientName(name: string): string {
     .replace(/Cailleachs/g, "Cailleach's");
 }
 
-export function GameBoard({ state, onPlayCard, onUnplayCard, onResolutionChoice, onEndDiscussion }: Props) {
+export function GameBoard({ state, onPlayCard, onUnplayCard, onClaimCard, onResolutionChoice, onEndDiscussion }: Props) {
   const myId = state.currentPlayerId;
   const myHand = myId ? state.hands[myId] || [] : [];
   const hasPlayedCard = state.table.some(t => t.playerId === myId);
@@ -454,13 +455,55 @@ export function GameBoard({ state, onPlayCard, onUnplayCard, onResolutionChoice,
         <div className="col-span-2 md:col-span-3">
           <h2 className="mb-2 text-sm text-slate-400">Table</h2>
           <div className="flex flex-wrap gap-2">
-            {shuffledTable.map((t, i) => (
-              <CardImage key={i} src={t.image} cardName={t.cardName} playerCount={state.players.length} />
-            ))}
+            {shuffledTable.map((t, i) => {
+              const cardId = t.cardId;
+              const claimedBy = cardId && state.cardClaims?.[cardId];
+              const claimerName = claimedBy ? state.players.find(p => p.id === claimedBy)?.name : undefined;
+              const isClickable = state.phase === 'DAY' && cardId;
+              
+              return (
+                <div key={i} className="relative group">
+                  <CardImage 
+                    src={t.image} 
+                    cardName={t.cardName} 
+                    playerCount={state.players.length}
+                    onClick={isClickable ? () => onClaimCard(cardId) : undefined}
+                    className={`${
+                      isClickable ? 'cursor-pointer hover:scale-105 transition-transform' : ''
+                    } ${
+                      claimedBy ? 'ring-4 ring-blue-500' : ''
+                    }`}
+                  />
+                  {claimerName && (
+                    <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 whitespace-nowrap rounded bg-blue-600 px-2 py-1 text-xs text-white opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
+                      Claimed by {claimerName}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         </div>
         <div className="col-span-2 md:col-span-3">
           <h2 className="mb-2 text-sm text-slate-400">Your Hand</h2>
+          
+          {/* Player Status during Night Phase */}
+          {state.phase === 'NIGHT' && (
+            <div className="mb-3 rounded-lg border border-slate-700 bg-slate-800 p-3">
+              <div className="mb-2 text-xs font-semibold text-slate-400">Player Status:</div>
+              <div className="flex flex-wrap gap-x-4 gap-y-1">
+                {state.players.map(player => {
+                  const hasPlayed = state.table.some(t => t.playerId === player.id);
+                  return (
+                    <div key={player.id} className={`text-sm ${hasPlayed ? 'text-green-400' : 'text-slate-500'}`}>
+                      {hasPlayed ? '✓' : '⏳'} {player.name}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+          
           {hasPlayedCard && state.phase === 'NIGHT' && (
             <div className="mb-2 flex items-center gap-3">
               <div className="text-sm text-green-400">✓ Card played - waiting for other players...</div>

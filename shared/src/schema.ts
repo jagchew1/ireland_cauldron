@@ -122,6 +122,7 @@ export const GameState = z.object({
   centerDeck: CenterDeck,
   hands: z.record(z.string(), z.array(Card)),
   table: z.array(PlayedCard),
+  cardClaims: z.record(z.string(), z.string()).default({}), // cardId -> playerId mapping for claimed cards
   config: GameConfig,
   expiresAt: z.number().nullable(),
   pendingActions: z.array(PendingAction).default([]), // for storing pending player actions during resolution
@@ -140,6 +141,7 @@ export const AssetList = z.object({
 // Action payloads
 export const ActionPlayCard = z.object({ type: z.literal('play_card'), cardId: z.string() });
 export const ActionUnplayCard = z.object({ type: z.literal('unplay_card') });
+export const ActionClaimCard = z.object({ type: z.literal('claim_card'), cardId: z.string() });
 export const ActionReady = z.object({ type: z.literal('ready'), ready: z.boolean() });
 export const ActionStart = z.object({ type: z.literal('start') });
 export const ActionResolution = z.object({ 
@@ -150,6 +152,7 @@ export const ActionEndDiscussion = z.object({ type: z.literal('end_discussion') 
 export const ActionPayloads = z.discriminatedUnion('type', [
   ActionPlayCard,
   ActionUnplayCard,
+  ActionClaimCard,
   ActionReady, 
   ActionStart,
   ActionResolution,
