@@ -17,7 +17,7 @@ export const CARD_EFFECTS = {
   "faerie_thistle": {
     name: "Faerie Thistle",
     primary: (playerCount?: number) => {
-      const threshold = playerCount ? Math.floor((playerCount - 1) / 2) : 3;
+      const threshold = playerCount ? Math.max(2, Math.floor((playerCount - 1) / 2)) : 3;
       return `Reveal top 2 cards from deck. If >${threshold} Faeries played: discard milk, shuffle blood back. If ≤${threshold} played: discard blood, shuffle milk back.`;
     },
     secondary: "Discard the top card from the deck without revealing it"

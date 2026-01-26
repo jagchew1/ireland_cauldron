@@ -559,9 +559,9 @@ function applyCeolPrimary(state: GameState, playerIds: string[]) {
 function applyFaeriePrimary(state: GameState, count: number) {
   if (state.centerDeck.cards.length < 2) return;
   
-  // Calculate dynamic threshold: floor((playerCount - 1) / 2)
+  // Calculate dynamic threshold: floor((playerCount - 1) / 2), minimum of 2
   const playerCount = state.players.length;
-  const threshold = Math.floor((playerCount - 1) / 2);
+  const threshold = Math.max(2, Math.floor((playerCount - 1) / 2));
   
   const card1 = state.centerDeck.cards.pop()!;
   const card2 = state.centerDeck.cards.pop()!;

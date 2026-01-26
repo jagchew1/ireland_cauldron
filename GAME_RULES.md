@@ -100,10 +100,15 @@ Each player who played this ingredient:
 
 #### Faerie Thistle
 Draw **two cards** from the top of the center deck and reveal them publicly:
-- **If more than 3 Faerie Thistles were played:**
+- **Threshold:** Dynamic based on player count
+  - **5-6 players:** More than **2** Faerie Thistles
+  - **7-8 players:** More than **3** Faerie Thistles
+  - **9-10 players:** More than **4** Faerie Thistles
+  - Formula: `floor((playerCount - 1) / 2)`
+- **If more Faerie Thistles than threshold:**
   - Discard any **Milk** cards
   - Shuffle any **Blood** cards back into the deck
-- **If 3 or fewer Faerie Thistles were played:**
+- **If at or below threshold:**
   - Discard any **Blood** cards
   - Shuffle any **Milk** cards back into the deck
 
