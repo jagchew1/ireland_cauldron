@@ -1,5 +1,6 @@
 import type { ShapedState, PendingAction } from '@irish-potions/shared';
 import { Button } from '../ui/button';
+import { useState } from 'react';
 
 type Props = {
   state: ShapedState;
@@ -20,16 +21,44 @@ function formatRoleName(name: string): string {
 }
 
 export function ResolutionModal({ state, myPendingAction, onChoice, onYewTarget }: Props) {
+  const [isMinimized, setIsMinimized] = useState(false);
   const hasPendingActions = state.pendingActions && state.pendingActions.length > 0;
   
   if (!hasPendingActions) return null;
   
   if (!myPendingAction) {
-    // This player has no action, but others do
+    // This player has no action, but others do - show minimizable waiting indicator
+    if (isMinimized) {
+      return (
+        <div className="fixed bottom-4 right-4 z-50">
+          <button
+            onClick={() => setIsMinimized(false)}
+            className="rounded-lg border border-slate-600 bg-slate-800 px-4 py-3 shadow-xl hover:bg-slate-750 transition-colors flex items-center gap-2"
+          >
+            <div className="animate-pulse h-2 w-2 rounded-full bg-yellow-400"></div>
+            <div className="text-sm text-slate-200">
+              Waiting ({state.pendingActions.length})
+            </div>
+          </button>
+        </div>
+      );
+    }
+    
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70">
         <div className="rounded-lg border border-slate-700 bg-slate-900 p-6 shadow-2xl max-w-md">
-          <h2 className="mb-4 text-xl font-bold text-slate-200">Waiting...</h2>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-bold text-slate-200">Waiting...</h2>
+            <button
+              onClick={() => setIsMinimized(true)}
+              className="text-slate-400 hover:text-slate-200 transition-colors"
+              title="Minimize"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+          </div>
           <p className="text-slate-300">
             Other players are making their choices. Please wait.
           </p>
