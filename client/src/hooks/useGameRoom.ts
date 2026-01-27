@@ -11,8 +11,8 @@ export function useGameRoom(roomCode: string | null) {
     const onState = (payload: ShapedState) => {
       setState(payload);
       // Store our player ID in localStorage for reconnection
-      if (payload.currentPlayerId) {
-        localStorage.setItem(`playerId_${payload.room}`, payload.currentPlayerId);
+      if (payload.currentPlayerId && payload.room?.code) {
+        localStorage.setItem(`playerId_${payload.room.code}`, payload.currentPlayerId);
       }
     };
     s.on(WS.GAME_STATE, onState);
