@@ -2,10 +2,45 @@ import type { Server as IOServer, Socket } from 'socket.io';
 import type { Express } from 'express';
 import { z } from 'zod';
 import { WS, RoomCreatePayload, RoomJoinPayload, GameActionPayload, ChatSendPayload } from '@irish-potions/shared';
-import { ensureRoom, getRoom } from './storage.js';
+import { ensureRoom, getRoom, getAllRooms } from './storage.js';
 import { startGame, playCard, unplayCard, claimCard, revealDay, nextRound, shapeStateFor, processResolutionAction, processYewTarget, hasPendingActions, endDiscussion, forceNightPhaseEnd } from './gameLogic.js';
 
+// Helper function to check and handle expired timers
+function checkTimerExpiry(io: IOServer, roomCode: string, state: any) {
+  if (state.expiresAt && Date.now() > state.expiresAt) {
+    if (state.phase === 'NIGHT') {
+      // Force all non-submitted players to play a random card, then start resolution
+      forceNightPhaseEnd(state);
+      broadcastState(io, roomCode);
+      return true;
+    }
+    else if (state.phase === 'RESOLUTION') {
+      // Only advance if no pending actions
+      if (!hasPendingActions(state)) {
+        nextRound(state);
+        broadcastState(io, roomCode);
+        return true;
+      }
+    }
+    else if (state.phase === 'DAY') {
+      // When day timer expires, force advance to night regardless of player readiness
+      nextRound(state);
+      broadcastState(io, roomCode);
+      return true;
+    }
+  }
+  return false;
+}
+
 export function initSockets(io: IOServer, _app: Express) {
+  // Set up interval to check for expired timers every second
+  setInterval(() => {
+    const rooms = getAllRooms();
+    for (const room of rooms) {
+      checkTimerExpiry(io, room.state.room.code, room.state);
+    }
+  }, 1000); // Check every second
+
   io.on('connection', (socket) => {
     let currentRoom: string | null = null;
     let playerId: string | null = null;
@@ -89,23 +124,6 @@ export function initSockets(io: IOServer, _app: Express) {
         case 'end_discussion':
           endDiscussion(s, playerId);
           break;
-      }
-      // Handle auto timeouts
-      if (s.expiresAt && Date.now() > s.expiresAt) {
-        if (s.phase === 'NIGHT') {
-          // Force all non-submitted players to play a random card, then start resolution
-          forceNightPhaseEnd(s);
-        }
-        else if (s.phase === 'RESOLUTION') {
-          // Only advance if no pending actions
-          if (!hasPendingActions(s)) {
-            nextRound(s);
-          }
-        }
-        else if (s.phase === 'DAY') {
-          // When day timer expires, force advance to night regardless of player readiness
-          nextRound(s);
-        }
       }
       broadcastState(io, currentRoom);
     });

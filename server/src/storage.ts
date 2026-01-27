@@ -55,3 +55,7 @@ export function getRoomsSummary() {
     maxPlayers: r.state.room.maxPlayers,
   }));
 }
+
+export function getAllRooms() {
+  return Array.from(rooms.values());
+}

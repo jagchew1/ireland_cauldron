@@ -9,14 +9,25 @@
 
 ## Root Cause
 
-In [websocket.ts](server/src/websocket.ts), when the night phase timer expired, it called `revealDay(s)` which:
-- Changed phase from NIGHT → DAY directly
-- Completely skipped the RESOLUTION phase
-- Never revealed or processed any submitted cards
+In [websocket.ts](server/src/websocket.ts), there were two problems:
+
+1. **Wrong Function Call**: When the night phase timer expired, it called `revealDay(s)` which:
+   - Changed phase from NIGHT → DAY directly
+   - Completely skipped the RESOLUTION phase
+   - Never revealed or processed any submitted cards
+
+2. **Timer Only Checked on Actions**: The timer expiry check was inside the `GAME_ACTION` handler, so it only ran when players performed actions. If no players acted after the timer expired, the phase would never advance.
 
 ```typescript
 // OLD BUGGY CODE:
-if (s.phase === 'NIGHT') revealDay(s);
+socket.on(WS.GAME_ACTION, (raw) => {
+  // ... handle action ...
+  
+  // Timer check only runs when action occurs!
+  if (s.expiresAt && Date.now() > s.expiresAt) {
+    if (s.phase === 'NIGHT') revealDay(s); // Wrong function!
+  }
+});
 ```
 
 This bypassed the entire resolution flow that:
@@ -76,18 +87,35 @@ export function forceNightPhaseEnd(state: GameState) {
 - 🔍 Server logs show which specific cards were auto-played
 - ⚖️ Respects poisoned and disconnected player states
 
-#### 3. Updated timer handler in websocket
-**File:** [server/src/websocket.ts](server/src/websocket.ts#L93-L96)
+#### 3. Added global timer check mechanism
+**Files:** [websocket.ts](server/src/websocket.ts#L8-L31), [storage.ts](server/src/storage.ts#L59-L61)
 
-Changed night phase timeout to call the new function:
+**New interval-based timer check:**
+- Set up `setInterval()` that runs every **1 second**
+- Checks all active game rooms for expired timers
+- Immediately triggers phase transitions when timers expire
+- Works independently of player actions
 
 ```typescript
-// NEW CORRECT CODE:
-if (s.phase === 'NIGHT') {
-  // Force all non-submitted players to play a random card, then start resolution
-  forceNightPhaseEnd(s);
-}
+// Set up interval to check for expired timers every second
+setInterval(() => {
+  const rooms = getAllRooms();
+  for (const room of rooms) {
+    checkTimerExpiry(io, room.state.room.code, room.state);
+  }
+}, 1000); // Check every second
 ```
+
+**Helper function** `checkTimerExpiry()`:
+- Checks if `expiresAt` has passed
+- Handles all three phases (NIGHT, RESOLUTION, DAY)
+- Broadcasts state updates automatically
+- Removed duplicate check from action handler
+
+#### 4. Updated timer handler in websocket
+**File:** [websocket.ts](server/src/websocket.ts#L95-L98)
+
+Removed the old timer check from the action handler since it's now handled by the interval.
 
 ## Expected Behavior After Fix
 
@@ -131,6 +159,8 @@ This message appears:
 - [ ] Start a 5-player game
 - [ ] Have 4 players submit cards
 - [ ] Wait for timer to expire (30 seconds by default)
+- [ ] **DO NOT take any actions after timer expires**
+- [ ] Verify: **Timer triggers automatically within 1 second** of expiry
 - [ ] Verify: Server logs show "FORCING NIGHT PHASE END"
 - [ ] Verify: Server logs show auto-play for the missing player
 - [ ] Verify: **All players see notification in Resolution Log** (e.g., "⏰ Timer expired! Random cards were played for: PlayerName")
@@ -170,9 +200,18 @@ This message appears:
 - [ ] Start a 5-player game
 - [ ] No players submit any cards
 - [ ] Wait for timer to expire
+- [ ] **Verify: Automatic transition happens without any player action**
 - [ ] Verify: All 5 players have random cards auto-played
 - [ ] Verify: Resolution processes 5 random cards
 - [ ] Verify: Game continues normally
+
+### Test Case 7: Timer Check Independence (Critical)
+- [ ] Start a 5-player game
+- [ ] Have 4 players submit cards
+- [ ] Wait for timer to expire
+- [ ] **DO NOT perform any actions** (no clicks, no card plays)
+- [ ] Verify: Phase advances automatically within 1 second
+- [ ] Verify: Game does NOT require player action to trigger timer check
 
 ## Monitoring
 
@@ -196,7 +235,8 @@ Table contents: [...]
 
 If issues occur, revert these commits:
 1. `gameLogic.ts` - Remove `export` from `startResolution`, delete `forceNightPhaseEnd` function
-2. `websocket.ts` - Change back to `if (s.phase === 'NIGHT') revealDay(s);`
+2. `websocket.ts` - Remove interval and `checkTimerExpiry` function, restore old timer check in action handler
+3. `storage.ts` - Remove `getAllRooms` export
 
 ## Additional Notes
 
