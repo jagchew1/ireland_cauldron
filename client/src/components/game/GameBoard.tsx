@@ -48,6 +48,9 @@ export function GameBoard({ state, onPlayCard, onUnplayCard, onClaimCard, onReso
   const myHand = myId ? state.hands[myId] || [] : [];
   const hasPlayedCard = state.table.some(t => t.playerId === myId);
   
+  // Expanded deck modal
+  const [expandedDeck, setExpandedDeck] = React.useState<'center' | 'discard' | null>(null);
+  
   // Drag and drop state
   const [draggedCardId, setDraggedCardId] = React.useState<string | null>(null);
   const [isDraggingOver, setIsDraggingOver] = React.useState(false);
@@ -278,37 +281,30 @@ export function GameBoard({ state, onPlayCard, onUnplayCard, onClaimCard, onReso
             <div className="flex gap-4 overflow-x-auto pb-2">
               {/* Blood/Milk Center Deck */}
               <div className="flex-shrink-0">
-                <div className="flex flex-col items-center gap-1 relative group/deck">
-                  <div className="h-32 w-24 rounded-md border-2 border-purple-600 bg-slate-800 flex items-center justify-center">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setExpandedDeck('center');
+                  }}
+                  className="flex flex-col items-center gap-1 group/deck cursor-pointer hover:scale-105 transition-transform"
+                >
+                  <div className="h-32 w-24 rounded-md border-2 border-purple-600 bg-slate-800 flex items-center justify-center relative">
                     <div className="text-center">
                       <div className="text-xl font-bold text-purple-400">{state.centerDeck.cards.length}</div>
                       <div className="text-xs text-slate-400">Cards</div>
                     </div>
+                    {(deckCounts.MILK > 0 || deckCounts.BLOOD > 0) && (
+                      <div className="absolute top-1 right-1 h-2 w-2 rounded-full bg-blue-400 animate-pulse" title="You have knowledge"></div>
+                    )}
                   </div>
                   <div className="text-xs text-slate-400">Blood/Milk</div>
-                  
-                  {/* Blood/Milk Tooltip */}
-                  <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover/deck:block z-10 w-48 rounded-lg border border-slate-700 bg-slate-950 p-3 shadow-xl">
-                    <div className="space-y-1 text-xs">
-                      <div className="text-slate-400 font-semibold">Started with:</div>
-                      <div className="text-green-400">• 8 MILK</div>
-                      <div className="text-red-400">• 8 BLOOD</div>
-                      {(deckCounts.MILK > 0 || deckCounts.BLOOD > 0) && (
-                        <>
-                          <div className="text-slate-400 font-semibold mt-2">You know:</div>
-                          {deckCounts.MILK > 0 && <div className="text-green-400">• MILK ({deckCounts.MILK})</div>}
-                          {deckCounts.BLOOD > 0 && <div className="text-red-400">• BLOOD ({deckCounts.BLOOD})</div>}
-                        </>
-                      )}
-                    </div>
-                    <div className="absolute left-1/2 top-full h-0 w-0 -translate-x-1/2 border-6 border-transparent border-t-slate-950"></div>
-                  </div>
-                </div>
+                  <div className="text-xs text-slate-500 opacity-0 group-hover/deck:opacity-100 transition-opacity">Click for details</div>
+                </button>
               </div>
               
               {/* Ingredient Deck */}
               <div className="flex-shrink-0">
-                <div className="flex flex-col items-center gap-1 relative group/deck">
+                <div className="flex flex-col items-center gap-1">
                   <div className="h-32 w-24 rounded-md border-2 border-green-600 bg-slate-800 flex items-center justify-center">
                     <div className="text-center">
                       <div className="text-xl font-bold text-green-400">{state.deck.drawPile.length + state.deck.discardPile.length}</div>
@@ -316,17 +312,6 @@ export function GameBoard({ state, onPlayCard, onUnplayCard, onClaimCard, onReso
                     </div>
                   </div>
                   <div className="text-xs text-slate-400">Ingredients</div>
-                  
-                  {/* Ingredient Tooltip */}
-                  <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover/deck:block z-10 w-56 rounded-lg border border-slate-700 bg-slate-950 p-3 shadow-xl max-h-64 overflow-y-auto">
-                    <div className="text-xs">
-                      <div className="text-slate-400 font-semibold mb-1">10 of each:</div>
-                      {Array.from(new Set([...state.deck.drawPile, ...state.deck.discardPile].map(c => c.name))).sort().map(name => (
-                        <div key={name} className="text-slate-300">• {formatIngredientName(name)}</div>
-                      ))}
-                    </div>
-                    <div className="absolute left-1/2 top-full h-0 w-0 -translate-x-1/2 border-6 border-transparent border-t-slate-950"></div>
-                  </div>
                 </div>
               </div>
               
@@ -351,27 +336,25 @@ export function GameBoard({ state, onPlayCard, onUnplayCard, onClaimCard, onReso
               {/* Discard Pile */}
               {state.centerDeck.discarded.length > 0 && (
                 <div className="flex-shrink-0">
-                  <div className="flex flex-col items-center gap-1 relative group/deck">
-                    <div className="h-32 w-24 rounded-md border-2 border-slate-600 bg-slate-800 flex items-center justify-center">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setExpandedDeck('discard');
+                    }}
+                    className="flex flex-col items-center gap-1 group/deck cursor-pointer hover:scale-105 transition-transform"
+                  >
+                    <div className="h-32 w-24 rounded-md border-2 border-slate-600 bg-slate-800 flex items-center justify-center relative">
                       <div className="text-center">
                         <div className="text-xl font-bold text-slate-400">{state.centerDeck.discarded.length}</div>
                         <div className="text-xs text-slate-500">Discarded</div>
                       </div>
+                      {(discardCounts.MILK > 0 || discardCounts.BLOOD > 0) && (
+                        <div className="absolute top-1 right-1 h-2 w-2 rounded-full bg-blue-400 animate-pulse" title="You have knowledge"></div>
+                      )}
                     </div>
                     <div className="text-xs text-slate-400">Discard</div>
-                    
-                    {/* Discard Tooltip */}
-                    {(discardCounts.MILK > 0 || discardCounts.BLOOD > 0) && (
-                      <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover/deck:block z-10 w-48 rounded-lg border border-slate-700 bg-slate-950 p-3 shadow-xl">
-                        <div className="space-y-1 text-xs">
-                          <div className="text-slate-400 font-semibold">You know:</div>
-                          {discardCounts.MILK > 0 && <div className="text-green-400">• MILK ({discardCounts.MILK})</div>}
-                          {discardCounts.BLOOD > 0 && <div className="text-red-400">• BLOOD ({discardCounts.BLOOD})</div>}
-                        </div>
-                        <div className="absolute left-1/2 top-full h-0 w-0 -translate-x-1/2 border-6 border-transparent border-t-slate-950"></div>
-                      </div>
-                    )}
-                  </div>
+                    <div className="text-xs text-slate-500 opacity-0 group-hover/deck:opacity-100 transition-opacity">Click for details</div>
+                  </button>
                 </div>
               )}
             </div>
@@ -703,6 +686,96 @@ export function GameBoard({ state, onPlayCard, onUnplayCard, onClaimCard, onReso
           </div>
         </div>
       </div>
+      
+      {/* Expanded Deck Modal */}
+      {expandedDeck && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70" onClick={() => setExpandedDeck(null)}>
+          <div className="rounded-lg border border-slate-700 bg-slate-900 p-6 shadow-2xl max-w-md w-full mx-4" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-bold text-slate-200">
+                {expandedDeck === 'center' ? 'Blood/Milk Deck' : 'Discard Pile'}
+              </h2>
+              <button
+                onClick={() => setExpandedDeck(null)}
+                className="text-slate-400 hover:text-slate-200 transition-colors"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            
+            {expandedDeck === 'center' && (
+              <div className="space-y-4">
+                <div>
+                  <div className="text-sm font-semibold text-slate-300 mb-2">Current Status</div>
+                  <div className="text-lg text-purple-400 font-bold">{state.centerDeck.cards.length} cards hidden</div>
+                  <div className="text-sm text-slate-400 mt-1">{state.centerDeck.revealed.length} cards revealed</div>
+                </div>
+                
+                <div className="border-t border-slate-700 pt-4">
+                  <div className="text-sm font-semibold text-slate-300 mb-2">Initial Composition</div>
+                  <div className="space-y-1 text-sm">
+                    <div className="text-green-400">• 8 MILK cards</div>
+                    <div className="text-red-400">• 8 BLOOD cards</div>
+                  </div>
+                </div>
+                
+                {(deckCounts.MILK > 0 || deckCounts.BLOOD > 0) && (
+                  <div className="border-t border-slate-700 pt-4">
+                    <div className="text-sm font-semibold text-blue-400 mb-2">Your Knowledge</div>
+                    <div className="text-sm text-slate-300 mb-2">You know these cards are in the deck:</div>
+                    <div className="space-y-1 text-sm">
+                      {deckCounts.MILK > 0 && (
+                        <div className="flex items-center gap-2">
+                          <div className="text-green-400 font-bold">MILK</div>
+                          <div className="text-slate-400">× {deckCounts.MILK}</div>
+                        </div>
+                      )}
+                      {deckCounts.BLOOD > 0 && (
+                        <div className="flex items-center gap-2">
+                          <div className="text-red-400 font-bold">BLOOD</div>
+                          <div className="text-slate-400">× {deckCounts.BLOOD}</div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+            
+            {expandedDeck === 'discard' && (
+              <div className="space-y-4">
+                <div>
+                  <div className="text-sm font-semibold text-slate-300 mb-2">Discarded Cards</div>
+                  <div className="text-lg text-slate-400 font-bold">{state.centerDeck.discarded.length} cards permanently removed</div>
+                </div>
+                
+                {(discardCounts.MILK > 0 || discardCounts.BLOOD > 0) && (
+                  <div className="border-t border-slate-700 pt-4">
+                    <div className="text-sm font-semibold text-blue-400 mb-2">Your Knowledge</div>
+                    <div className="text-sm text-slate-300 mb-2">You know these cards were discarded:</div>
+                    <div className="space-y-1 text-sm">
+                      {discardCounts.MILK > 0 && (
+                        <div className="flex items-center gap-2">
+                          <div className="text-green-400 font-bold">MILK</div>
+                          <div className="text-slate-400">× {discardCounts.MILK}</div>
+                        </div>
+                      )}
+                      {discardCounts.BLOOD > 0 && (
+                        <div className="flex items-center gap-2">
+                          <div className="text-red-400 font-bold">BLOOD</div>
+                          <div className="text-slate-400">× {discardCounts.BLOOD}</div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
