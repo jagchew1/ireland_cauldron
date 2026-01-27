@@ -305,14 +305,15 @@ function determinePrimaryAndSecondary(
   if (remaining.length === 0) return { primary, secondary: [] };
   
   const secondCount = remaining[0][1].count;
-  const secondary = remaining.filter((e) => e[1].count === secondCount).map((e) => e[0]);
+  const secondaryTied = remaining.filter((e) => e[1].count === secondCount).map((e) => e[0]);
   
-  // If there's a tie for secondary, ignore those
-  if (secondary.length > 1) {
-    return { primary, secondary: [] };
+  // If there's a tie for secondary and we have a primary, randomly pick one
+  if (secondaryTied.length > 1) {
+    const randomIndex = Math.floor(Math.random() * secondaryTied.length);
+    return { primary, secondary: [secondaryTied[randomIndex]] };
   }
   
-  return { primary, secondary };
+  return { primary, secondary: secondaryTied };
 }
 
 function startResolution(state: GameState) {
