@@ -178,6 +178,45 @@ export function dealToHandSize(state: GameState) {
   }
 }
 
+// Force all players who haven't submitted to auto-play a random card
+export function forceNightPhaseEnd(state: GameState) {
+  if (state.phase !== 'NIGHT') return;
+  
+  console.log('=== FORCING NIGHT PHASE END (TIMER EXPIRED) ===');
+  
+  // Find all connected, non-poisoned players who haven't played
+  const playersWhoPlayed = new Set(state.table.map(t => t.playerId));
+  const activePlayers = state.players.filter(p => p.connected && !p.poisoned);
+  const playersWhoNeedToPlay = activePlayers.filter(p => !playersWhoPlayed.has(p.id));
+  
+  console.log(`Active players: ${activePlayers.length}, Already played: ${playersWhoPlayed.size}, Need to play: ${playersWhoNeedToPlay.length}`);
+  
+  // Auto-play a random card for each player who hasn't submitted
+  for (const player of playersWhoNeedToPlay) {
+    const hand = state.hands[player.id];
+    if (hand && hand.length > 0) {
+      // Pick a random card from their hand
+      const randomIndex = Math.floor(Math.random() * hand.length);
+      const [card] = hand.splice(randomIndex, 1);
+      state.table.push({ playerId: player.id, cardId: card.id, card, revealed: false });
+      const cardName = card.kind === 'INGREDIENT' ? card.name : card.type;
+      console.log(`Auto-played random card for ${player.name}: ${cardName}`);
+    }
+  }
+  
+  // Add log entry notifying about auto-plays
+  if (playersWhoNeedToPlay.length > 0) {
+    const names = playersWhoNeedToPlay.map(p => p.name).join(', ');
+    addLogEntry(state, {
+      type: 'info',
+      message: `⏰ Timer expired! Random cards were played for: ${names}`,
+    });
+  }
+  
+  // Now trigger resolution
+  startResolution(state);
+}
+
 export function playCard(state: GameState, playerId: string, cardId: string) {
   if (state.phase !== 'NIGHT') return;
   
@@ -316,7 +355,7 @@ function determinePrimaryAndSecondary(
   return { primary, secondary: secondaryTied };
 }
 
-function startResolution(state: GameState) {
+export function startResolution(state: GameState) {
   console.log('=== RESOLUTION PHASE STARTING ===');
   console.log('Table contents:', JSON.stringify(state.table, null, 2));
   state.phase = 'RESOLUTION';
