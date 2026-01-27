@@ -238,10 +238,10 @@ export function GameBoard({ state, onPlayCard, onUnplayCard, onClaimCard, onReso
         </div>
       </div>
       
-      {/* Game Progress Indicator */}
-      <div className="rounded-lg border border-slate-700 bg-slate-800 p-3">
+      {/* Game Progress Indicator with Deck Info */}
+      <div className="rounded-lg border border-slate-700 bg-slate-800 p-3 relative group cursor-help">
         <div className="flex items-center justify-between mb-2">
-          <div className="text-sm font-semibold text-slate-300">Game Progress</div>
+          <div className="text-sm font-semibold text-slate-300">Game Progress <span className="text-xs text-slate-500">(hover for decks)</span></div>
           <div className={`text-sm font-bold ${
             state.centerDeck.cards.length <= 3 ? 'text-red-400 animate-pulse' :
             state.centerDeck.cards.length <= 7 ? 'text-yellow-400' :
@@ -266,12 +266,97 @@ export function GameBoard({ state, onPlayCard, onUnplayCard, onClaimCard, onReso
            state.centerDeck.cards.length <= 7 ? 'Approaching endgame...' :
            'Game in progress'}
         </div>
+        
+        {/* Deck Details Tooltip */}
+        <div className="absolute top-full left-0 right-0 mt-2 hidden group-hover:block z-20 rounded-lg border border-slate-700 bg-slate-900 shadow-2xl max-h-96 overflow-y-auto">
+          <div className="p-4 space-y-4">
+            {/* Blood/Milk Deck */}
+            <div>
+              <div className="flex items-center gap-2 mb-2">
+                <div className="text-sm font-semibold text-purple-400">🧪 Blood/Milk Deck</div>
+                <div className="text-xs text-slate-400">({state.centerDeck.cards.length} hidden)</div>
+              </div>
+              <div className="pl-4 space-y-1 text-xs">
+                <div className="text-slate-400">Started with:</div>
+                <div className="text-green-400">• 8 MILK cards</div>
+                <div className="text-red-400">• 8 BLOOD cards</div>
+                {(deckCounts.MILK > 0 || deckCounts.BLOOD > 0) && (
+                  <>
+                    <div className="text-slate-400 mt-2">You know in deck:</div>
+                    {deckCounts.MILK > 0 && (
+                      <div className="text-green-400">• MILK ({deckCounts.MILK})</div>
+                    )}
+                    {deckCounts.BLOOD > 0 && (
+                      <div className="text-red-400">• BLOOD ({deckCounts.BLOOD})</div>
+                    )}
+                  </>
+                )}
+              </div>
+            </div>
+            
+            {/* Revealed Cards */}
+            {state.centerDeck.revealed.length > 0 && (
+              <div className="border-t border-slate-700 pt-3">
+                <div className="text-sm font-semibold text-slate-300 mb-2">Revealed Cards ({state.centerDeck.revealed.length})</div>
+                <div className="flex flex-wrap gap-2">
+                  {state.centerDeck.revealed.map((card, i) => (
+                    <div key={i} className="flex flex-col items-center gap-1">
+                      <div className={`h-24 w-16 rounded border overflow-hidden ${
+                        card.type === 'MILK' ? 'border-green-500' : 'border-red-500'
+                      }`}>
+                        <img 
+                          src={`/assets/center_deck/${card.type.toLowerCase()}.png`} 
+                          alt={card.type}
+                          className="h-full w-full object-cover"
+                        />
+                      </div>
+                      <div className="text-xs text-slate-400">{card.type}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+            
+            {/* Discarded Cards */}
+            {state.centerDeck.discarded.length > 0 && (
+              <div className="border-t border-slate-700 pt-3">
+                <div className="text-sm font-semibold text-slate-400 mb-2">Discarded ({state.centerDeck.discarded.length})</div>
+                {(discardCounts.MILK > 0 || discardCounts.BLOOD > 0) && (
+                  <div className="pl-4 space-y-1 text-xs">
+                    <div className="text-slate-400">You know were discarded:</div>
+                    {discardCounts.MILK > 0 && (
+                      <div className="text-green-400">• MILK ({discardCounts.MILK})</div>
+                    )}
+                    {discardCounts.BLOOD > 0 && (
+                      <div className="text-red-400">• BLOOD ({discardCounts.BLOOD})</div>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+            
+            {/* Ingredient Deck */}
+            <div className="border-t border-slate-700 pt-3">
+              <div className="flex items-center gap-2 mb-2">
+                <div className="text-sm font-semibold text-green-400">🌿 Ingredient Deck</div>
+                <div className="text-xs text-slate-400">({state.deck.drawPile.length + state.deck.discardPile.length} cards)</div>
+              </div>
+              <div className="pl-4 space-y-1 text-xs">
+                <div className="text-slate-400">Started with 10 of each:</div>
+                {Array.from(new Set([...state.deck.drawPile, ...state.deck.discardPile].map(c => c.name))).sort().map(name => (
+                  <div key={name} className="text-slate-300">• {formatIngredientName(name)}</div>
+                ))}
+              </div>
+            </div>
+          </div>
+          <div className="absolute left-8 bottom-full h-0 w-0 border-8 border-transparent border-b-slate-900"></div>
+        </div>
       </div>
       
       {/* Player's Current Role */}
       {myRole && (
-        <div className="rounded-lg border border-slate-700 bg-slate-800 p-4">
-          <h2 className="mb-3 text-lg font-semibold text-slate-200">Your Role</h2>
+        <div className="rounded-lg border border-slate-700 bg-slate-800 p-4 relative group">
+          <h2 className="mb-3 text-lg font-semibold text-slate-200">Your Role <span className="text-xs text-slate-500 font-normal">(hover for hero pool)</span></h2>
           <div className="flex items-center gap-4">
             {myRole.image && (
               <div className="h-32 w-24 rounded-md border-2 border-slate-600 overflow-hidden">
@@ -290,6 +375,30 @@ export function GameBoard({ state, onPlayCard, onUnplayCard, onClaimCard, onReso
                 Team: {myRole.team}
               </div>
             </div>
+          </div>
+          
+          {/* Hero Pool Tooltip */}
+          <div className="absolute top-full left-0 mt-2 hidden group-hover:block z-20 w-72 max-w-[90vw] rounded-lg border border-slate-700 bg-slate-900 p-4 shadow-xl max-h-80 overflow-y-auto">
+            <div className="mb-3 text-sm font-semibold text-slate-300">
+              Hero Pool ({state.heroDeck.length} remaining in deck)
+            </div>
+            <div className="mb-3">
+              <div className="text-xs font-semibold text-green-400 mb-1">Good Heroes:</div>
+              <div className="space-y-0.5 pl-2">
+                {Object.values(state.roles).filter(r => r.team === 'GOOD').concat(state.heroDeck.filter(r => r.team === 'GOOD')).filter((r, i, arr) => arr.findIndex(x => x.id === r.id) === i).map(role => (
+                  <div key={role.id} className="text-xs text-slate-300">• {formatRoleName(role.name)}</div>
+                ))}
+              </div>
+            </div>
+            <div>
+              <div className="text-xs font-semibold text-red-400 mb-1">Evil Heroes:</div>
+              <div className="space-y-0.5 pl-2">
+                {Object.values(state.roles).filter(r => r.team === 'EVIL').concat(state.heroDeck.filter(r => r.team === 'EVIL')).filter((r, i, arr) => arr.findIndex(x => x.id === r.id) === i).map(role => (
+                  <div key={role.id} className="text-xs text-slate-300">• {formatRoleName(role.name)}</div>
+                ))}
+              </div>
+            </div>
+            <div className="absolute left-8 bottom-full h-0 w-0 border-8 border-transparent border-b-slate-900"></div>
           </div>
         </div>
       )}
@@ -457,148 +566,6 @@ export function GameBoard({ state, onPlayCard, onUnplayCard, onClaimCard, onReso
       </div>
       
       <div className="grid grid-cols-2 gap-6 md:grid-cols-3">
-        <div className="col-span-2 md:col-span-3">
-          <h2 className="mb-2 text-sm text-slate-400">Game Decks</h2>
-          <div className="flex flex-wrap gap-4 items-start">
-            {/* Blood/Milk Center Deck */}
-            <div className="flex flex-col items-center gap-1 relative group">
-              <div className="h-40 w-28 rounded-md border-2 border-purple-600 bg-slate-800 flex items-center justify-center">
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-purple-400">{state.centerDeck.cards.length}</div>
-                  <div className="text-xs text-slate-400">Cards</div>
-                </div>
-              </div>
-              <div className="text-xs text-slate-400">Blood/Milk</div>
-              
-              {/* Center Deck Initial Info Tooltip */}
-              <div className="absolute bottom-full left-0 md:left-1/2 mb-2 hidden group-hover:block z-10 w-48 max-w-[90vw] md:-translate-x-1/2 rounded-lg border border-slate-700 bg-slate-900 p-3 shadow-xl">
-                <div className="mb-1 text-xs font-semibold text-slate-300">Initial deck composition:</div>
-                <div className="space-y-1">
-                  <div className="text-xs text-green-400">8 MILK cards</div>
-                  <div className="text-xs text-red-400">8 BLOOD cards</div>
-                </div>
-                {(deckCounts.MILK > 0 || deckCounts.BLOOD > 0) && (
-                  <>
-                    <div className="my-2 border-t border-slate-700"></div>
-                    <div className="mb-1 text-xs font-semibold text-slate-300">You know in deck:</div>
-                    <div className="space-y-1">
-                      {deckCounts.MILK > 0 && (
-                        <div className="text-xs text-green-400">MILK ({deckCounts.MILK})</div>
-                      )}
-                      {deckCounts.BLOOD > 0 && (
-                        <div className="text-xs text-red-400">BLOOD ({deckCounts.BLOOD})</div>
-                      )}
-                    </div>
-                  </>
-                )}
-                <div className="absolute left-8 md:left-1/2 top-full h-0 w-0 md:-translate-x-1/2 border-8 border-transparent border-t-slate-900"></div>
-              </div>
-            </div>
-            
-            {/* Hero Deck */}
-            <div className="flex flex-col items-center gap-1 relative group">
-              <div className="h-40 w-28 rounded-md border-2 border-yellow-600 bg-slate-800 flex items-center justify-center">
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-yellow-400">{state.heroDeck.length}</div>
-                  <div className="text-xs text-slate-400">Roles</div>
-                </div>
-              </div>
-              <div className="text-xs text-slate-400">Heroes</div>
-              
-              {/* Hero Deck Tooltip */}
-              <div className="absolute bottom-full left-0 md:left-1/2 mb-2 hidden group-hover:block z-10 w-56 max-w-[90vw] md:-translate-x-1/2 rounded-lg border border-slate-700 bg-slate-900 p-3 shadow-xl max-h-64 overflow-y-auto">
-                <div className="mb-2">
-                  <div className="text-xs font-semibold text-green-400 mb-1">Good Heroes:</div>
-                  <div className="space-y-0.5">
-                    {Object.values(state.roles).filter(r => r.team === 'GOOD').concat(state.heroDeck.filter(r => r.team === 'GOOD')).filter((r, i, arr) => arr.findIndex(x => x.id === r.id) === i).map(role => (
-                      <div key={role.id} className="text-xs text-slate-300">• {formatRoleName(role.name)}</div>
-                    ))}
-                  </div>
-                </div>
-                <div>
-                  <div className="text-xs font-semibold text-red-400 mb-1">Evil Heroes:</div>
-                  <div className="space-y-0.5">
-                    {Object.values(state.roles).filter(r => r.team === 'EVIL').concat(state.heroDeck.filter(r => r.team === 'EVIL')).filter((r, i, arr) => arr.findIndex(x => x.id === r.id) === i).map(role => (
-                      <div key={role.id} className="text-xs text-slate-300">• {formatRoleName(role.name)}</div>
-                    ))}
-                  </div>
-                </div>
-                <div className="absolute left-8 md:left-1/2 top-full h-0 w-0 md:-translate-x-1/2 border-8 border-transparent border-t-slate-900"></div>
-              </div>
-            </div>
-            
-            {/* Ingredient Deck */}
-            <div className="flex flex-col items-center gap-1 relative group">
-              <div className="h-40 w-28 rounded-md border-2 border-green-600 bg-slate-800 flex items-center justify-center">
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-green-400">{state.deck.drawPile.length + state.deck.discardPile.length}</div>
-                  <div className="text-xs text-slate-400">Cards</div>
-                </div>
-              </div>
-              <div className="text-xs text-slate-400">Ingredients</div>
-              
-              {/* Ingredient Deck Tooltip */}
-              <div className="absolute bottom-full left-0 md:left-1/2 mb-2 hidden group-hover:block z-10 w-56 max-w-[90vw] md:-translate-x-1/2 rounded-lg border border-slate-700 bg-slate-900 p-3 shadow-xl max-h-64 overflow-y-auto">
-                <div className="mb-1 text-xs font-semibold text-slate-300">Initial deck (10 of each):</div>
-                <div className="space-y-0.5">
-                  {Array.from(new Set([...state.deck.drawPile, ...state.deck.discardPile].map(c => c.name))).sort().map(name => (
-                    <div key={name} className="text-xs text-slate-300">• {formatIngredientName(name)}</div>
-                  ))}
-                </div>
-                <div className="absolute left-8 md:left-1/2 top-full h-0 w-0 md:-translate-x-1/2 border-8 border-transparent border-t-slate-900"></div>
-              </div>
-            </div>
-            
-            {/* Revealed Cards */}
-            {state.centerDeck.revealed.map((card, i) => (
-              <div key={i} className="flex flex-col items-center gap-1">
-                <div className={`h-40 w-28 rounded-md border-2 overflow-hidden ${
-                  card.type === 'MILK' ? 'border-green-500' : 'border-red-500'
-                }`}>
-                  <img 
-                    src={`/assets/center_deck/${card.type.toLowerCase()}.png`} 
-                    alt={card.type}
-                    className="h-full w-full object-cover"
-                  />
-                </div>
-                <div className="text-xs text-slate-400">Revealed</div>
-              </div>
-            ))}
-            
-            {/* Discard Pile */}
-            {state.centerDeck.discarded.length > 0 && (
-              <div className="flex flex-col items-center gap-1 relative group">
-                <div className="h-40 w-28 rounded-md border-2 border-slate-600 bg-slate-800 flex items-center justify-center">
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-slate-400">{state.centerDeck.discarded.length}</div>
-                    <div className="text-xs text-slate-500">Discarded</div>
-                  </div>
-                </div>
-                <div className="text-xs text-slate-400">Discard</div>
-                
-                {/* Discard Knowledge Tooltip */}
-                {(discardCounts.MILK > 0 || discardCounts.BLOOD > 0) && (
-                  <div className="absolute bottom-full left-0 md:left-1/2 mb-2 hidden group-hover:block z-10 w-48 max-w-[90vw] md:-translate-x-1/2 rounded-lg border border-slate-700 bg-slate-900 p-3 shadow-xl">
-                    <div className="mb-1 text-xs font-semibold text-slate-300">Cards you know were discarded:</div>
-                    <div className="space-y-1">
-                      {discardCounts.MILK > 0 && (
-                        <div className="text-xs text-green-400">
-                          MILK ({discardCounts.MILK})
-                        </div>
-                      )}
-                      {discardCounts.BLOOD > 0 && (
-                        <div className="text-xs text-red-400">
-                          BLOOD ({discardCounts.BLOOD})
-                        </div>
-                      )}
-                    </div>
-                    <div className="absolute left-8 md:left-1/2 top-full h-0 w-0 md:-translate-x-1/2 border-8 border-transparent border-t-slate-900"></div>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-        </div>
         <div className="col-span-2 md:col-span-3">
           <h2 className="mb-2 text-sm text-slate-400">The Cauldron</h2>
           
