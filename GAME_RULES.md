@@ -18,13 +18,14 @@ Ireland Cauldron is a secret identity card game for 5-10 players. Players receiv
 - Cards can be revealed (face up), discarded, or remain hidden
 
 #### Ingredient Deck
-- **5 ingredient types:** 
+- **6 ingredient types:** 
   - Brigid's Blessing
   - Cailleach's Gaze
   - Ceol of the Midnight Cairn
   - Faerie Thistle
   - Wolfbane Root
-- **10 cards of each ingredient** (50 total)
+  - Yew's Quiet Draught
+- **10 cards of each ingredient** (60 total)
 - Players draw from this deck to form their hands
 - Discarded/played ingredients go to a discard pile, which is reshuffled when the draw pile is empty
 
@@ -54,7 +55,8 @@ When the game ends, count all remaining cards (in deck + revealed):
 
 #### Tie Rules
 - **Tie for Primary:** Both ingredients are treated as Secondary instead
-- **Tie for Secondary:** Those ingredient effects are ignored
+- **Tie for Secondary (with Primary):** One of the tied ingredients is randomly chosen as secondary
+- **Tie for Secondary (no Primary):** Secondary effects are ignored
 
 ### Phase 3: Effects Resolution
 Effects are resolved in this order:
@@ -90,21 +92,20 @@ Each player who played this ingredient:
   - Place it at the **bottom** of the center deck, OR
   - **Discard** it (removed from game)
 
-#### Ceol of the Mundealt hero card** from the hero deck (roles not given to any player)
+#### Ceol of the Midnight Cairn
+- Draw a **random hero card** from the hero deck (roles not given to any player)
 - **Shuffle** it with the hero cards of all players who played Ceol
 - Give a **random hero card** from this pool to each Ceol player
-- The **leftover card** is returned to the hero deck
-- Players who swap roles will see their new identity in a modalof all players who played Ceol
-- Give a **random hero card** from this pool to each Ceol player
 - **Discard** the remaining hero card
+- Players who swap roles will see their new identity in a modal
 
 #### Faerie Thistle
 Draw **two cards** from the top of the center deck and reveal them publicly:
-- **Threshold:** Dynamic based on player count
+- **Threshold:** Dynamic based on player count (minimum 2)
   - **5-6 players:** More than **2** Faerie Thistles
   - **7-8 players:** More than **3** Faerie Thistles
   - **9-10 players:** More than **4** Faerie Thistles
-  - Formula: `floor((playerCount - 1) / 2)`
+  - Formula: `max(2, floor((playerCount - 1) / 2))`
 - **If more Faerie Thistles than threshold:**
   - Discard any **Milk** cards
   - Shuffle any **Blood** cards back into the deck
@@ -112,8 +113,16 @@ Draw **two cards** from the top of the center deck and reveal them publicly:
   - Discard any **Blood** cards
   - Shuffle any **Milk** cards back into the deck
 
-#### Wolfbanwho played this card e Root
+#### Wolfbane Root
 Each player **discards 1 random card** from their remaining 2 cards in hand
+
+#### Yew's Quiet Draught
+Each player who played Yew's Quiet Draught:
+- **Votes** to poison one other player (select from a list)
+- If a **majority** of votes target the same player, that player is **poisoned**
+- **Poisoned players** cannot play cards in the next round (automatically skip night phase)
+- If there's a **tie** in votes, reveal one random center deck card to all voters as a tie-breaker, then revote
+- Poison status is cleared after the player skips their turn
 
 ### Secondary Effects
 
@@ -137,6 +146,11 @@ Each player who played Cailleach's Gaze:
 **Blocks the primary effect completely**
 - No matter what the primary ingredient is, its effect does not activate
 
+#### Yew's Quiet Draught (Secondary)
+Each player who played Yew's Quiet Draught:
+- **Poisons themselves** for the next round
+- Cannot play cards in the following night phase
+
 ## Strategy Tips
 
 ### For Good Players
@@ -148,26 +162,32 @@ Each player who played Cailleach's Gaze:
 ### For Evil Players
 - Use Faerie Thistle (>3) to remove Milk cards
 - Use Cailleach's Gaze to discard Milk cards
+- Use Yew's Quiet Draught to poison good players and prevent them from acting
 - Create chaos and confusion during discussion
 - Try to create ties to waste rounds
 - Use Wolfbane Root to force discards and reduce information
 
 ### General Strategy
 - **Ceol of the Midnight Cairn** is high-risk, high-reward - you might change your own identity!
+- **Yew's Quiet Draught** can eliminate key players but reveals who played it through voting
 - **Faerie Thistle as secondary** is a powerful blocking tool
-- **Wolfbane Root secondary** can thin the deck but also removes information
+- **Wolfbane Root secondary** can save critical information by blocking primary effects
 - Pay attention to what ingredients are discarded - they won't appear again until reshuffled
+- Poisoned players are visible to all - use this information strategically
 
 ## Phase Timers
 - **Night Phase:** 30 seconds (configurable)
-- **Day Phase:** 15 seconds (configurable) - *does not end until all players click "End Discussion"*
+- **Day Phase:** 45 seconds (configurable) - *timer forces advance to night even if players haven't clicked "End Discussion"*
 - **Resolution:** Automatic (processes effects, then waits for player actions like Cailleach choices)
 
 ## End Game
 When the game ends:
 - All remaining center deck cards and revealed cards are shown
 - All player identities and roles are revealed
-- The winning team is displayed batil game end (or until you swap via Ceol)
+- The winning team is displayed based on the final count
+
+## Additional Information
+- Your role is secret until game end (or until you swap via Ceol)
 - Played cards remain visible on the table during day phase to help with discussion
 - Players can hover over decks to see initial composition and what they know about cards
 

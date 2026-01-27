@@ -3,6 +3,7 @@ import { CardImage } from './CardImage';
 import { ResolutionModal } from './ResolutionModal';
 import { HelpButton } from './HelpButton';
 import { CountdownTimer } from './CountdownTimer';
+import { useMobile } from '../../hooks/useMobile';
 import React from 'react';
 
 type Props = {
@@ -42,6 +43,7 @@ function formatIngredientName(name: string): string {
 }
 
 export function GameBoard({ state, onPlayCard, onUnplayCard, onClaimCard, onResolutionChoice, onYewTarget, onEndDiscussion }: Props) {
+  const isMobile = useMobile();
   const myId = state.currentPlayerId;
   const myHand = myId ? state.hands[myId] || [] : [];
   const hasPlayedCard = state.table.some(t => t.playerId === myId);
@@ -241,7 +243,9 @@ export function GameBoard({ state, onPlayCard, onUnplayCard, onClaimCard, onReso
       {/* Game Progress Indicator with Deck Info */}
       <div className="rounded-lg border border-slate-700 bg-slate-800 p-3 relative group cursor-help">
         <div className="flex items-center justify-between mb-2">
-          <div className="text-sm font-semibold text-slate-300">Game Progress <span className="text-xs text-slate-500">(hover for decks)</span></div>
+          <div className="text-sm font-semibold text-slate-300">
+            Game Progress <span className="text-xs text-slate-500">({isMobile ? 'tap' : 'hover'} for decks)</span>
+          </div>
           <div className={`text-sm font-bold ${
             state.centerDeck.cards.length <= 3 ? 'text-red-400 animate-pulse' :
             state.centerDeck.cards.length <= 7 ? 'text-yellow-400' :
@@ -267,87 +271,113 @@ export function GameBoard({ state, onPlayCard, onUnplayCard, onClaimCard, onReso
            'Game in progress'}
         </div>
         
-        {/* Deck Details Tooltip */}
-        <div className="absolute top-full left-0 right-0 mt-2 hidden group-hover:block z-20 rounded-lg border border-slate-700 bg-slate-900 shadow-2xl max-h-96 overflow-y-auto">
-          <div className="p-4 space-y-4">
-            {/* Blood/Milk Deck */}
-            <div>
-              <div className="flex items-center gap-2 mb-2">
-                <div className="text-sm font-semibold text-purple-400">🧪 Blood/Milk Deck</div>
-                <div className="text-xs text-slate-400">({state.centerDeck.cards.length} hidden)</div>
-              </div>
-              <div className="pl-4 space-y-1 text-xs">
-                <div className="text-slate-400">Started with:</div>
-                <div className="text-green-400">• 8 MILK cards</div>
-                <div className="text-red-400">• 8 BLOOD cards</div>
-                {(deckCounts.MILK > 0 || deckCounts.BLOOD > 0) && (
-                  <>
-                    <div className="text-slate-400 mt-2">You know in deck:</div>
-                    {deckCounts.MILK > 0 && (
-                      <div className="text-green-400">• MILK ({deckCounts.MILK})</div>
-                    )}
-                    {deckCounts.BLOOD > 0 && (
-                      <div className="text-red-400">• BLOOD ({deckCounts.BLOOD})</div>
-                    )}
-                  </>
-                )}
-              </div>
-            </div>
-            
-            {/* Revealed Cards */}
-            {state.centerDeck.revealed.length > 0 && (
-              <div className="border-t border-slate-700 pt-3">
-                <div className="text-sm font-semibold text-slate-300 mb-2">Revealed Cards ({state.centerDeck.revealed.length})</div>
-                <div className="flex flex-wrap gap-2">
-                  {state.centerDeck.revealed.map((card, i) => (
-                    <div key={i} className="flex flex-col items-center gap-1">
-                      <div className={`h-24 w-16 rounded border overflow-hidden ${
-                        card.type === 'MILK' ? 'border-green-500' : 'border-red-500'
-                      }`}>
-                        <img 
-                          src={`/assets/center_deck/${card.type.toLowerCase()}.png`} 
-                          alt={card.type}
-                          className="h-full w-full object-cover"
-                        />
-                      </div>
-                      <div className="text-xs text-slate-400">{card.type}</div>
+        {/* Deck Details Tooltip with Visual Cards */}
+        <div className="absolute top-full left-0 right-0 mt-2 hidden group-hover:block z-20 rounded-lg border border-slate-700 bg-slate-900 shadow-2xl">
+          <div className="p-4">
+            <div className="text-sm font-semibold text-slate-300 mb-3">Game Decks</div>
+            <div className="flex gap-4 overflow-x-auto pb-2">
+              {/* Blood/Milk Center Deck */}
+              <div className="flex-shrink-0">
+                <div className="flex flex-col items-center gap-1 relative group/deck">
+                  <div className="h-32 w-24 rounded-md border-2 border-purple-600 bg-slate-800 flex items-center justify-center">
+                    <div className="text-center">
+                      <div className="text-xl font-bold text-purple-400">{state.centerDeck.cards.length}</div>
+                      <div className="text-xs text-slate-400">Cards</div>
                     </div>
-                  ))}
+                  </div>
+                  <div className="text-xs text-slate-400">Blood/Milk</div>
+                  
+                  {/* Blood/Milk Tooltip */}
+                  <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover/deck:block z-10 w-48 rounded-lg border border-slate-700 bg-slate-950 p-3 shadow-xl">
+                    <div className="space-y-1 text-xs">
+                      <div className="text-slate-400 font-semibold">Started with:</div>
+                      <div className="text-green-400">• 8 MILK</div>
+                      <div className="text-red-400">• 8 BLOOD</div>
+                      {(deckCounts.MILK > 0 || deckCounts.BLOOD > 0) && (
+                        <>
+                          <div className="text-slate-400 font-semibold mt-2">You know:</div>
+                          {deckCounts.MILK > 0 && <div className="text-green-400">• MILK ({deckCounts.MILK})</div>}
+                          {deckCounts.BLOOD > 0 && <div className="text-red-400">• BLOOD ({deckCounts.BLOOD})</div>}
+                        </>
+                      )}
+                    </div>
+                    <div className="absolute left-1/2 top-full h-0 w-0 -translate-x-1/2 border-6 border-transparent border-t-slate-950"></div>
+                  </div>
                 </div>
               </div>
-            )}
-            
-            {/* Discarded Cards */}
-            {state.centerDeck.discarded.length > 0 && (
-              <div className="border-t border-slate-700 pt-3">
-                <div className="text-sm font-semibold text-slate-400 mb-2">Discarded ({state.centerDeck.discarded.length})</div>
-                {(discardCounts.MILK > 0 || discardCounts.BLOOD > 0) && (
-                  <div className="pl-4 space-y-1 text-xs">
-                    <div className="text-slate-400">You know were discarded:</div>
-                    {discardCounts.MILK > 0 && (
-                      <div className="text-green-400">• MILK ({discardCounts.MILK})</div>
-                    )}
-                    {discardCounts.BLOOD > 0 && (
-                      <div className="text-red-400">• BLOOD ({discardCounts.BLOOD})</div>
+              
+              {/* Ingredient Deck */}
+              <div className="flex-shrink-0">
+                <div className="flex flex-col items-center gap-1 relative group/deck">
+                  <div className="h-32 w-24 rounded-md border-2 border-green-600 bg-slate-800 flex items-center justify-center">
+                    <div className="text-center">
+                      <div className="text-xl font-bold text-green-400">{state.deck.drawPile.length + state.deck.discardPile.length}</div>
+                      <div className="text-xs text-slate-400">Cards</div>
+                    </div>
+                  </div>
+                  <div className="text-xs text-slate-400">Ingredients</div>
+                  
+                  {/* Ingredient Tooltip */}
+                  <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover/deck:block z-10 w-56 rounded-lg border border-slate-700 bg-slate-950 p-3 shadow-xl max-h-64 overflow-y-auto">
+                    <div className="text-xs">
+                      <div className="text-slate-400 font-semibold mb-1">10 of each:</div>
+                      {Array.from(new Set([...state.deck.drawPile, ...state.deck.discardPile].map(c => c.name))).sort().map(name => (
+                        <div key={name} className="text-slate-300">• {formatIngredientName(name)}</div>
+                      ))}
+                    </div>
+                    <div className="absolute left-1/2 top-full h-0 w-0 -translate-x-1/2 border-6 border-transparent border-t-slate-950"></div>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Revealed Cards */}
+              {state.centerDeck.revealed.map((card, i) => (
+                <div key={i} className="flex-shrink-0">
+                  <div className="flex flex-col items-center gap-1">
+                    <div className={`h-32 w-24 rounded-md border-2 overflow-hidden ${
+                      card.type === 'MILK' ? 'border-green-500' : 'border-red-500'
+                    }`}>
+                      <img 
+                        src={`/assets/center_deck/${card.type.toLowerCase()}.png`} 
+                        alt={card.type}
+                        className="h-full w-full object-cover"
+                      />
+                    </div>
+                    <div className="text-xs text-slate-400">Revealed</div>
+                  </div>
+                </div>
+              ))}
+              
+              {/* Discard Pile */}
+              {state.centerDeck.discarded.length > 0 && (
+                <div className="flex-shrink-0">
+                  <div className="flex flex-col items-center gap-1 relative group/deck">
+                    <div className="h-32 w-24 rounded-md border-2 border-slate-600 bg-slate-800 flex items-center justify-center">
+                      <div className="text-center">
+                        <div className="text-xl font-bold text-slate-400">{state.centerDeck.discarded.length}</div>
+                        <div className="text-xs text-slate-500">Discarded</div>
+                      </div>
+                    </div>
+                    <div className="text-xs text-slate-400">Discard</div>
+                    
+                    {/* Discard Tooltip */}
+                    {(discardCounts.MILK > 0 || discardCounts.BLOOD > 0) && (
+                      <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover/deck:block z-10 w-48 rounded-lg border border-slate-700 bg-slate-950 p-3 shadow-xl">
+                        <div className="space-y-1 text-xs">
+                          <div className="text-slate-400 font-semibold">You know:</div>
+                          {discardCounts.MILK > 0 && <div className="text-green-400">• MILK ({discardCounts.MILK})</div>}
+                          {discardCounts.BLOOD > 0 && <div className="text-red-400">• BLOOD ({discardCounts.BLOOD})</div>}
+                        </div>
+                        <div className="absolute left-1/2 top-full h-0 w-0 -translate-x-1/2 border-6 border-transparent border-t-slate-950"></div>
+                      </div>
                     )}
                   </div>
-                )}
-              </div>
-            )}
-            
-            {/* Ingredient Deck */}
-            <div className="border-t border-slate-700 pt-3">
-              <div className="flex items-center gap-2 mb-2">
-                <div className="text-sm font-semibold text-green-400">🌿 Ingredient Deck</div>
-                <div className="text-xs text-slate-400">({state.deck.drawPile.length + state.deck.discardPile.length} cards)</div>
-              </div>
-              <div className="pl-4 space-y-1 text-xs">
-                <div className="text-slate-400">Started with 10 of each:</div>
-                {Array.from(new Set([...state.deck.drawPile, ...state.deck.discardPile].map(c => c.name))).sort().map(name => (
-                  <div key={name} className="text-slate-300">• {formatIngredientName(name)}</div>
-                ))}
-              </div>
+                </div>
+              )}
             </div>
+            {state.centerDeck.revealed.length + (state.centerDeck.discarded.length > 0 ? 1 : 0) > 0 && (
+              <div className="text-xs text-slate-500 text-center mt-2">← Scroll to see all decks →</div>
+            )}
           </div>
           <div className="absolute left-8 bottom-full h-0 w-0 border-8 border-transparent border-b-slate-900"></div>
         </div>
@@ -356,7 +386,9 @@ export function GameBoard({ state, onPlayCard, onUnplayCard, onClaimCard, onReso
       {/* Player's Current Role */}
       {myRole && (
         <div className="rounded-lg border border-slate-700 bg-slate-800 p-4 relative group">
-          <h2 className="mb-3 text-lg font-semibold text-slate-200">Your Role <span className="text-xs text-slate-500 font-normal">(hover for hero pool)</span></h2>
+          <h2 className="mb-3 text-lg font-semibold text-slate-200">
+            Your Role <span className="text-xs text-slate-500 font-normal">({isMobile ? 'tap' : 'hover'} for hero pool)</span>
+          </h2>
           <div className="flex items-center gap-4">
             {myRole.image && (
               <div className="h-32 w-24 rounded-md border-2 border-slate-600 overflow-hidden">
