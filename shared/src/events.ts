@@ -18,7 +18,7 @@ export type WSEvent = (typeof WS)[keyof typeof WS];
 
 // Payload schemas
 export const RoomCreatePayload = z.object({ name: z.string().min(1) });
-export const RoomJoinPayload = z.object({ roomCode: z.string().min(3), name: z.string().min(1), spectator: z.boolean().optional() });
+export const RoomJoinPayload = z.object({ roomCode: z.string().min(3), name: z.string().min(1), spectator: z.boolean().optional(), playerId: z.string().optional() });
 export const RoomLeavePayload = z.object({ roomCode: z.string().min(3) });
 export const RoomListResponse = z.object({ rooms: z.array(z.object({ code: z.string(), players: z.number(), maxPlayers: z.number() })) });
 

@@ -22,15 +22,26 @@ export function initSockets(io: IOServer, _app: Express) {
     socket.on(WS.ROOM_JOIN, (raw) => {
       const res = RoomJoinPayload.safeParse(raw);
       if (!res.success) return;
-      const { roomCode, name, spectator } = res.data;
+      const { roomCode, name, spectator, playerId: clientPlayerId } = res.data;
       const room = ensureRoom(roomCode, 10, {});
       currentRoom = roomCode;
       playerName = name;
       if (!spectator) {
-        const id = playerId ?? socket.id;
+        // Try to reconnect as existing player if clientPlayerId provided and exists
+        const existingPlayer = clientPlayerId ? room.state.players.find((p) => p.id === clientPlayerId) : null;
+        const id = existingPlayer ? clientPlayerId! : (playerId ?? socket.id);
         playerId = id;
+        
         if (!room.state.players.find((p) => p.id === id)) {
+          // New player
           room.state.players.push({ id, name, connected: true, isReady: false, endedDiscussion: false, poisoned: false });
+        } else {
+          // Reconnecting player - update connection status
+          const player = room.state.players.find((p) => p.id === id);
+          if (player) {
+            player.connected = true;
+            player.name = name; // Update name in case it changed
+          }
         }
       } else {
         room.state.spectators.push(socket.id);

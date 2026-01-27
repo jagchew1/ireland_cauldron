@@ -8,7 +8,13 @@ export function useGameRoom(roomCode: string | null) {
 
   useEffect(() => {
     const s = socketRef.current;
-    const onState = (payload: ShapedState) => setState(payload);
+    const onState = (payload: ShapedState) => {
+      setState(payload);
+      // Store our player ID in localStorage for reconnection
+      if (payload.currentPlayerId) {
+        localStorage.setItem(`playerId_${payload.room}`, payload.currentPlayerId);
+      }
+    };
     s.on(WS.GAME_STATE, onState);
     return () => {
       s.off(WS.GAME_STATE, onState);
@@ -20,7 +26,9 @@ export function useGameRoom(roomCode: string | null) {
   }, []);
 
   const joinRoom = useCallback((code: string, name: string, spectator?: boolean) => {
-    socketRef.current.emit(WS.ROOM_JOIN, { roomCode: code, name, spectator: !!spectator });
+    // Try to get stored player ID for this room
+    const storedPlayerId = localStorage.getItem(`playerId_${code}`);
+    socketRef.current.emit(WS.ROOM_JOIN, { roomCode: code, name, spectator: !!spectator, playerId: storedPlayerId || undefined });
   }, []);
 
   const start = useCallback(() => {
