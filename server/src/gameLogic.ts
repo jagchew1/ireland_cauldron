@@ -240,6 +240,15 @@ export function playCard(state: GameState, playerId: string, cardId: string) {
   const [card] = hand!.splice(idx, 1);
   state.table.push({ playerId, cardId: card.id, card, revealed: false });
   
+  // Check if this ingredient is poisoned
+  if (card.kind === 'INGREDIENT' && state.poisonedIngredient && player) {
+    const normalizedCardName = normalizeIngredientName(card.name);
+    if (normalizedCardName === state.poisonedIngredient) {
+      player.poisoned = true;
+      console.log(`Player ${player.name} played poisoned ingredient ${card.name} and is now poisoned`);
+    }
+  }
+  
   // Count expected players (connected and not poisoned)
   const expectedPlayers = state.players.filter(p => p.connected && !p.poisoned).length;
   console.log(`Cards played: ${state.table.length}/${expectedPlayers} active players (some may be poisoned)`);
@@ -808,43 +817,70 @@ function applyFaerieSecondary(state: GameState) {
 }
 
 function applyYewPrimary(state: GameState, playerIds: string[]) {
-  // Each player who played Yew chooses another player to poison
+  // Each player who played Yew chooses an ingredient to poison
+  const availableIngredients = [
+    INGREDIENTS.BRIGID,
+    INGREDIENTS.CAILLEACH,
+    INGREDIENTS.CEOL,
+    INGREDIENTS.FAERIE,
+    INGREDIENTS.WOLFBANE,
+    // Note: Yew itself is not in the list
+  ];
+  
   for (const playerId of playerIds) {
-    const availableTargets = state.players
-      .filter(p => p.id !== playerId)
-      .map(p => p.id);
-    
     state.pendingActions.push({
       actionType: 'yew_primary',
       playerId,
-      availableTargets,
+      availableIngredients,
     });
   }
   
   addLogEntry(state, {
     type: 'primary',
-    message: `Yew's Quiet Draught: ${playerIds.length} player(s) choosing targets to poison...`,
+    message: `Yew's Quiet Draught: ${playerIds.length} player(s) choosing ingredients to poison...`,
   });
 }
 
 function applyYewSecondary(state: GameState, playerIds: string[]) {
-  // Players who played Yew poison themselves
-  for (const playerId of playerIds) {
-    const player = state.players.find(p => p.id === playerId);
-    if (player) {
-      player.poisoned = true;
-      
-      state.pendingActions.push({
-        actionType: 'yew_secondary',
-        playerId,
-      });
-    }
-  }
-  
-  if (playerIds.length > 0) {
+  // Reveal top card of deck - if blood, poison all Yew players
+  if (state.centerDeck.cards.length === 0) {
     addLogEntry(state, {
       type: 'secondary',
-      message: `Yew's Quiet Draught (Secondary): ${playerIds.length} player(s) poisoned themselves for next round.`,
+      message: `Yew's Quiet Draught (Secondary): No cards in deck to reveal.`,
+    });
+    return;
+  }
+  
+  const topCard = state.centerDeck.cards[state.centerDeck.cards.length - 1];
+  
+  addLogEntry(state, {
+    type: 'secondary',
+    message: `Yew's Quiet Draught (Secondary): Top card revealed: ${topCard.type}`,
+    cardsShown: [topCard],
+  });
+  
+  if (topCard.type === 'BLOOD') {
+    // Poison all players who played Yew
+    for (const playerId of playerIds) {
+      const player = state.players.find(p => p.id === playerId);
+      if (player) {
+        player.poisoned = true;
+        
+        state.pendingActions.push({
+          actionType: 'yew_secondary',
+          playerId,
+        });
+      }
+    }
+    
+    addLogEntry(state, {
+      type: 'secondary',
+      message: `Blood revealed! ${playerIds.length} player(s) who cast Yew are poisoned for next round.`,
+    });
+  } else {
+    addLogEntry(state, {
+      type: 'secondary',
+      message: `Milk revealed - Yew players are safe.`,
     });
   }
 }
@@ -893,6 +929,9 @@ export function nextRound(state: GameState) {
   // Clear table from previous round (cards already in discard from revealDay)
   state.table = [];
   state.cardClaims = {};
+  
+  // Clear poisoned ingredient (it only lasts one round)
+  state.poisonedIngredient = null;
   
   // Advance to night phase
   state.phase = 'NIGHT';
@@ -1002,7 +1041,7 @@ export function processResolutionAction(state: GameState, playerId: string, choi
   state.pendingActions.splice(actionIndex, 1);
 }
 
-export function processYewTarget(state: GameState, playerId: string, targetPlayerId: string) {
+export function processYewTarget(state: GameState, playerId: string, targetIngredient: string) {
   // Find and remove this player's pending yew action
   const actionIndex = state.pendingActions.findIndex(
     a => a.playerId === playerId && a.actionType === 'yew_primary'
@@ -1013,7 +1052,7 @@ export function processYewTarget(state: GameState, playerId: string, targetPlaye
   if (!state.yewVotes) {
     (state as any).yewVotes = {};
   }
-  (state as any).yewVotes[playerId] = targetPlayerId;
+  (state as any).yewVotes[playerId] = targetIngredient;
   
   // Remove this player's pending action
   state.pendingActions.splice(actionIndex, 1);
@@ -1030,53 +1069,39 @@ function resolveYewVotes(state: GameState) {
   const votes = (state as any).yewVotes || {};
   const voteCount: Record<string, number> = {};
   
-  // Count votes for each target
-  for (const targetId of Object.values(votes) as string[]) {
-    voteCount[targetId] = (voteCount[targetId] || 0) + 1;
+  // Count votes for each ingredient
+  for (const ingredientName of Object.values(votes) as string[]) {
+    voteCount[ingredientName] = (voteCount[ingredientName] || 0) + 1;
   }
   
   // Find the maximum vote count
   const maxVotes = Math.max(...Object.values(voteCount), 0);
-  const winners = Object.entries(voteCount).filter(([_, count]) => count === maxVotes).map(([id]) => id);
+  const winners = Object.entries(voteCount).filter(([_, count]) => count === maxVotes).map(([name]) => name);
   
   // Calculate majority threshold (more than half of voters)
   const totalVoters = Object.keys(votes).length;
   const majorityThreshold = Math.floor(totalVoters / 2) + 1;
   
+  let poisonedIngredient: string;
+  
   if (maxVotes >= majorityThreshold && winners.length === 1) {
-    // Majority achieved - poison the target
-    const targetPlayer = state.players.find(p => p.id === winners[0]);
-    if (targetPlayer) {
-      targetPlayer.poisoned = true;
-      addLogEntry(state, {
-        type: 'primary',
-        message: `Yew's Quiet Draught: ${targetPlayer.name} has been poisoned by majority vote and cannot play next round.`,
-      });
-    }
+    // Majority achieved - poison this ingredient
+    poisonedIngredient = winners[0];
+    addLogEntry(state, {
+      type: 'primary',
+      message: `Yew's Quiet Draught: ${formatIngredientName(poisonedIngredient)} has been poisoned by majority vote. Players who cast it next round will be poisoned.`,
+    });
   } else {
-    // Tie or no majority - reveal and handle top card
-    if (state.centerDeck.cards.length > 0) {
-      const topCard = state.centerDeck.cards.pop()!;
-      
-      if (topCard.type === 'BLOOD') {
-        // Play face up
-        state.centerDeck.revealed.push(topCard);
-        addLogEntry(state, {
-          type: 'primary',
-          message: `Yew's Quiet Draught: Vote tied. Top card revealed: ${topCard.type} (played face up).`,
-          cardsShown: [topCard],
-        });
-      } else {
-        // Milk - discard
-        state.centerDeck.discarded.push(topCard);
-        addLogEntry(state, {
-          type: 'primary',
-          message: `Yew's Quiet Draught: Vote tied. Top card revealed: ${topCard.type} (discarded).`,
-          cardsShown: [topCard],
-        });
-      }
-    }
+    // Tie - randomly select one of the tied ingredients
+    poisonedIngredient = winners[Math.floor(Math.random() * winners.length)];
+    addLogEntry(state, {
+      type: 'primary',
+      message: `Yew's Quiet Draught: Vote tied. ${formatIngredientName(poisonedIngredient)} randomly selected to be poisoned. Players who cast it next round will be poisoned.`,
+    });
   }
+  
+  // Store the poisoned ingredient for the next round
+  state.poisonedIngredient = poisonedIngredient;
   
   // Clear the votes
   delete (state as any).yewVotes;

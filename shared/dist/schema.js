@@ -35,6 +35,7 @@ export const Player = z.object({
     isReady: z.boolean().default(false),
     connected: z.boolean().default(true),
     endedDiscussion: z.boolean().default(false), // for day phase voting
+    poisoned: z.boolean().default(false), // cannot play cards next round if true
 });
 export const Room = z.object({
     code: z.string(),
@@ -50,7 +51,7 @@ export const PlayedCard = z.object({
 });
 export const GameConfig = z.object({
     nightSeconds: z.number().default(30),
-    daySeconds: z.number().default(15),
+    daySeconds: z.number().default(45),
     handSize: z.number().default(3),
 });
 export const ResolutionLogEntry = z.object({
@@ -75,6 +76,11 @@ export const PendingAction = z.discriminatedUnion('actionType', [
         cardIndex: z.number(), // original position in deck
     }),
     z.object({
+        actionType: z.literal('cailleach_secondary'),
+        playerId: z.string(),
+        cardShown: CenterCard, // Top card of deck (just shown, no choice)
+    }),
+    z.object({
         actionType: z.literal('wolfbane_primary'),
         playerId: z.string(),
     }),
@@ -82,6 +88,25 @@ export const PendingAction = z.discriminatedUnion('actionType', [
         actionType: z.literal('ceol_primary'),
         playerId: z.string(),
         newRoleId: z.string(), // The role they swapped to
+    }),
+    z.object({
+        actionType: z.literal('ceol_secondary'),
+        playerId: z.string(),
+        revealedRoleId: z.string(), // Role of another Ceol player (identity unknown)
+    }),
+    z.object({
+        actionType: z.literal('yew_primary'),
+        playerId: z.string(),
+        availableIngredients: z.array(z.string()), // Ingredient names that can be poisoned
+    }),
+    z.object({
+        actionType: z.literal('yew_secondary'),
+        playerId: z.string(), // Player who poisoned themselves
+    }),
+    z.object({
+        actionType: z.literal('forced_play_notification'),
+        playerId: z.string(), // Player who had a card auto-played
+        cardName: z.string(), // Name of the card that was auto-played
     }),
 ]);
 export const GameState = z.object({
@@ -96,11 +121,15 @@ export const GameState = z.object({
     centerDeck: CenterDeck,
     hands: z.record(z.string(), z.array(Card)),
     table: z.array(PlayedCard),
+    cardClaims: z.record(z.string(), z.array(z.string())).default({}), // cardId -> array of playerIds (multiple players can claim same card)
     config: GameConfig,
     expiresAt: z.number().nullable(),
     pendingActions: z.array(PendingAction).default([]), // for storing pending player actions during resolution
     resolutionLog: z.array(ResolutionLogEntry).default([]), // Log of what happened this round
     playerKnowledge: z.array(PlayerKnowledge).default([]), // Track what each player knows about center deck
+    yewVotes: z.record(z.string(), z.string()).optional(), // playerId -> ingredientName for Yew's poison voting
+    poisonedIngredient: z.string().nullable().default(null), // The ingredient that is currently poisoned (players who play it get poisoned)
+    winner: z.enum(['GOOD', 'EVIL', 'TIE']).nullable().default(null), // Winner when game ends
 });
 // REST schemas
 export const Health = z.object({ ok: z.boolean(), ts: z.number() });
@@ -110,6 +139,9 @@ export const AssetList = z.object({
 });
 // Action payloads
 export const ActionPlayCard = z.object({ type: z.literal('play_card'), cardId: z.string() });
+export const ActionUnplayCard = z.object({ type: z.literal('unplay_card') });
+export const ActionClaimCard = z.object({ type: z.literal('claim_card'), cardId: z.string() });
+export const ActionYewTarget = z.object({ type: z.literal('yew_target'), targetPlayerId: z.string() });
 export const ActionReady = z.object({ type: z.literal('ready'), ready: z.boolean() });
 export const ActionStart = z.object({ type: z.literal('start') });
 export const ActionResolution = z.object({
@@ -119,6 +151,9 @@ export const ActionResolution = z.object({
 export const ActionEndDiscussion = z.object({ type: z.literal('end_discussion') });
 export const ActionPayloads = z.discriminatedUnion('type', [
     ActionPlayCard,
+    ActionUnplayCard,
+    ActionClaimCard,
+    ActionYewTarget,
     ActionReady,
     ActionStart,
     ActionResolution,

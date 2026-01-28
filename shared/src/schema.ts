@@ -112,7 +112,7 @@ export const PendingAction = z.discriminatedUnion('actionType', [
   z.object({
     actionType: z.literal('yew_primary'),
     playerId: z.string(),
-    availableTargets: z.array(z.string()), // Player IDs that can be targeted (everyone except self)
+    availableIngredients: z.array(z.string()), // Ingredient names that can be poisoned
   }),
   z.object({
     actionType: z.literal('yew_secondary'),
@@ -143,7 +143,8 @@ export const GameState = z.object({
   pendingActions: z.array(PendingAction).default([]), // for storing pending player actions during resolution
   resolutionLog: z.array(ResolutionLogEntry).default([]), // Log of what happened this round
   playerKnowledge: z.array(PlayerKnowledge).default([]), // Track what each player knows about center deck
-  yewVotes: z.record(z.string(), z.string()).optional(), // playerId -> targetPlayerId for Yew's poison voting
+  yewVotes: z.record(z.string(), z.string()).optional(), // playerId -> ingredientName for Yew's poison voting
+  poisonedIngredient: z.string().nullable().default(null), // The ingredient that is currently poisoned (players who play it get poisoned)
   winner: z.enum(['GOOD', 'EVIL', 'TIE']).nullable().default(null), // Winner when game ends
 });
 

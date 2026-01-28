@@ -28,6 +28,7 @@ export interface ShapedState extends Omit<GameState, 'hands' | 'table'> {
         revealed: boolean;
         image?: string;
         cardId?: string;
+        cardName?: string;
     }>;
 }
 //# sourceMappingURL=types.d.ts.map

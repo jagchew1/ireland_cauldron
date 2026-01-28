@@ -118,11 +118,11 @@ Each player **discards 1 random card** from their remaining 2 cards in hand
 
 #### Yew's Quiet Draught
 Each player who played Yew's Quiet Draught:
-- **Votes** to poison one other player (select from a list)
-- If a **majority** of votes target the same player, that player is **poisoned**
-- **Poisoned players** cannot play cards in the next round (automatically skip night phase)
-- If there's a **tie** in votes, reveal one random center deck card to all voters as a tie-breaker, then revote
-- Poison status is cleared after the player skips their turn
+- **Votes** to poison one ingredient (select from a list of 5 other ingredients)
+- If a **majority** of votes target the same ingredient, that ingredient becomes **poisoned**
+- **Any player who casts the poisoned ingredient** in the following round is poisoned and cannot play cards in the round after that
+- If there's a **tie** in votes, one ingredient is randomly selected to be poisoned
+- Poisoned ingredient status is cleared after one round
 
 ### Secondary Effects
 
@@ -147,9 +147,10 @@ Each player who played Cailleach's Gaze:
 - No matter what the primary ingredient is, its effect does not activate
 
 #### Yew's Quiet Draught (Secondary)
-Each player who played Yew's Quiet Draught:
-- **Poisons themselves** for the next round
-- Cannot play cards in the following night phase
+**Reveal the top card** of the center deck:
+- **If Blood:** All players who played Yew's Quiet Draught become **poisoned** and cannot play cards in the following round
+- **If Milk:** Nothing happens (Yew players are safe)
+- The revealed card remains in its position (on top of the deck)
 
 ## Strategy Tips
 
@@ -162,18 +163,18 @@ Each player who played Yew's Quiet Draught:
 ### For Evil Players
 - Use Faerie Thistle (>3) to remove Milk cards
 - Use Cailleach's Gaze to discard Milk cards
-- Use Yew's Quiet Draught to poison good players and prevent them from acting
+- Use Yew's Quiet Draught to poison key ingredients and disrupt good players' strategies
 - Create chaos and confusion during discussion
 - Try to create ties to waste rounds
 - Use Wolfbane Root to force discards and reduce information
 
 ### General Strategy
 - **Ceol of the Midnight Cairn** is high-risk, high-reward - you might change your own identity!
-- **Yew's Quiet Draught** can eliminate key players but reveals who played it through voting
+- **Yew's Quiet Draught** can eliminate key plays by poisoning strategic ingredients
 - **Faerie Thistle as secondary** is a powerful blocking tool
 - **Wolfbane Root secondary** can save critical information by blocking primary effects
 - Pay attention to what ingredients are discarded - they won't appear again until reshuffled
-- Poisoned players are visible to all - use this information strategically
+- Poisoned ingredients create strategic depth - watch for which ingredient gets poisoned and plan accordingly
 
 ## Phase Timers
 - **Night Phase:** 30 seconds (configurable)

@@ -259,27 +259,29 @@ export function ResolutionModal({ state, myPendingAction, onChoice, onYewTarget 
   }
   
   if (myPendingAction.actionType === 'yew_primary') {
-    const availablePlayers = state.players.filter(p => 
-      myPendingAction.availableTargets.includes(p.id)
-    );
+    // Format ingredient names for display
+    const ingredientOptions = myPendingAction.availableIngredients.map(ingredient => ({
+      value: ingredient,
+      label: formatRoleName(ingredient), // Reuse the role name formatter to convert snake_case to Title Case
+    }));
     
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70">
         <div className="rounded-lg border border-slate-700 bg-slate-900 p-6 shadow-2xl max-w-md">
           <h2 className="mb-4 text-xl font-bold text-green-600">Yew's Quiet Draught (Primary)</h2>
           <p className="mb-4 text-slate-300">
-            Choose another player to poison. If a majority of Yew players choose the same target, that player cannot cast next round.
+            Choose an ingredient to poison. If a majority of Yew players choose the same ingredient, any player who casts it next round will be poisoned and unable to act the following round.
           </p>
           
           <div className="space-y-2 max-h-64 overflow-y-auto">
-            {availablePlayers.map(player => (
+            {ingredientOptions.map(option => (
               <Button
-                key={player.id}
-                onClick={() => onYewTarget(player.id)}
+                key={option.value}
+                onClick={() => onYewTarget(option.value)}
                 variant="outline"
                 className="w-full justify-start text-left hover:bg-green-900/30 hover:border-green-500"
               >
-                {player.name}
+                {option.label}
               </Button>
             ))}
           </div>
@@ -298,7 +300,7 @@ export function ResolutionModal({ state, myPendingAction, onChoice, onYewTarget 
         <div className="rounded-lg border border-slate-700 bg-slate-900 p-6 shadow-2xl max-w-md">
           <h2 className="mb-4 text-xl font-bold text-green-600">Yew's Quiet Draught (Secondary)</h2>
           <p className="mb-4 text-slate-300">
-            You poisoned yourself. You will not be able to cast an ingredient in the next round.
+            The top card of the deck was revealed and it was <strong>Blood</strong>! You are now poisoned and will not be able to cast an ingredient in the next round.
           </p>
           
           <div className="mb-4 rounded-lg bg-red-900/30 border border-red-700 p-4 text-center">

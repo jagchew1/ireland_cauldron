@@ -29,8 +29,8 @@ export const CARD_EFFECTS = {
   },
   "yews_quiet_draught": {
     name: "Yew's Quiet Draught",
-    primary: "Each player who played this chooses another player to poison. If a majority chose the same target, that player cannot cast next round. On tie: reveal top card, play face up if blood or discard if milk.",
-    secondary: "Poison yourself. You cannot cast an ingredient in the next round."
+    primary: "Each player who played this votes for an ingredient to poison. The ingredient with the most votes becomes poisoned for the next round. Any player who casts the poisoned ingredient becomes poisoned. On tie: random selection.",
+    secondary: "Reveal the top card of the center deck. If it's Blood, all players who cast Yew become poisoned."
   }
 } as const;
 

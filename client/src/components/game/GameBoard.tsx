@@ -572,7 +572,7 @@ export function GameBoard({ state, onPlayCard, onUnplayCard, onClaimCard, onReso
                 >
                   <CardImage 
                     src={(c as any).image}
-                    cardName={c.name}
+                    cardName={c.kind === 'INGREDIENT' ? c.name : c.type}
                     playerCount={state.players.length}
                     onClick={() => canPlay && onPlayCard(c.id)}
                     className={`${
