@@ -64,19 +64,28 @@ export function GameBoard({ state, onPlayCard, onUnplayCard, onClaimCard, onReso
   
   // Track timer expiration for flashing effects
   const [isTimeExpired, setIsTimeExpired] = React.useState(false);
+  const [isTimeLow, setIsTimeLow] = React.useState(false); // Track when 10 seconds or less remain
   
   React.useEffect(() => {
     if (!state.expiresAt) {
       setIsTimeExpired(false);
+      setIsTimeLow(false);
       return;
     }
     
     const checkExpiration = () => {
       const now = Date.now();
+      const timeRemaining = state.expiresAt! - now;
+      
       if (now > state.expiresAt!) {
         setIsTimeExpired(true);
+        setIsTimeLow(false);
+      } else if (timeRemaining <= 10000) { // 10 seconds or less
+        setIsTimeExpired(false);
+        setIsTimeLow(true);
       } else {
         setIsTimeExpired(false);
+        setIsTimeLow(false);
       }
     };
     
@@ -548,6 +557,7 @@ export function GameBoard({ state, onPlayCard, onUnplayCard, onClaimCard, onReso
           <div className="flex gap-2">
             {myHand.map((c) => {
               const canPlay = !hasPlayedCard && state.phase === 'NIGHT';
+              const shouldFlash = canPlay && isTimeLow && state.phase === 'NIGHT';
               return (
                 <div
                   key={c.id}
@@ -568,6 +578,8 @@ export function GameBoard({ state, onPlayCard, onUnplayCard, onClaimCard, onReso
                     className={`${
                       !canPlay
                         ? 'opacity-50 cursor-not-allowed' 
+                        : shouldFlash
+                        ? 'cursor-pointer hover:scale-105 transition-transform animate-pulse ring-2 ring-orange-500 shadow-lg shadow-orange-500/50'
                         : isTimeExpired && !hasPlayedCard && state.phase === 'NIGHT'
                         ? 'cursor-pointer hover:scale-105 transition-transform animate-pulse ring-2 ring-yellow-500'
                         : 'cursor-grab active:cursor-grabbing hover:scale-105 transition-transform'

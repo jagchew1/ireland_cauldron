@@ -177,7 +177,7 @@ Each player who played Yew's Quiet Draught:
 
 ## Phase Timers
 - **Night Phase:** 30 seconds (configurable)
-- **Day Phase:** 45 seconds (configurable) - *timer forces advance to night even if players haven't clicked "End Discussion"*
+- **Day Phase:** 60 seconds (configurable) - *timer forces advance to night even if players haven't clicked "End Discussion"*
 - **Resolution:** Automatic (processes effects, then waits for player actions like Cailleach choices)
 
 ## End Game

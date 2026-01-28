@@ -201,6 +201,13 @@ export function forceNightPhaseEnd(state: GameState) {
       state.table.push({ playerId: player.id, cardId: card.id, card, revealed: false });
       const cardName = card.kind === 'INGREDIENT' ? card.name : card.type;
       console.log(`Auto-played random card for ${player.name}: ${cardName}`);
+      
+      // Create a pending action to notify this player
+      state.pendingActions.unshift({
+        actionType: 'forced_play_notification',
+        playerId: player.id,
+        cardName,
+      });
     }
   }
   
@@ -986,6 +993,9 @@ export function processResolutionAction(state: GameState, playerId: string, choi
   } else if (action.actionType === 'yew_secondary') {
     // Just confirmation of self-poison
     // Poison status already set
+  } else if (action.actionType === 'forced_play_notification') {
+    // Just confirmation that they saw the notification
+    // No state change required
   }
   
   // Remove the action

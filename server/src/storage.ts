@@ -23,7 +23,7 @@ export function createRoom(code: string, maxPlayers: number, config: Partial<Gam
     centerDeck: { cards: [], revealed: [], discarded: [] },
     hands: {},
     table: [],
-    config: { nightSeconds: 30, daySeconds: 15, handSize: 3, ...config },
+    config: { nightSeconds: 30, daySeconds: 60, handSize: 3, ...config },
     expiresAt: null,
     pendingActions: [],
     resolutionLog: [],

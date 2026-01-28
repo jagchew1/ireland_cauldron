@@ -118,6 +118,11 @@ export const PendingAction = z.discriminatedUnion('actionType', [
     actionType: z.literal('yew_secondary'),
     playerId: z.string(), // Player who poisoned themselves
   }),
+  z.object({
+    actionType: z.literal('forced_play_notification'),
+    playerId: z.string(), // Player who had a card auto-played
+    cardName: z.string(), // Name of the card that was auto-played
+  }),
 ]);
 
 export const GameState = z.object({

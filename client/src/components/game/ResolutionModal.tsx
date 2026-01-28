@@ -315,5 +315,34 @@ export function ResolutionModal({ state, myPendingAction, onChoice, onYewTarget 
     );
   }
   
+  if (myPendingAction.actionType === 'forced_play_notification') {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70">
+        <div className="rounded-lg border border-slate-700 bg-slate-900 p-6 shadow-2xl max-w-md">
+          <h2 className="mb-4 text-xl font-bold text-orange-400">⏰ Time's Up!</h2>
+          <p className="mb-4 text-slate-300">
+            The night phase timer expired before you selected a card.
+          </p>
+          
+          <div className="mb-4 rounded-lg bg-orange-900/30 border border-orange-700 p-4 text-center">
+            <div className="text-2xl mb-2">🎲</div>
+            <div className="text-orange-300 font-semibold mb-2">Random Card Played</div>
+            <div className="text-sm text-slate-400">
+              Card: <span className="text-orange-200 font-medium">{formatRoleName(myPendingAction.cardName)}</span>
+            </div>
+          </div>
+          
+          <p className="mb-4 text-sm text-slate-400">
+            A random card from your hand was automatically played for you.
+          </p>
+          
+          <Button onClick={() => onChoice('confirm')} className="w-full bg-orange-600 hover:bg-orange-700">
+            Acknowledge
+          </Button>
+        </div>
+      </div>
+    );
+  }
+  
   return null;
 }
