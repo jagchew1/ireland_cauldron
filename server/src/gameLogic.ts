@@ -376,13 +376,7 @@ export function startResolution(state: GameState) {
   console.log('Table contents:', JSON.stringify(state.table, null, 2));
   state.phase = 'RESOLUTION';
   
-  // Clear poison status from all players (they've now skipped their turn)
-  for (const player of state.players) {
-    if (player.poisoned) {
-      console.log(`Clearing poison status from ${player.name}`);
-      player.poisoned = false;
-    }
-  }
+  // Don't clear poison here - let them skip their next turn first
   
   // Keep previous rounds in log - just add to it with current round number
   
@@ -929,6 +923,14 @@ export function nextRound(state: GameState) {
   // Clear table from previous round (cards already in discard from revealDay)
   state.table = [];
   state.cardClaims = {};
+  
+  // Clear poison status from all players (they've now skipped a round of casting)
+  for (const player of state.players) {
+    if (player.poisoned) {
+      console.log(`Clearing poison status from ${player.name} - they skipped casting`);
+      player.poisoned = false;
+    }
+  }
   
   // Clear poisoned ingredient (it only lasts one round)
   state.poisonedIngredient = null;
