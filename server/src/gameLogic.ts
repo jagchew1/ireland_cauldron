@@ -383,13 +383,20 @@ export function startResolution(state: GameState) {
   console.log('Table contents:', JSON.stringify(state.table, null, 2));
   state.phase = 'RESOLUTION';
   
+  // Clear poison status from players who were blocked from casting (didn't play a card)
+  const playerIdsWhoPlayed = new Set(state.table.map(t => t.playerId));
+  for (const player of state.players) {
+    if (player.poisoned && !playerIdsWhoPlayed.has(player.id)) {
+      console.log(`[CLEAR PLAYER POISON] ${player.name} was blocked from casting - clearing poison`);
+      player.poisoned = false;
+    }
+  }
+  
   // Clear poisoned ingredient now that the night phase is over and cards have been played
   if (state.poisonedIngredient) {
     console.log(`[CLEAR POISON] Clearing poisoned ingredient: "${state.poisonedIngredient}"`);
     state.poisonedIngredient = null;
   }
-  
-  // Don't clear player poison status here - let them skip their next turn first
   
   // Keep previous rounds in log - just add to it with current round number
   
@@ -937,14 +944,8 @@ export function nextRound(state: GameState) {
   state.table = [];
   state.cardClaims = {};
   
-  // Clear poison status from all players (they've now skipped a round of casting)
-  for (const player of state.players) {
-    if (player.poisoned) {
-      console.log(`Clearing poison status from ${player.name} - they skipped casting`);
-      player.poisoned = false;
-    }
-  }
-  
+  // Note: Player poison is NOT cleared here - it's cleared in startResolution
+  // after they've been blocked from casting
   // Note: poisonedIngredient is NOT cleared here - it needs to persist through the next night
   // so we can check if players play the poisoned ingredient
   
