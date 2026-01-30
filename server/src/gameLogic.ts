@@ -239,9 +239,14 @@ export function playCard(state: GameState, playerId: string, cardId: string) {
   const idx = hand?.findIndex((c) => c.id === cardId) ?? -1;
   if (idx < 0) return;
   const [card] = hand!.splice(idx, 1);
+  
+  // Count expected players BEFORE marking anyone as newly poisoned
+  // (players poisoned from playing poisoned ingredient this round should still count)
+  const expectedPlayers = state.players.filter(p => p.connected && !p.poisoned).length;
+  
   state.table.push({ playerId, cardId: card.id, card, revealed: false });
   
-  // Check if this ingredient is poisoned
+  // Check if this ingredient is poisoned (mark player as poisoned AFTER counting)
   if (card.kind === 'INGREDIENT' && state.poisonedIngredient && player) {
     const normalizedCardName = normalizeIngredientName(card.name);
     console.log(`[POISON CHECK] Card: "${card.name}" → normalized: "${normalizedCardName}" | Poisoned ingredient: "${state.poisonedIngredient}"`);
@@ -253,9 +258,7 @@ export function playCard(state: GameState, playerId: string, cardId: string) {
     }
   }
   
-  // Count expected players (connected and not poisoned)
-  const expectedPlayers = state.players.filter(p => p.connected && !p.poisoned).length;
-  console.log(`Cards played: ${state.table.length}/${expectedPlayers} active players (some may be poisoned)`);
+  console.log(`Cards played: ${state.table.length}/${expectedPlayers} active players`);
   
   if (state.table.length >= expectedPlayers) {
     startResolution(state);
