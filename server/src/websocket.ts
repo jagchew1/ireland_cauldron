@@ -3,7 +3,7 @@ import type { Express } from 'express';
 import { z } from 'zod';
 import { WS, RoomCreatePayload, RoomJoinPayload, GameActionPayload, ChatSendPayload } from '@irish-potions/shared';
 import { ensureRoom, getRoom, getAllRooms } from './storage.js';
-import { startGame, playCard, unplayCard, claimCard, revealDay, nextRound, shapeStateFor, processResolutionAction, processYewTarget, hasPendingActions, endDiscussion, forceNightPhaseEnd } from './gameLogic.js';
+import { startGame, playCard, unplayCard, claimCard, revealDay, nextRound, shapeStateFor, processResolutionAction, processYewTarget, hasPendingActions, endDiscussion, forceNightPhaseEnd, sendRune } from './gameLogic.js';
 
 // Helper function to check and handle expired timers
 function checkTimerExpiry(io: IOServer, roomCode: string, state: any) {
@@ -123,6 +123,21 @@ export function initSockets(io: IOServer, _app: Express) {
           break;
         case 'end_discussion':
           endDiscussion(s, playerId);
+          break;
+        case 'send_rune':
+          if (sendRune(s, playerId, action.toPlayerId, action.message)) {
+            // Broadcast public notification that rune was sent (not the message content)
+            const fromPlayer = s.players.find(p => p.id === playerId);
+            const toPlayer = s.players.find(p => p.id === action.toPlayerId);
+            if (fromPlayer && toPlayer) {
+              // Add to resolution log for public visibility
+              s.resolutionLog.push({
+                type: 'info',
+                message: `${fromPlayer.name} sent a rune to ${toPlayer.name}`,
+                round: s.round,
+              });
+            }
+          }
           break;
       }
       broadcastState(io, currentRoom);

@@ -83,6 +83,14 @@ export const PlayerKnowledge = z.object({
   isPublic: z.boolean().default(false), // true if all players know this information
 });
 
+export const RuneMessage = z.object({
+  fromPlayerId: z.string(),
+  toPlayerId: z.string(),
+  message: z.string(),
+  round: z.number(),
+  timestamp: z.number(),
+});
+
 export const PendingAction = z.discriminatedUnion('actionType', [
   z.object({
     actionType: z.literal('cailleach_primary'),
@@ -146,6 +154,8 @@ export const GameState = z.object({
   yewVotes: z.record(z.string(), z.string()).optional(), // playerId -> ingredientName for Yew's poison voting
   poisonedIngredient: z.string().nullable().default(null), // The ingredient that is currently poisoned (players who play it get poisoned)
   winner: z.enum(['GOOD', 'EVIL', 'TIE']).nullable().default(null), // Winner when game ends
+  runes: z.array(RuneMessage).default([]), // Runic communications between players
+  runesSentThisRound: z.record(z.string(), z.boolean()).default({}), // playerId -> has sent rune this day phase
 });
 
 // REST schemas
@@ -167,6 +177,11 @@ export const ActionResolution = z.object({
   choice: z.enum(['keep', 'discard', 'confirm']) 
 });
 export const ActionEndDiscussion = z.object({ type: z.literal('end_discussion') });
+export const ActionSendRune = z.object({ 
+  type: z.literal('send_rune'), 
+  toPlayerId: z.string(),
+  message: z.string()
+});
 export const ActionPayloads = z.discriminatedUnion('type', [
   ActionPlayCard,
   ActionUnplayCard,
@@ -176,4 +191,5 @@ export const ActionPayloads = z.discriminatedUnion('type', [
   ActionStart,
   ActionResolution,
   ActionEndDiscussion,
+  ActionSendRune,
 ]);

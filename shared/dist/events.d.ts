@@ -617,6 +617,26 @@ export declare const GameStatePayload: z.ZodObject<{
     yewVotes: z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodString>>;
     poisonedIngredient: z.ZodDefault<z.ZodNullable<z.ZodString>>;
     winner: z.ZodDefault<z.ZodNullable<z.ZodEnum<["GOOD", "EVIL", "TIE"]>>>;
+    runes: z.ZodDefault<z.ZodArray<z.ZodObject<{
+        fromPlayerId: z.ZodString;
+        toPlayerId: z.ZodString;
+        message: z.ZodString;
+        round: z.ZodNumber;
+        timestamp: z.ZodNumber;
+    }, "strip", z.ZodTypeAny, {
+        message: string;
+        round: number;
+        fromPlayerId: string;
+        toPlayerId: string;
+        timestamp: number;
+    }, {
+        message: string;
+        round: number;
+        fromPlayerId: string;
+        toPlayerId: string;
+        timestamp: number;
+    }>, "many">>;
+    runesSentThisRound: z.ZodDefault<z.ZodRecord<z.ZodString, z.ZodBoolean>>;
 }, "strip", z.ZodTypeAny, {
     round: number;
     deck: {
@@ -779,6 +799,14 @@ export declare const GameStatePayload: z.ZodObject<{
     }[];
     poisonedIngredient: string | null;
     winner: "GOOD" | "EVIL" | "TIE" | null;
+    runes: {
+        message: string;
+        round: number;
+        fromPlayerId: string;
+        toPlayerId: string;
+        timestamp: number;
+    }[];
+    runesSentThisRound: Record<string, boolean>;
     yewVotes?: Record<string, string> | undefined;
 }, {
     deck: {
@@ -943,6 +971,14 @@ export declare const GameStatePayload: z.ZodObject<{
     yewVotes?: Record<string, string> | undefined;
     poisonedIngredient?: string | null | undefined;
     winner?: "GOOD" | "EVIL" | "TIE" | null | undefined;
+    runes?: {
+        message: string;
+        round: number;
+        fromPlayerId: string;
+        toPlayerId: string;
+        timestamp: number;
+    }[] | undefined;
+    runesSentThisRound?: Record<string, boolean> | undefined;
 }>;
 export declare const GameActionPayload: z.ZodDiscriminatedUnion<"type", [z.ZodObject<{
     type: z.ZodLiteral<"play_card">;
@@ -1007,6 +1043,18 @@ export declare const GameActionPayload: z.ZodDiscriminatedUnion<"type", [z.ZodOb
     type: "end_discussion";
 }, {
     type: "end_discussion";
+}>, z.ZodObject<{
+    type: z.ZodLiteral<"send_rune">;
+    toPlayerId: z.ZodString;
+    message: z.ZodString;
+}, "strip", z.ZodTypeAny, {
+    message: string;
+    type: "send_rune";
+    toPlayerId: string;
+}, {
+    message: string;
+    type: "send_rune";
+    toPlayerId: string;
 }>]>;
 export declare const ChatSendPayload: z.ZodObject<{
     roomCode: z.ZodString;

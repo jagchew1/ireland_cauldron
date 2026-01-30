@@ -31,6 +31,8 @@ export function createRoom(code: string, maxPlayers: number, config: Partial<Gam
     cardClaims: {},
     poisonedIngredient: null,
     winner: null,
+    runes: [],
+    runesSentThisRound: {},
   };
   const data: RoomData = { state, socketsByPlayer: new Map(), roomBySocket: new Map() };
   rooms.set(code, data);

@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { RoleTeam as RoleTeamZ, Player as PlayerZ, Role as RoleZ, Card as CardZ, CenterCard as CenterCardZ, IngredientCard as IngredientCardZ, Deck as DeckZ, CenterDeck as CenterDeckZ, Room as RoomZ, PlayedCard as PlayedCardZ, GameConfig as GameConfigZ, GameState as GameStateZ, Phase as PhaseZ, ActionPayloads as ActionPayloadsZ, ResolutionLogEntry as ResolutionLogEntryZ, PlayerKnowledge as PlayerKnowledgeZ, PendingAction as PendingActionZ } from './schema.js';
+import { RoleTeam as RoleTeamZ, Player as PlayerZ, Role as RoleZ, Card as CardZ, CenterCard as CenterCardZ, IngredientCard as IngredientCardZ, Deck as DeckZ, CenterDeck as CenterDeckZ, Room as RoomZ, PlayedCard as PlayedCardZ, GameConfig as GameConfigZ, GameState as GameStateZ, Phase as PhaseZ, ActionPayloads as ActionPayloadsZ, ResolutionLogEntry as ResolutionLogEntryZ, PlayerKnowledge as PlayerKnowledgeZ, PendingAction as PendingActionZ, RuneMessage as RuneMessageZ } from './schema.js';
 export type RoleTeam = z.infer<typeof RoleTeamZ>;
 export type Player = z.infer<typeof PlayerZ>;
 export type Role = z.infer<typeof RoleZ>;
@@ -17,6 +17,7 @@ export type PlayerKnowledge = z.infer<typeof PlayerKnowledgeZ>;
 export type PendingAction = z.infer<typeof PendingActionZ>;
 export type Phase = z.infer<typeof PhaseZ>;
 export type ActionPayloads = z.infer<typeof ActionPayloadsZ>;
+export type RuneMessage = z.infer<typeof RuneMessageZ>;
 export type ClientVisibleCard = Card & {
     image?: string;
 };

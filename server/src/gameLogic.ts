@@ -943,6 +943,9 @@ export function nextRound(state: GameState) {
   state.table = [];
   state.cardClaims = {};
   
+  // Clear runes sent tracker for new day phase
+  state.runesSentThisRound = {};
+  
   // Note: Player poison is NOT cleared here - it's cleared in startResolution
   // after they've been blocked from casting
   // Note: poisonedIngredient is NOT cleared here - it needs to persist through the next night
@@ -1157,5 +1160,41 @@ export function hasPendingActions(state: GameState): boolean {
 
 export function getPendingActionFor(state: GameState, playerId: string): PendingAction | undefined {
   return state.pendingActions.find(a => a.playerId === playerId);
+}
+
+export function sendRune(state: GameState, fromPlayerId: string, toPlayerId: string, message: string): boolean {
+  // Only during day phase
+  if (state.phase !== 'DAY') {
+    console.log(`[RUNE] Cannot send rune - not in day phase`);
+    return false;
+  }
+  
+  // Check if sender already sent a rune this round
+  if (state.runesSentThisRound[fromPlayerId]) {
+    console.log(`[RUNE] Player ${fromPlayerId} already sent a rune this round`);
+    return false;
+  }
+  
+  // Check if target player exists
+  const targetPlayer = state.players.find(p => p.id === toPlayerId);
+  if (!targetPlayer) {
+    console.log(`[RUNE] Target player ${toPlayerId} not found`);
+    return false;
+  }
+  
+  // Add rune
+  state.runes.push({
+    fromPlayerId,
+    toPlayerId,
+    message,
+    round: state.round,
+    timestamp: Date.now(),
+  });
+  
+  // Mark as sent
+  state.runesSentThisRound[fromPlayerId] = true;
+  
+  console.log(`[RUNE] Player ${fromPlayerId} sent rune to ${toPlayerId}`);
+  return true;
 }
 

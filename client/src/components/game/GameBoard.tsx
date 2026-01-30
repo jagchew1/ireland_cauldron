@@ -14,6 +14,7 @@ type Props = {
   onResolutionChoice: (choice: 'keep' | 'discard' | 'confirm') => void;
   onYewTarget: (targetPlayerId: string) => void;
   onEndDiscussion: () => void;
+  onSendRune: (toPlayerId: string, message: string) => void;
 };
 
 function formatRoleName(name: string): string {
@@ -42,11 +43,20 @@ function formatIngredientName(name: string): string {
     .replace(/Cailleachs/g, "Cailleach's");
 }
 
-export function GameBoard({ state, onPlayCard, onUnplayCard, onClaimCard, onResolutionChoice, onYewTarget, onEndDiscussion }: Props) {
+export function GameBoard({ state, onPlayCard, onUnplayCard, onClaimCard, onResolutionChoice, onYewTarget, onEndDiscussion, onSendRune }: Props) {
   const isMobile = useMobile();
   const myId = state.currentPlayerId;
   const myHand = myId ? state.hands[myId] || [] : [];
   const hasPlayedCard = state.table.some(t => t.playerId === myId);
+  
+  // Rune communication state
+  const [showRuneSelector, setShowRuneSelector] = useState(false);
+  const [showReceivedRunes, setShowReceivedRunes] = useState(false);
+  const [selectedRuneTarget, setSelectedRuneTarget] = useState<string | null>(null);
+  
+  const myReceivedRunes = state.runes.filter(r => r.toPlayerId === myId && r.round === state.round);
+  const hasSentRune = myId ? state.runesSentThisRound[myId] : false;
+  const canSendRune = state.phase === 'DAY' && !hasSentRune;
   
   // Expanded deck modal
   const [expandedDeck, setExpandedDeck] = React.useState<'center' | 'discard' | null>(null);
@@ -490,6 +500,97 @@ export function GameBoard({ state, onPlayCard, onUnplayCard, onClaimCard, onReso
         </div>
       )}
       
+      {/* Runic Communication - only during day phase */}
+      {state.phase === 'DAY' && (
+        <div className="rounded-lg border border-purple-700/50 bg-purple-900/10 p-4">
+          <h2 className="mb-3 text-lg font-semibold text-purple-300">Runic Communication</h2>
+          
+          {canSendRune ? (
+            showRuneSelector ? (
+              /* Rune Message Builder */
+              <div className="space-y-3">
+                <div className="text-sm text-slate-300">Select a player to send a rune to:</div>
+                <div className="flex flex-wrap gap-2">
+                  {state.players
+                    .filter(p => p.id !== myId)
+                    .map(player => (
+                      <button
+                        key={player.id}
+                        onClick={() => setSelectedRuneTarget(player.id)}
+                        className={`px-3 py-2 rounded-md text-sm transition-all ${ 
+                          selectedRuneTarget === player.id
+                            ? 'bg-purple-600 text-white ring-2 ring-purple-400'
+                            : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+                        }`}
+                      >
+                        {player.name}
+                      </button>
+                    ))
+                  }
+                </div>
+                
+                {selectedRuneTarget && (
+                  <>
+                    <div className="text-sm text-slate-300 mt-3">Choose your message:</div>
+                    <div className="space-y-2">
+                      {[
+                        { value: 'play_brigid', label: "Play Brigid's Blessing" },
+                        { value: 'play_cailleach', label: "Play Cailleach's Gaze" },
+                        { value: 'play_ceol', label: "Play Ceol" },
+                        { value: 'play_faerie', label: "Play Faerie Thistle" },
+                        { value: 'play_wolfbane', label: "Play Wolfbane Root" },
+                        { value: 'play_yew', label: "Play Yew" },
+                        { value: 'dont_play_brigid', label: "Don't play Brigid's Blessing" },
+                        { value: 'dont_play_cailleach', label: "Don't play Cailleach's Gaze" },
+                        { value: 'dont_play_ceol', label: "Don't play Ceol" },
+                        { value: 'dont_play_faerie', label: "Don't play Faerie Thistle" },
+                        { value: 'dont_play_wolfbane', label: "Don't play Wolfbane Root" },
+                        { value: 'dont_play_yew', label: "Don't play Yew" },
+                        { value: 'trust_me', label: "Trust me" },
+                        { value: 'dont_trust_me', label: "Don't trust me" },
+                        { value: 'follow_lead', label: "Follow my lead" },
+                      ].map(rune => (
+                        <button
+                          key={rune.value}
+                          onClick={() => {
+                            onSendRune(selectedRuneTarget, rune.value);
+                            setShowRuneSelector(false);
+                            setSelectedRuneTarget(null);
+                          }}
+                          className="w-full px-3 py-2 rounded-md text-sm text-left bg-slate-700 text-slate-200 hover:bg-purple-600 hover:text-white transition-colors"
+                        >
+                          {rune.label}
+                        </button>
+                      ))}
+                    </div>
+                    <button
+                      onClick={() => {
+                        setShowRuneSelector(false);
+                        setSelectedRuneTarget(null);
+                      }}
+                      className="mt-2 text-sm text-slate-400 hover:text-slate-200"
+                    >
+                      Cancel
+                    </button>
+                  </>
+                )}
+              </div>
+            ) : (
+              <button
+                onClick={() => setShowRuneSelector(true)}
+                className="w-full px-4 py-2 rounded-md bg-purple-600 hover:bg-purple-700 text-white font-medium transition-colors"
+              >
+                Send a Rune
+              </button>
+            )
+          ) : (
+            <div className="text-sm text-purple-300/70">
+              ✓ Rune sent this round
+            </div>
+          )}
+        </div>
+      )}
+      
       {/* Event Log */}
       {state.resolutionLog && state.resolutionLog.length > 0 && (
         <div className="rounded-lg border border-slate-700 bg-slate-800 p-4">
@@ -873,6 +974,72 @@ export function GameBoard({ state, onPlayCard, onUnplayCard, onClaimCard, onReso
             )}
           </div>
         </div>
+      )}
+      
+      {/* Received Runes Notification Icon - Bottom Right */}
+      {myReceivedRunes.length > 0 && state.phase === 'DAY' && (
+        <>
+          <button
+            onClick={() => setShowReceivedRunes(!showReceivedRunes)}
+            className="fixed bottom-6 right-6 z-40 h-16 w-16 rounded-full bg-gradient-to-br from-purple-500 to-purple-700 shadow-lg shadow-purple-500/50 animate-pulse hover:scale-110 transition-transform flex items-center justify-center text-3xl"
+            aria-label="View received runes"
+          >
+            ✉️
+            {myReceivedRunes.length > 1 && (
+              <div className="absolute -top-1 -right-1 h-6 w-6 rounded-full bg-red-500 text-white text-xs font-bold flex items-center justify-center">
+                {myReceivedRunes.length}
+              </div>
+            )}
+          </button>
+          
+          {showReceivedRunes && (
+            <div className="fixed bottom-24 right-6 z-40 w-80 max-w-[90vw] rounded-lg border-2 border-purple-500 bg-slate-900 p-4 shadow-2xl">
+              <div className="mb-3 flex items-center justify-between">
+                <h3 className="text-lg font-bold text-purple-300">Received Runes</h3>
+                <button
+                  onClick={() => setShowReceivedRunes(false)}
+                  className="text-slate-400 hover:text-slate-200"
+                >
+                  ✕
+                </button>
+              </div>
+              
+              <div className="space-y-3 max-h-64 overflow-y-auto">
+                {myReceivedRunes.map((rune, i) => {
+                  const sender = state.players.find(p => p.id === rune.fromPlayerId);
+                  const messageLabels: Record<string, string> = {
+                    play_brigid: "Play Brigid's Blessing",
+                    play_cailleach: "Play Cailleach's Gaze",
+                    play_ceol: "Play Ceol",
+                    play_faerie: "Play Faerie Thistle",
+                    play_wolfbane: "Play Wolfbane Root",
+                    play_yew: "Play Yew",
+                    dont_play_brigid: "Don't play Brigid's Blessing",
+                    dont_play_cailleach: "Don't play Cailleach's Gaze",
+                    dont_play_ceol: "Don't play Ceol",
+                    dont_play_faerie: "Don't play Faerie Thistle",
+                    dont_play_wolfbane: "Don't play Wolfbane Root",
+                    dont_play_yew: "Don't play Yew",
+                    trust_me: "Trust me",
+                    dont_trust_me: "Don't trust me",
+                    follow_lead: "Follow my lead",
+                  };
+                  
+                  return (
+                    <div key={i} className="rounded-md border border-purple-700 bg-purple-900/20 p-3">
+                      <div className="mb-1 text-xs text-purple-400 font-semibold">
+                        From: {sender?.name || 'Unknown'}
+                      </div>
+                      <div className="text-sm text-slate-200">
+                        "{messageLabels[rune.message] || rune.message}"
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </>
       )}
     </div>
   );
