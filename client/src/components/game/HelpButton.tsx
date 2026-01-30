@@ -56,7 +56,7 @@ export function HelpButton({ playerCount }: Props) {
           <div className="mb-4 rounded-md border border-green-800 bg-green-900/20 p-3">
             <h4 className="mb-2 font-semibold text-green-400">Win Condition</h4>
             <p className="text-sm text-slate-300">
-              Game ends when <strong>center deck + revealed cards = 5 cards total</strong>.
+              Game ends when <strong>center deck = 5 cards remaining</strong>.
             </p>
             <p className="mt-2 text-sm text-slate-300">
               Count remaining cards:

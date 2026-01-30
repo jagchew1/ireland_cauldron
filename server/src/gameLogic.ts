@@ -130,10 +130,9 @@ export function createCenterDeck(): { cards: CenterCard[]; revealed: CenterCard[
 }
 
 export function checkWinCondition(state: GameState): boolean {
-  const revealedCount = state.centerDeck.revealed.length;
   const remainingCount = state.centerDeck.cards.length;
-  // Game ends when deck + revealed = 5 total
-  return revealedCount + remainingCount <= 5;
+  // Game ends when deck has 5 or fewer cards
+  return remainingCount <= 5;
 }
 
 export function calculateWinner(state: GameState): 'GOOD' | 'EVIL' | 'TIE' {
