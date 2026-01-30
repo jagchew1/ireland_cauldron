@@ -229,6 +229,7 @@ export function playCard(state: GameState, playerId: string, cardId: string) {
   
   // Check if player is poisoned
   const player = state.players.find(p => p.id === playerId);
+  console.log(`[PLAY CARD] Player ${player?.name || playerId} attempting to play. Poisoned status: ${player?.poisoned || false}`);
   if (player?.poisoned) {
     console.log(`Player ${playerId} is poisoned and cannot play a card`);
     return;
@@ -243,9 +244,12 @@ export function playCard(state: GameState, playerId: string, cardId: string) {
   // Check if this ingredient is poisoned
   if (card.kind === 'INGREDIENT' && state.poisonedIngredient && player) {
     const normalizedCardName = normalizeIngredientName(card.name);
+    console.log(`[POISON CHECK] Card: "${card.name}" → normalized: "${normalizedCardName}" | Poisoned ingredient: "${state.poisonedIngredient}"`);
     if (normalizedCardName === state.poisonedIngredient) {
       player.poisoned = true;
       console.log(`Player ${player.name} played poisoned ingredient ${card.name} and is now poisoned`);
+    } else {
+      console.log(`[POISON CHECK] No match - player NOT poisoned`);
     }
   }
   
@@ -1104,6 +1108,7 @@ function resolveYewVotes(state: GameState) {
   
   // Store the poisoned ingredient for the next round
   state.poisonedIngredient = poisonedIngredient;
+  console.log(`[YEW VOTES RESOLVED] Poisoned ingredient set to: "${poisonedIngredient}"`);
   
   // Clear the votes
   delete (state as any).yewVotes;
