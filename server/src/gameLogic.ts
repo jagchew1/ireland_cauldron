@@ -1132,17 +1132,21 @@ export function endDiscussion(state: GameState, playerId: string) {
   player.endedDiscussion = true;
   console.log(`Player ${player.name} (${player.id}) ended discussion`);
   
-  // Check if all players have ended discussion
+  // Check if 66%+ of players have ended discussion
   console.log('Current player states:');
   state.players.forEach(p => {
     console.log(`  - ${p.name} (${p.id}): endedDiscussion=${p.endedDiscussion}, connected=${p.connected}`);
   });
   
-  const allEnded = state.players.every(p => p.endedDiscussion);
-  console.log(`All ended check: ${allEnded} (${state.players.filter(p => p.endedDiscussion).length}/${state.players.length} players)`);
+  const readyCount = state.players.filter(p => p.endedDiscussion).length;
+  const totalPlayers = state.players.length;
+  const threshold = Math.ceil(totalPlayers * 0.66); // 66% threshold
+  const ready = readyCount >= threshold;
   
-  if (allEnded) {
-    console.log('All players ended discussion - starting next round');
+  console.log(`Ready check: ${ready} (${readyCount}/${totalPlayers} players, threshold: ${threshold})`);
+  
+  if (ready) {
+    console.log(`${readyCount}/${totalPlayers} players ready (≥66%) - starting next round`);
     nextRound(state);
   }
 }

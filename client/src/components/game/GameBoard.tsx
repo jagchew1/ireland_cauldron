@@ -4,7 +4,7 @@ import { ResolutionModal } from './ResolutionModal';
 import { HelpButton } from './HelpButton';
 import { CountdownTimer } from './CountdownTimer';
 import { useMobile } from '../../hooks/useMobile';
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 
 type Props = {
   state: ShapedState;
@@ -150,6 +150,27 @@ export function GameBoard({ state, onPlayCard, onUnplayCard, onClaimCard, onReso
     const milkCount = allFinalCards.filter(c => c.type === 'MILK').length;
     const bloodCount = allFinalCards.filter(c => c.type === 'BLOOD').length;
     
+    const [revealedCount, setRevealedCount] = useState(0);
+    const [showWinner, setShowWinner] = useState(false);
+    
+    useEffect(() => {
+      // Reveal cards one by one
+      if (revealedCount < allFinalCards.length) {
+        const timer = setTimeout(() => {
+          setRevealedCount(prev => prev + 1);
+        }, 600); // Reveal one card every 600ms
+        return () => clearTimeout(timer);
+      } else if (!showWinner) {
+        // After all cards revealed, wait 1 second then show winner
+        const timer = setTimeout(() => setShowWinner(true), 1000);
+        return () => clearTimeout(timer);
+      }
+    }, [revealedCount, allFinalCards.length, showWinner]);
+    
+    const revealedCards = allFinalCards.slice(0, revealedCount);
+    const currentMilk = revealedCards.filter(c => c.type === 'MILK').length;
+    const currentBlood = revealedCards.filter(c => c.type === 'BLOOD').length;
+    
     return (
       <div className="mx-auto max-w-5xl space-y-6 p-4">
         <div className="flex items-center justify-between">
@@ -157,41 +178,83 @@ export function GameBoard({ state, onPlayCard, onUnplayCard, onClaimCard, onReso
           <div>Game Over</div>
         </div>
         
-        {/* Winner Banner */}
-        <div className={`rounded-lg border-4 p-8 text-center ${
-          state.winner === 'GOOD' 
-            ? 'border-green-500 bg-green-900/30' 
-            : state.winner === 'EVIL'
-            ? 'border-red-500 bg-red-900/30'
-            : 'border-yellow-500 bg-yellow-900/30'
-        }`}>
-          <h1 className={`mb-4 text-4xl font-bold ${
-            state.winner === 'GOOD' 
-              ? 'text-green-400' 
-              : state.winner === 'EVIL'
-              ? 'text-red-400'
-              : 'text-yellow-400'
-          }`}>
-            {state.winner === 'GOOD' ? 'Good Wins!' : state.winner === 'EVIL' ? 'Evil Wins!' : "It's a Tie!"}
-          </h1>
-          <div className="text-xl text-slate-300">
-            Final Count: {milkCount} Milk vs {bloodCount} Blood
+        {/* Running Score Display */}
+        <div className="rounded-lg border border-slate-700 bg-slate-800 p-6 text-center">
+          <div className="mb-4 text-2xl font-bold text-slate-200">
+            Final Cards Reveal
           </div>
+          <div className="flex items-center justify-center gap-8 text-3xl font-bold">
+            <div className="text-green-400">
+              <div className="text-sm text-slate-400 mb-1">Milk</div>
+              <div className="text-5xl">{currentMilk}</div>
+            </div>
+            <div className="text-slate-500 text-4xl">vs</div>
+            <div className="text-red-400">
+              <div className="text-sm text-slate-400 mb-1">Blood</div>
+              <div className="text-5xl">{currentBlood}</div>
+            </div>
+          </div>
+          {revealedCount < allFinalCards.length && (
+            <div className="mt-4 text-slate-400 animate-pulse">
+              Revealing cards... {revealedCount} / {allFinalCards.length}
+            </div>
+          )}
         </div>
         
-        {/* Final Cards */}
+        {/* Winner Banner - only show after all cards revealed */}
+        {showWinner && (
+          <div className={`rounded-lg border-4 p-8 text-center animate-[pulse_1s_ease-in-out_3] ${
+            state.winner === 'GOOD' 
+              ? 'border-green-500 bg-green-900/30' 
+              : state.winner === 'EVIL'
+              ? 'border-red-500 bg-red-900/30'
+              : 'border-yellow-500 bg-yellow-900/30'
+          }`}>
+            <h1 className={`mb-4 text-4xl font-bold ${
+              state.winner === 'GOOD' 
+                ? 'text-green-400' 
+                : state.winner === 'EVIL'
+                ? 'text-red-400'
+                : 'text-yellow-400'
+            }`}>
+              {state.winner === 'GOOD' ? '🎉 Good Wins! 🎉' : state.winner === 'EVIL' ? '💀 Evil Wins! 💀' : "⚖️ It's a Tie! ⚖️"}
+            </h1>
+            <div className="text-xl text-slate-300">
+              Final Count: {milkCount} Milk vs {bloodCount} Blood
+            </div>
+          </div>
+        )}
+        
+        {/* Cards Grid */}
         <div className="rounded-lg border border-slate-700 bg-slate-800 p-4">
-          <h2 className="mb-3 text-lg font-semibold text-slate-200">Final Cards (Deck + Revealed)</h2>
+          <h2 className="mb-3 text-lg font-semibold text-slate-200">Final Cards</h2>
           <div className="flex flex-wrap gap-2">
             {allFinalCards.map((card, i) => (
-              <div key={i} className={`h-32 w-24 rounded-md border-2 overflow-hidden ${
-                card.type === 'MILK' ? 'border-green-500' : 'border-red-500'
-              }`}>
-                <img 
-                  src={`/assets/center_deck/${card.type.toLowerCase()}.png`} 
-                  alt={card.type}
-                  className="h-full w-full object-cover"
-                />
+              <div 
+                key={i} 
+                className={`h-32 w-24 rounded-md border-2 overflow-hidden transition-all duration-500 ${
+                  i < revealedCount 
+                    ? card.type === 'MILK' 
+                      ? 'border-green-500 opacity-100' 
+                      : 'border-red-500 opacity-100'
+                    : 'border-slate-600 opacity-30 scale-95'
+                } ${i === revealedCount - 1 ? 'ring-4 ring-yellow-400 scale-110' : ''}`}
+                style={{ 
+                  transform: i < revealedCount ? 'rotateY(0deg)' : 'rotateY(180deg)',
+                  transition: 'all 0.6s ease-in-out'
+                }}
+              >
+                {i < revealedCount ? (
+                  <img 
+                    src={`/assets/center_deck/${card.type.toLowerCase()}.png`} 
+                    alt={card.type}
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  <div className="h-full w-full bg-slate-700 flex items-center justify-center text-slate-500">
+                    ?
+                  </div>
+                )}
               </div>
             ))}
           </div>
@@ -545,8 +608,31 @@ export function GameBoard({ state, onPlayCard, onUnplayCard, onClaimCard, onReso
                 End Discussion
               </button>
             )}
-            <div className="mt-1 text-xs text-slate-400">
-              {state.players.filter(p => p.endedDiscussion).length} / {state.players.length} players ready
+            
+            {/* Voting Progress Bar */}
+            <div className="mt-2">
+              <div className="flex items-center justify-between text-xs text-slate-400 mb-1">
+                <span>
+                  {state.players.filter(p => p.endedDiscussion).length} / {state.players.length} players ready
+                </span>
+                <span className="text-slate-500">
+                  {Math.ceil(state.players.length * 0.66)} needed (66%)
+                </span>
+              </div>
+              
+              {/* Progress Bar */}
+              <div className="w-full bg-slate-700 rounded-full h-2 overflow-hidden">
+                <div 
+                  className={`h-full transition-all duration-300 ${
+                    state.players.filter(p => p.endedDiscussion).length >= Math.ceil(state.players.length * 0.66)
+                      ? 'bg-green-500'
+                      : 'bg-blue-500'
+                  }`}
+                  style={{ 
+                    width: `${(state.players.filter(p => p.endedDiscussion).length / state.players.length) * 100}%` 
+                  }}
+                />
+              </div>
             </div>
           </div>
         )}
