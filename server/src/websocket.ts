@@ -125,17 +125,19 @@ export function initSockets(io: IOServer, _app: Express) {
           endDiscussion(s, playerId);
           break;
         case 'send_rune':
-          if (sendRune(s, playerId, res.data.toPlayerId, res.data.message)) {
-            // Broadcast public notification that rune was sent (not the message content)
-            const fromPlayer = s.players.find(p => p.id === playerId);
-            const toPlayer = s.players.find(p => p.id === res.data.toPlayerId);
-            if (fromPlayer && toPlayer) {
-              // Add to resolution log for public visibility
-              s.resolutionLog.push({
-                type: 'info',
-                message: `${fromPlayer.name} sent a rune to ${toPlayer.name}`,
-                round: s.round,
-              });
+          if (res.data.type === 'send_rune') {
+            if (sendRune(s, playerId, res.data.toPlayerId, res.data.message)) {
+              // Broadcast public notification that rune was sent (not the message content)
+              const fromPlayer = s.players.find(p => p.id === playerId);
+              const toPlayer = s.players.find(p => p.id === res.data.toPlayerId);
+              if (fromPlayer && toPlayer) {
+                // Add to resolution log for public visibility
+                s.resolutionLog.push({
+                  type: 'info',
+                  message: `${fromPlayer.name} sent a rune to ${toPlayer.name}`,
+                  round: s.round,
+                });
+              }
             }
           }
           break;
