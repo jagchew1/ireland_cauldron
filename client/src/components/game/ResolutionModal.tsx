@@ -1,6 +1,7 @@
 import type { ShapedState, PendingAction } from '@irish-potions/shared';
 import { Button } from '../ui/button';
 import { useState } from 'react';
+import { CardImage } from './CardImage';
 
 type Props = {
   state: ShapedState;
@@ -259,30 +260,44 @@ export function ResolutionModal({ state, myPendingAction, onChoice, onYewTarget 
   }
   
   if (myPendingAction.actionType === 'yew_primary') {
+    // Create a helper to get the correct image path
+    const getIngredientImage = (ingredient: string) => {
+      // Try .JPG first (most files), fallback to .jpg (yew's file)
+      return `/assets/ingredients/${ingredient}.JPG`;
+    };
+    
     // Format ingredient names for display
     const ingredientOptions = myPendingAction.availableIngredients.map(ingredient => ({
       value: ingredient,
-      label: formatRoleName(ingredient), // Reuse the role name formatter to convert snake_case to Title Case
+      label: formatRoleName(ingredient),
+      image: getIngredientImage(ingredient),
     }));
     
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70">
-        <div className="rounded-lg border border-slate-700 bg-slate-900 p-6 shadow-2xl max-w-md">
+        <div className="rounded-lg border border-slate-700 bg-slate-900 p-6 shadow-2xl max-w-2xl">
           <h2 className="mb-4 text-xl font-bold text-green-600">Yew's Quiet Draught (Primary)</h2>
           <p className="mb-4 text-slate-300">
             Choose an ingredient to poison. If a majority of Yew players choose the same ingredient, any player who casts it next round will be poisoned and unable to act the following round.
           </p>
           
-          <div className="space-y-2 max-h-64 overflow-y-auto">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 max-h-96 overflow-y-auto">
             {ingredientOptions.map(option => (
-              <Button
+              <div 
                 key={option.value}
+                className="flex flex-col items-center cursor-pointer group"
                 onClick={() => onYewTarget(option.value)}
-                variant="outline"
-                className="w-full justify-start text-left hover:bg-green-900/30 hover:border-green-500"
               >
-                {option.label}
-              </Button>
+                <CardImage
+                  src={option.image}
+                  cardName={option.label}
+                  playerCount={state.players.length}
+                  className="transition-all group-hover:scale-105 group-hover:ring-2 group-hover:ring-green-500 group-hover:shadow-lg group-hover:shadow-green-500/50"
+                />
+                <span className="mt-2 text-sm text-slate-300 text-center group-hover:text-green-400 transition-colors">
+                  {option.label}
+                </span>
+              </div>
             ))}
           </div>
           

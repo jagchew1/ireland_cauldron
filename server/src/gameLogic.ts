@@ -380,7 +380,13 @@ export function startResolution(state: GameState) {
   console.log('Table contents:', JSON.stringify(state.table, null, 2));
   state.phase = 'RESOLUTION';
   
-  // Don't clear poison here - let them skip their next turn first
+  // Clear poisoned ingredient now that the night phase is over and cards have been played
+  if (state.poisonedIngredient) {
+    console.log(`[CLEAR POISON] Clearing poisoned ingredient: "${state.poisonedIngredient}"`);
+    state.poisonedIngredient = null;
+  }
+  
+  // Don't clear player poison status here - let them skip their next turn first
   
   // Keep previous rounds in log - just add to it with current round number
   
@@ -936,8 +942,8 @@ export function nextRound(state: GameState) {
     }
   }
   
-  // Clear poisoned ingredient (it only lasts one round)
-  state.poisonedIngredient = null;
+  // Note: poisonedIngredient is NOT cleared here - it needs to persist through the next night
+  // so we can check if players play the poisoned ingredient
   
   // Advance to night phase
   state.phase = 'NIGHT';
