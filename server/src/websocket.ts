@@ -125,10 +125,10 @@ export function initSockets(io: IOServer, _app: Express) {
           endDiscussion(s, playerId);
           break;
         case 'send_rune':
-          if (sendRune(s, playerId, action.toPlayerId, action.message)) {
+          if (sendRune(s, playerId, res.data.toPlayerId, res.data.message)) {
             // Broadcast public notification that rune was sent (not the message content)
             const fromPlayer = s.players.find(p => p.id === playerId);
-            const toPlayer = s.players.find(p => p.id === action.toPlayerId);
+            const toPlayer = s.players.find(p => p.id === res.data.toPlayerId);
             if (fromPlayer && toPlayer) {
               // Add to resolution log for public visibility
               s.resolutionLog.push({
