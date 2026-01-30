@@ -124,12 +124,13 @@ export function initSockets(io: IOServer, _app: Express) {
         case 'end_discussion':
           endDiscussion(s, playerId);
           break;
-        case 'send_rune':
-          if (res.data.type === 'send_rune') {
-            if (sendRune(s, playerId, res.data.toPlayerId, res.data.message)) {
+        case 'send_rune': {
+          const runeData = res.data;
+          if (runeData.type === 'send_rune') {
+            if (sendRune(s, playerId, runeData.toPlayerId, runeData.message)) {
               // Broadcast public notification that rune was sent (not the message content)
               const fromPlayer = s.players.find(p => p.id === playerId);
-              const toPlayer = s.players.find(p => p.id === res.data.toPlayerId);
+              const toPlayer = s.players.find(p => p.id === runeData.toPlayerId);
               if (fromPlayer && toPlayer) {
                 // Add to resolution log for public visibility
                 s.resolutionLog.push({
@@ -141,6 +142,7 @@ export function initSockets(io: IOServer, _app: Express) {
             }
           }
           break;
+        }
       }
       broadcastState(io, currentRoom);
     });
