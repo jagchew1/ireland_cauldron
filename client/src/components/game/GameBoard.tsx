@@ -55,6 +55,7 @@ export function GameBoard({ state, onPlayCard, onUnplayCard, onClaimCard, onReso
   const [showRuneSelector, setShowRuneSelector] = useState(false);
   const [showReceivedRunes, setShowReceivedRunes] = useState(false);
   const [selectedRuneTarget, setSelectedRuneTarget] = useState<string | null>(null);
+  const [currentRuneIndex, setCurrentRuneIndex] = useState(0);
   
   const myReceivedRunes = state.runes.filter(r => r.toPlayerId === myId && r.round === state.round);
   const hasSentRune = myId ? state.runesSentThisRound[myId] : false;
@@ -548,7 +549,10 @@ export function GameBoard({ state, onPlayCard, onUnplayCard, onClaimCard, onReso
                     .map(player => (
                       <button
                         key={player.id}
-                        onClick={() => setSelectedRuneTarget(player.id)}
+                        onClick={() => {
+                          setSelectedRuneTarget(player.id);
+                          setCurrentRuneIndex(0); // Reset to first message when changing target
+                        }}
                         className={`px-3 py-2 rounded-md text-sm transition-all ${ 
                           selectedRuneTarget === player.id
                             ? 'bg-purple-600 text-white ring-2 ring-purple-400'
@@ -561,51 +565,88 @@ export function GameBoard({ state, onPlayCard, onUnplayCard, onClaimCard, onReso
                   }
                 </div>
                 
-                {selectedRuneTarget && (
-                  <>
-                    <div className="text-sm text-slate-300 mt-3">Choose your message:</div>
-                    <div className="space-y-2">
-                      {[
-                        { value: 'play_brigid', label: "Play Brigid's Blessing" },
-                        { value: 'play_cailleach', label: "Play Cailleach's Gaze" },
-                        { value: 'play_ceol', label: "Play Ceol" },
-                        { value: 'play_faerie', label: "Play Faerie Thistle" },
-                        { value: 'play_wolfbane', label: "Play Wolfbane Root" },
-                        { value: 'play_yew', label: "Play Yew" },
-                        { value: 'dont_play_brigid', label: "Don't play Brigid's Blessing" },
-                        { value: 'dont_play_cailleach', label: "Don't play Cailleach's Gaze" },
-                        { value: 'dont_play_ceol', label: "Don't play Ceol" },
-                        { value: 'dont_play_faerie', label: "Don't play Faerie Thistle" },
-                        { value: 'dont_play_wolfbane', label: "Don't play Wolfbane Root" },
-                        { value: 'dont_play_yew', label: "Don't play Yew" },
-                        { value: 'trust_me', label: "Trust me" },
-                        { value: 'dont_trust_me', label: "Don't trust me" },
-                        { value: 'follow_lead', label: "Follow my lead" },
-                      ].map(rune => (
-                        <button
-                          key={rune.value}
-                          onClick={() => {
-                            onSendRune(selectedRuneTarget, rune.value);
-                            setShowRuneSelector(false);
-                            setSelectedRuneTarget(null);
-                          }}
-                          className="w-full px-3 py-2 rounded-md text-sm text-left bg-slate-700 text-slate-200 hover:bg-purple-600 hover:text-white transition-colors"
-                        >
-                          {rune.label}
-                        </button>
-                      ))}
-                    </div>
-                    <button
-                      onClick={() => {
-                        setShowRuneSelector(false);
-                        setSelectedRuneTarget(null);
-                      }}
-                      className="mt-2 text-sm text-slate-400 hover:text-slate-200"
-                    >
-                      Cancel
-                    </button>
-                  </>
-                )}
+                {selectedRuneTarget && (() => {
+                  const runeMessages = [
+                    { value: 'play_brigid', label: "Play Brigid's Blessing" },
+                    { value: 'play_cailleach', label: "Play Cailleach's Gaze" },
+                    { value: 'play_ceol', label: "Play Ceol" },
+                    { value: 'play_faerie', label: "Play Faerie Thistle" },
+                    { value: 'play_wolfbane', label: "Play Wolfbane Root" },
+                    { value: 'play_yew', label: "Play Yew" },
+                    { value: 'dont_play_brigid', label: "Don't play Brigid's Blessing" },
+                    { value: 'dont_play_cailleach', label: "Don't play Cailleach's Gaze" },
+                    { value: 'dont_play_ceol', label: "Don't play Ceol" },
+                    { value: 'dont_play_faerie', label: "Don't play Faerie Thistle" },
+                    { value: 'dont_play_wolfbane', label: "Don't play Wolfbane Root" },
+                    { value: 'dont_play_yew', label: "Don't play Yew" },
+                    { value: 'trust_me', label: "Trust me" },
+                    { value: 'dont_trust_me', label: "Don't trust me" },
+                    { value: 'follow_lead', label: "Follow my lead" },
+                  ];
+                  const currentMessage = runeMessages[currentRuneIndex];
+                  
+                  return (
+                    <>
+                      <div className="mt-3 space-y-2">
+                        <div className="text-sm text-slate-300">Choose your message:</div>
+                        {/* Message carousel */}
+                        <div className="flex items-center gap-3">
+                          <button
+                            onClick={() => setCurrentRuneIndex((prev) => 
+                              prev === 0 ? runeMessages.length - 1 : prev - 1
+                            )}
+                            className="px-3 py-2 rounded-md bg-slate-700 hover:bg-slate-600 text-slate-200 transition-colors"
+                            title="Previous message"
+                          >
+                            ←
+                          </button>
+                          
+                          <div className="flex-1 px-4 py-3 rounded-md bg-slate-700 text-slate-200 text-center">
+                            <div className="font-medium">{currentMessage.label}</div>
+                            <div className="text-xs text-slate-400 mt-1">
+                              {currentRuneIndex + 1} / {runeMessages.length}
+                            </div>
+                          </div>
+                          
+                          <button
+                            onClick={() => setCurrentRuneIndex((prev) => 
+                              (prev + 1) % runeMessages.length
+                            )}
+                            className="px-3 py-2 rounded-md bg-slate-700 hover:bg-slate-600 text-slate-200 transition-colors"
+                            title="Next message"
+                          >
+                            →
+                          </button>
+                        </div>
+                        
+                        {/* Send and Cancel buttons */}
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => {
+                              onSendRune(selectedRuneTarget, currentMessage.value);
+                              setShowRuneSelector(false);
+                              setSelectedRuneTarget(null);
+                              setCurrentRuneIndex(0);
+                            }}
+                            className="flex-1 px-4 py-2 rounded-md bg-purple-600 hover:bg-purple-700 text-white font-medium transition-colors"
+                          >
+                            Send Rune
+                          </button>
+                          <button
+                            onClick={() => {
+                              setShowRuneSelector(false);
+                              setSelectedRuneTarget(null);
+                              setCurrentRuneIndex(0);
+                            }}
+                            className="px-4 py-2 rounded-md bg-slate-700 hover:bg-slate-600 text-slate-300 transition-colors"
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      </div>
+                    </>
+                  );
+                })()}
               </div>
             ) : (
               <button
