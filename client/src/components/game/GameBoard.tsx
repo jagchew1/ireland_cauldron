@@ -587,36 +587,71 @@ export function GameBoard({ state, onPlayCard, onUnplayCard, onClaimCard, onReso
                   
                   return (
                     <>
-                      <div className="mt-3 space-y-2">
+                      <div className="mt-3 space-y-3">
                         <div className="text-sm text-slate-300">Choose your message:</div>
-                        {/* Message carousel */}
-                        <div className="flex items-center gap-3">
+                        
+                        {/* Vertical wheel picker */}
+                        <div className="relative h-48 rounded-lg border border-slate-700 bg-slate-900 overflow-hidden">
+                          {/* Scroll container */}
+                          <div className="h-full overflow-y-auto scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-slate-900">
+                            <div className="py-16">
+                              {runeMessages.map((msg, idx) => {
+                                const isSelected = idx === currentRuneIndex;
+                                const distance = Math.abs(idx - currentRuneIndex);
+                                const opacity = distance === 0 ? 1 : distance === 1 ? 0.6 : 0.3;
+                                const scale = distance === 0 ? 1 : distance === 1 ? 0.9 : 0.8;
+                                
+                                return (
+                                  <button
+                                    key={msg.value}
+                                    onClick={() => setCurrentRuneIndex(idx)}
+                                    className={`w-full px-4 py-3 text-center transition-all duration-200 ${
+                                      isSelected 
+                                        ? 'bg-purple-600 text-white font-semibold' 
+                                        : 'text-slate-300 hover:bg-slate-800'
+                                    }`}
+                                    style={{
+                                      opacity,
+                                      transform: `scale(${scale})`,
+                                    }}
+                                  >
+                                    {msg.label}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          </div>
+                          
+                          {/* Center highlight indicator */}
+                          <div className="absolute top-1/2 left-0 right-0 h-12 -translate-y-1/2 border-y-2 border-purple-500 pointer-events-none" />
+                          
+                          {/* Gradient overlays for fade effect */}
+                          <div className="absolute top-0 left-0 right-0 h-16 bg-gradient-to-b from-slate-900 to-transparent pointer-events-none" />
+                          <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-slate-900 to-transparent pointer-events-none" />
+                          
+                          {/* Up/Down navigation buttons */}
                           <button
                             onClick={() => setCurrentRuneIndex((prev) => 
                               prev === 0 ? runeMessages.length - 1 : prev - 1
                             )}
-                            className="px-3 py-2 rounded-md bg-slate-700 hover:bg-slate-600 text-slate-200 transition-colors"
+                            className="absolute top-2 left-1/2 -translate-x-1/2 w-8 h-8 flex items-center justify-center rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 transition-colors z-10"
                             title="Previous message"
                           >
-                            ←
+                            ▲
                           </button>
-                          
-                          <div className="flex-1 px-4 py-3 rounded-md bg-slate-700 text-slate-200 text-center">
-                            <div className="font-medium">{currentMessage.label}</div>
-                            <div className="text-xs text-slate-400 mt-1">
-                              {currentRuneIndex + 1} / {runeMessages.length}
-                            </div>
-                          </div>
-                          
                           <button
                             onClick={() => setCurrentRuneIndex((prev) => 
                               (prev + 1) % runeMessages.length
                             )}
-                            className="px-3 py-2 rounded-md bg-slate-700 hover:bg-slate-600 text-slate-200 transition-colors"
+                            className="absolute bottom-2 left-1/2 -translate-x-1/2 w-8 h-8 flex items-center justify-center rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 transition-colors z-10"
                             title="Next message"
                           >
-                            →
+                            ▼
                           </button>
+                        </div>
+                        
+                        <div className="text-xs text-center text-slate-400">
+                          {currentRuneIndex + 1} of {runeMessages.length}
                         </div>
                         
                         {/* Send and Cancel buttons */}
