@@ -3,7 +3,7 @@ import type { Express } from 'express';
 import { z } from 'zod';
 import { WS, RoomCreatePayload, RoomJoinPayload, GameActionPayload, ChatSendPayload } from '@irish-potions/shared';
 import { ensureRoom, getRoom, getAllRooms } from './storage.js';
-import { startGame, playCard, unplayCard, claimCard, revealDay, nextRound, shapeStateFor, processResolutionAction, processYewTarget, hasPendingActions, endDiscussion, forceNightPhaseEnd, sendRune } from './gameLogic.js';
+import { startGame, playCard, unplayCard, claimCard, revealDay, nextRound, shapeStateFor, processResolutionAction, processYewTarget, hasPendingActions, endDiscussion, forceNightPhaseEnd, sendRune, acknowledgeBio } from './gameLogic.js';
 
 // Helper function to check and handle expired timers
 function checkTimerExpiry(io: IOServer, roomCode: string, state: any) {
@@ -69,7 +69,7 @@ export function initSockets(io: IOServer, _app: Express) {
         
         if (!room.state.players.find((p) => p.id === id)) {
           // New player
-          room.state.players.push({ id, name, connected: true, isReady: false, endedDiscussion: false, poisoned: false });
+          room.state.players.push({ id, name, connected: true, isReady: false, endedDiscussion: false, poisoned: false, acknowledgedBio: false });
         } else {
           // Reconnecting player - update connection status
           const player = room.state.players.find((p) => p.id === id);
@@ -143,6 +143,9 @@ export function initSockets(io: IOServer, _app: Express) {
           }
           break;
         }
+        case 'acknowledge_bio':
+          acknowledgeBio(s, playerId);
+          break;
       }
       broadcastState(io, currentRoom);
     });

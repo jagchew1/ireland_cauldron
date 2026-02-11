@@ -16,6 +16,7 @@ type Props = {
   onYewTarget: (targetPlayerId: string) => void;
   onEndDiscussion: () => void;
   onSendRune: (toPlayerId: string, message: string) => void;
+  onAcknowledgeBio: () => void;
 };
 
 function formatRoleName(name: string): string {
@@ -44,7 +45,7 @@ function formatIngredientName(name: string): string {
     .replace(/Cailleachs/g, "Cailleach's");
 }
 
-export function GameBoard({ state, onPlayCard, onUnplayCard, onClaimCard, onResolutionChoice, onYewTarget, onEndDiscussion, onSendRune }: Props) {
+export function GameBoard({ state, onPlayCard, onUnplayCard, onClaimCard, onResolutionChoice, onYewTarget, onEndDiscussion, onSendRune, onAcknowledgeBio }: Props) {
   const isMobile = useMobile();
   const myId = state.currentPlayerId;
   const myHand = myId ? state.hands[myId] || [] : [];
@@ -325,7 +326,10 @@ export function GameBoard({ state, onPlayCard, onUnplayCard, onClaimCard, onReso
       {showBioModal && myRole && (
         <CharacterBioModal 
           role={myRole}
-          onContinue={() => setShowBioModal(false)}
+          onContinue={() => {
+            setShowBioModal(false);
+            onAcknowledgeBio();
+          }}
         />
       )}
       
@@ -340,7 +344,14 @@ export function GameBoard({ state, onPlayCard, onUnplayCard, onClaimCard, onReso
       <div className="flex items-center justify-between">
         <div>Room {state.room.code}</div>
         <div className="flex items-center gap-4">
-          <CountdownTimer expiresAt={state.expiresAt} phase={state.phase} />
+          {state.round === 1 && state.phase === 'NIGHT' && !state.expiresAt ? (
+            <div className="text-sm text-yellow-400 animate-pulse flex items-center gap-2">
+              <span>⏳</span>
+              <span>Waiting for {state.players.filter(p => !(p as any).acknowledgedBio).length} player(s) to read character bio...</span>
+            </div>
+          ) : (
+            <CountdownTimer expiresAt={state.expiresAt} phase={state.phase} />
+          )}
           <div>Phase: {state.phase} | Round {state.round}</div>
           <HelpButton playerCount={state.players.length} />
         </div>

@@ -158,7 +158,11 @@ export function startGame(state: GameState) {
   state.table = [];
   state.cardClaims = {};
   state.pendingActions = [];
-  state.expiresAt = Date.now() + state.config.nightSeconds * 1000;
+  // Don't set timer yet - wait for all players to acknowledge their character bios
+  // Timer will be set when all players have acknowledged (see acknowledgeBio function)
+  state.expiresAt = null;
+  // Reset acknowledgedBio for all players
+  state.players.forEach(p => p.acknowledgedBio = false);
 }
 
 export function dealToHandSize(state: GameState) {
@@ -1206,5 +1210,32 @@ export function sendRune(state: GameState, fromPlayerId: string, toPlayerId: str
   
   console.log(`[RUNE] Player ${fromPlayerId} sent rune to ${toPlayerId}`);
   return true;
+}
+
+export function acknowledgeBio(state: GameState, playerId: string) {
+  // Find the player
+  const player = state.players.find(p => p.id === playerId);
+  if (!player) {
+    console.log(`[BIO] Player ${playerId} not found`);
+    return;
+  }
+  
+  // Mark as acknowledged
+  player.acknowledgedBio = true;
+  console.log(`[BIO] Player ${player.name} acknowledged their character bio`);
+  
+  // Check if this is round 1 and all players have acknowledged
+  if (state.round === 1 && state.phase === 'NIGHT' && !state.expiresAt) {
+    const allAcknowledged = state.players.every(p => p.acknowledgedBio);
+    
+    if (allAcknowledged) {
+      // Start the timer now that everyone has seen their character
+      state.expiresAt = Date.now() + state.config.nightSeconds * 1000;
+      console.log(`[BIO] All players acknowledged - starting round 1 timer`);
+    } else {
+      const remaining = state.players.filter(p => !p.acknowledgedBio).length;
+      console.log(`[BIO] Waiting for ${remaining} more player(s) to acknowledge`);
+    }
+  }
 }
 
