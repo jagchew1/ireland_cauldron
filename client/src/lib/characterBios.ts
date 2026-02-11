@@ -35,7 +35,7 @@ export function getCharacterDisplayName(roleId: string): string {
     "eriu": "Ériu",
     "fair_dohrik": "Fear Doirche",
     "banshee": "The Banshee",
-    "dullahan": "The Dullahan",
+    "the_dullahan": "The Dullahan",
   };
   
   return specialCases[withoutTeam] || withoutTeam
