@@ -21,21 +21,6 @@ function formatRoleName(name: string): string {
     .join(' ');
 }
 
-function formatIngredientName(name: string): string {
-  // Convert "brigids_blessing" to "Brigid's Blessing"
-  const formatted = name
-    .replace(/_/g, ' ')
-    .split(' ')
-    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(' ');
-  
-  // Add apostrophes where needed
-  return formatted
-    .replace(/Brigids/g, "Brigid's")
-    .replace(/Cailleachs/g, "Cailleach's")
-    .replace(/Yews/g, "Yew's");
-}
-
 export function ResolutionModal({ state, myPendingAction, onChoice, onYewTarget }: Props) {
   const [isMinimized, setIsMinimized] = useState(false);
   const hasPendingActions = state.pendingActions && state.pendingActions.length > 0;
