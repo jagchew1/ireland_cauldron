@@ -1,6 +1,7 @@
 import type { ShapedState } from '@irish-potions/shared';
 import { CardImage } from './CardImage';
 import { ResolutionModal } from './ResolutionModal';
+import { CharacterBioModal } from './CharacterBioModal';
 import { HelpButton } from './HelpButton';
 import { CountdownTimer } from './CountdownTimer';
 import { useMobile } from '../../hooks/useMobile';
@@ -68,6 +69,18 @@ export function GameBoard({ state, onPlayCard, onUnplayCard, onClaimCard, onReso
   // Get player's current role
   const myPlayer = state.players.find(p => p.id === myId);
   const myRole = myPlayer?.roleId ? state.roles[myPlayer.roleId] : undefined;
+  
+  // Character bio modal state - show at start of first NIGHT phase
+  const [hasSeenBio, setHasSeenBio] = React.useState(false);
+  const [showBioModal, setShowBioModal] = React.useState(false);
+  
+  React.useEffect(() => {
+    // Show bio modal when entering NIGHT phase for the first time (round 1)
+    if (state.phase === 'NIGHT' && state.round === 1 && !hasSeenBio && myRole) {
+      setShowBioModal(true);
+      setHasSeenBio(true);
+    }
+  }, [state.phase, state.round, hasSeenBio, myRole]);
   
   // Filter for event log
   const [logFilter, setLogFilter] = React.useState<'current' | 'all'>('current');
@@ -308,6 +321,14 @@ export function GameBoard({ state, onPlayCard, onUnplayCard, onClaimCard, onReso
   
   return (
     <div className="mx-auto max-w-5xl space-y-6 p-4">
+      {/* Character Bio Modal - shown at game start */}
+      {showBioModal && myRole && (
+        <CharacterBioModal 
+          role={myRole}
+          onContinue={() => setShowBioModal(false)}
+        />
+      )}
+      
       {/* Resolution Modal */}
       <ResolutionModal 
         state={state} 
