@@ -202,7 +202,7 @@ export function forceNightPhaseEnd(state: GameState) {
       const randomIndex = Math.floor(Math.random() * hand.length);
       const [card] = hand.splice(randomIndex, 1);
       state.table.push({ playerId: player.id, cardId: card.id, card, revealed: false });
-      const cardName = card.kind === 'INGREDIENT' ? card.name : card.type;
+      const cardName = card.kind === 'INGREDIENT' ? formatIngredientName(card.name) : card.type;
       console.log(`Auto-played random card for ${player.name}: ${cardName}`);
       
       // Create a pending action to notify this player
