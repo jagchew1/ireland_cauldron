@@ -939,6 +939,16 @@ export function revealDay(state: GameState) {
 
 export function nextRound(state: GameState) {
   console.log('=== NEXT ROUND ===');
+  
+  // Check win condition before starting new round
+  if (checkWinCondition(state)) {
+    state.phase = 'ENDED';
+    state.winner = calculateWinner(state);
+    state.expiresAt = null;
+    console.log(`=== GAME ENDED - Winner: ${state.winner} ===`);
+    return;
+  }
+  
   // Clear table from previous round (cards already in discard from revealDay)
   state.table = [];
   state.cardClaims = {};
