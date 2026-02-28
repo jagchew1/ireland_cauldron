@@ -23,7 +23,21 @@ export function createRoom(code: string, maxPlayers: number, config: Partial<Gam
     centerDeck: { cards: [], revealed: [], discarded: [] },
     hands: {},
     table: [],
-    config: { nightSeconds: 30, daySeconds: 60, handSize: 3, ...config },
+    config: { 
+      nightSeconds: 30, 
+      daySeconds: 60, 
+      handSize: 3, 
+      timersEnabled: true,
+      enabledIngredients: [
+        'brigids_blessing',
+        'cailleachs_gaze',
+        'ceol_of_the_midnight_cairn',
+        'faerie_thistle',
+        'wolfbane_root',
+        'yews_quiet_draught',
+      ],
+      ...config 
+    },
     expiresAt: null,
     pendingActions: [],
     resolutionLog: [],
