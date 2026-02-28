@@ -17,6 +17,7 @@ const INGREDIENT_NAMES = {
   'faerie_thistle': 'Faerie Thistle',
   'wolfbane_root': 'Wolfbane Root',
   'yews_quiet_draught': "Yew's Quiet Draught",
+  'innkeepers_lots': "Innkeepers' Lots",
 } as const;
 
 export function GameLobby({ state, onStart, onReady, onUpdateConfig }: Props) {
@@ -143,7 +144,7 @@ export function GameLobby({ state, onStart, onReady, onUpdateConfig }: Props) {
                   })}
                 </div>
                 <div className="text-xs text-slate-500 italic">
-                  {config.enabledIngredients?.length || 6} of 6 ingredients enabled
+                  {config.enabledIngredients?.length || 7} of 7 ingredients enabled
                 </div>
               </div>
             </div>
