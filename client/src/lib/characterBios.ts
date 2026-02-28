@@ -9,13 +9,16 @@ export const CHARACTER_BIOS: Record<string, string> = {
   "good_brigid": "Meaning 'exalted one'; one of the Tuatha Dé Danann, a supernatural race from Irish mythology, often described as god-like beings who possessed great magical and artistic skills. Daughter of chief god the Dagda, she is associated with healing, fertility, craft, and platonic love, and is known as the \"goddess of the poets.\" She is said to have begun the custom of keening, a combination of wailing and singing, while mourning the death of her son Ruadán. The Christian Saint Brigid shares many of the goddess's attributes and her feast day.",
   
   "good_eriu": "From \"fertile land\" or \"land of abundance\"; one of the Tuatha Dé Danann, a supernatural race from Irish mythology, often described as god-like beings who possessed great magical and artistic skills. She is one of three sister goddesses—along with Banba and Fódla—who asked the Milesian druid Amergin that the island be named after them, with Ériu ultimately giving her name to Éire (Ireland). Along with her sisters, she became a symbol of the true spirit of Ireland and a muse for poets who retold her tale in stories and poems.",
-  
+
+  "good_amergin_mac_eccit": "Son of Eccet, Amergin is a warrior-poet and hero in early Irish myth, sometimes distinct from Amergin Glúingel of the Milesians. He is remembered chiefly as the slayer of the triple-headed monster Ellen Trekhend, defeating the beast after it devastated Ireland during Samhain. Amergin's name is associated with inspired speech and heroic prowess.",
   // Villains
   "evil_fair_dohrik": "Literally \"Dark Man\"—a villainous druid in Irish mythology in events surrounding the hero Fionn mac Cumhaill and his wife Sadhbh. He is sometimes described as a malevolent fairy, acting as a butler-like servant of the Fairy Queen. Fear Doirich had sought Sadhbh to wife, but transformed her into a deer or fawn when she refused his advances.",
   
   "evil_banshee": "From Bean Sith meaning \"woman of the fairies\"—the Banshee is a harbinger of death, often appearing as a wailing woman whose mournful cries foretell the passing of a loved one. According to the legend, the Banshee is a spirit tied to specific Irish families, particularly those with surnames beginning with \"O'\" or \"Mac.\" When a member of one of these families is about to die, the Banshee appears to warn them of the impending tragedy. Her cries are said to be so sorrowful that they can bring even the bravest of men to tears.",
   
   "evil_dullahan": "\"Hobgoblin\" or \"dark person\"—a legendary creature in Irish folklore who appears as a headless rider on a black horse, who carries his own head in his hand or under his arm, or as a coachman driving a horse-drawn carriage out of graveyards. The rumour of a Dullahan's appearance often develops near a graveyard or a charnel vault where a wicked aristocrat is reputed to be buried.",
+
+  "evil_ellen_trekhend": "The \"Triple-headed one\", a monstrous being in early Irish legend, described as a three-headed dragon or demon that emerged from a cave on Samhain to ravage the land of Ireland with fire and venom. Each of its heads is said to have breathed destruction, symbolizing plague, famine, and war. In some accounts, it was slain by the hero Amergin mac Eccit after it laid waste to much of the countryside, its blood poisoning the soil where it fell.",
 };
 
 export function getCharacterBio(roleId: string): string | undefined {
@@ -35,7 +38,9 @@ export function getCharacterDisplayName(roleId: string): string {
     "eriu": "Ériu",
     "fair_dohrik": "Fear Doirche",
     "banshee": "The Banshee",
-    "the_dullahan": "The Dullahan",
+    "dullahan": "The Dullahan",
+    "ellen_trekhend": "Ellén Tréchend",
+    "amergin_mac_eccit": "Amergin mac Eccit",
   };
   
   return specialCases[withoutTeam] || withoutTeam
