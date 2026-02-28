@@ -169,16 +169,21 @@ export function GameBoard({ state, onPlayCard, onUnplayCard, onClaimCard, onReso
     firstCard: myHand[0]
   });
   
-  // End game screen
-  if (state.phase === 'ENDED') {
-    const allFinalCards = [...state.centerDeck.cards, ...state.centerDeck.revealed];
-    const milkCount = allFinalCards.filter(c => c.type === 'MILK').length;
-    const bloodCount = allFinalCards.filter(c => c.type === 'BLOOD').length;
-    
-    const [revealedCount, setRevealedCount] = useState(0);
-    const [showWinner, setShowWinner] = useState(false);
-    
-    useEffect(() => {
+  // End game state (hooks must be at top level)
+  const [revealedCount, setRevealedCount] = useState(0);
+  const [showWinner, setShowWinner] = useState(false);
+  
+  // Reset end game state when phase changes or round changes
+  useEffect(() => {
+    if (state.phase !== 'ENDED') {
+      setRevealedCount(0);
+      setShowWinner(false);
+    }
+  }, [state.phase, state.round]);
+  
+  useEffect(() => {
+    if (state.phase === 'ENDED') {
+      const allFinalCards = [...state.centerDeck.cards, ...state.centerDeck.revealed];
       // Reveal cards one by one
       if (revealedCount < allFinalCards.length) {
         const timer = setTimeout(() => {
@@ -190,7 +195,14 @@ export function GameBoard({ state, onPlayCard, onUnplayCard, onClaimCard, onReso
         const timer = setTimeout(() => setShowWinner(true), 1000);
         return () => clearTimeout(timer);
       }
-    }, [revealedCount, allFinalCards.length, showWinner]);
+    }
+  }, [state.phase, revealedCount, showWinner, state.centerDeck.cards.length, state.centerDeck.revealed.length]);
+  
+  // End game screen
+  if (state.phase === 'ENDED') {
+    const allFinalCards = [...state.centerDeck.cards, ...state.centerDeck.revealed];
+    const milkCount = allFinalCards.filter(c => c.type === 'MILK').length;
+    const bloodCount = allFinalCards.filter(c => c.type === 'BLOOD').length;
     
     const revealedCards = allFinalCards.slice(0, revealedCount);
     const currentMilk = revealedCards.filter(c => c.type === 'MILK').length;
