@@ -24,6 +24,7 @@ function formatRoleName(name: string): string {
 
 export function ResolutionModal({ state, myPendingAction, onChoice, onYewTarget, onInnkeeperGuess }: Props) {
   const [isMinimized, setIsMinimized] = useState(false);
+  const [isVotingMinimized, setIsVotingMinimized] = useState(false);
   const hasPendingActions = state.pendingActions && state.pendingActions.length > 0;
   
   if (!hasPendingActions) return null;
@@ -261,8 +262,6 @@ export function ResolutionModal({ state, myPendingAction, onChoice, onYewTarget,
   }
   
   if (myPendingAction.actionType === 'yew_primary') {
-    const [isVotingMinimized, setIsVotingMinimized] = useState(false);
-    
     // Create a helper to get the correct image path
     const getIngredientImage = (ingredient: string) => {
       // Try .JPG first, with fallback for .jpg (yew's file)
@@ -367,8 +366,6 @@ export function ResolutionModal({ state, myPendingAction, onChoice, onYewTarget,
   }
   
   if (myPendingAction.actionType === 'innkeeper_primary') {
-    const [isVotingMinimized, setIsVotingMinimized] = useState(false);
-    
     // Create a helper to get the correct image path
     const getIngredientImage = (ingredient: string) => {
       // Try .JPG first, with fallback for .jpg (yew's file)
