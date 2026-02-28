@@ -255,6 +255,7 @@ export declare const Player: z.ZodObject<{
     connected: z.ZodDefault<z.ZodBoolean>;
     endedDiscussion: z.ZodDefault<z.ZodBoolean>;
     poisoned: z.ZodDefault<z.ZodBoolean>;
+    acknowledgedBio: z.ZodDefault<z.ZodBoolean>;
 }, "strip", z.ZodTypeAny, {
     id: string;
     name: string;
@@ -262,6 +263,7 @@ export declare const Player: z.ZodObject<{
     connected: boolean;
     endedDiscussion: boolean;
     poisoned: boolean;
+    acknowledgedBio: boolean;
     roleId?: string | undefined;
 }, {
     id: string;
@@ -271,6 +273,7 @@ export declare const Player: z.ZodObject<{
     connected?: boolean | undefined;
     endedDiscussion?: boolean | undefined;
     poisoned?: boolean | undefined;
+    acknowledgedBio?: boolean | undefined;
 }>;
 export declare const Room: z.ZodObject<{
     code: z.ZodString;
@@ -353,14 +356,20 @@ export declare const GameConfig: z.ZodObject<{
     nightSeconds: z.ZodDefault<z.ZodNumber>;
     daySeconds: z.ZodDefault<z.ZodNumber>;
     handSize: z.ZodDefault<z.ZodNumber>;
+    timersEnabled: z.ZodDefault<z.ZodBoolean>;
+    enabledIngredients: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
 }, "strip", z.ZodTypeAny, {
     nightSeconds: number;
     daySeconds: number;
     handSize: number;
+    timersEnabled: boolean;
+    enabledIngredients: string[];
 }, {
     nightSeconds?: number | undefined;
     daySeconds?: number | undefined;
     handSize?: number | undefined;
+    timersEnabled?: boolean | undefined;
+    enabledIngredients?: string[] | undefined;
 }>;
 export declare const ResolutionLogEntry: z.ZodObject<{
     type: z.ZodEnum<["primary", "secondary", "info"]>;
@@ -597,6 +606,7 @@ export declare const GameState: z.ZodObject<{
         connected: z.ZodDefault<z.ZodBoolean>;
         endedDiscussion: z.ZodDefault<z.ZodBoolean>;
         poisoned: z.ZodDefault<z.ZodBoolean>;
+        acknowledgedBio: z.ZodDefault<z.ZodBoolean>;
     }, "strip", z.ZodTypeAny, {
         id: string;
         name: string;
@@ -604,6 +614,7 @@ export declare const GameState: z.ZodObject<{
         connected: boolean;
         endedDiscussion: boolean;
         poisoned: boolean;
+        acknowledgedBio: boolean;
         roleId?: string | undefined;
     }, {
         id: string;
@@ -613,6 +624,7 @@ export declare const GameState: z.ZodObject<{
         connected?: boolean | undefined;
         endedDiscussion?: boolean | undefined;
         poisoned?: boolean | undefined;
+        acknowledgedBio?: boolean | undefined;
     }>, "many">;
     spectators: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
     roles: z.ZodRecord<z.ZodString, z.ZodObject<{
@@ -917,14 +929,20 @@ export declare const GameState: z.ZodObject<{
         nightSeconds: z.ZodDefault<z.ZodNumber>;
         daySeconds: z.ZodDefault<z.ZodNumber>;
         handSize: z.ZodDefault<z.ZodNumber>;
+        timersEnabled: z.ZodDefault<z.ZodBoolean>;
+        enabledIngredients: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
     }, "strip", z.ZodTypeAny, {
         nightSeconds: number;
         daySeconds: number;
         handSize: number;
+        timersEnabled: boolean;
+        enabledIngredients: string[];
     }, {
         nightSeconds?: number | undefined;
         daySeconds?: number | undefined;
         handSize?: number | undefined;
+        timersEnabled?: boolean | undefined;
+        enabledIngredients?: string[] | undefined;
     }>;
     expiresAt: z.ZodNullable<z.ZodNumber>;
     pendingActions: z.ZodDefault<z.ZodArray<z.ZodDiscriminatedUnion<"actionType", [z.ZodObject<{
@@ -1179,6 +1197,7 @@ export declare const GameState: z.ZodObject<{
         connected: boolean;
         endedDiscussion: boolean;
         poisoned: boolean;
+        acknowledgedBio: boolean;
         roleId?: string | undefined;
     }[];
     spectators: string[];
@@ -1242,6 +1261,8 @@ export declare const GameState: z.ZodObject<{
         nightSeconds: number;
         daySeconds: number;
         handSize: number;
+        timersEnabled: boolean;
+        enabledIngredients: string[];
     };
     expiresAt: number | null;
     pendingActions: ({
@@ -1350,6 +1371,7 @@ export declare const GameState: z.ZodObject<{
         connected?: boolean | undefined;
         endedDiscussion?: boolean | undefined;
         poisoned?: boolean | undefined;
+        acknowledgedBio?: boolean | undefined;
     }[];
     roles: Record<string, {
         id: string;
@@ -1404,6 +1426,8 @@ export declare const GameState: z.ZodObject<{
         nightSeconds?: number | undefined;
         daySeconds?: number | undefined;
         handSize?: number | undefined;
+        timersEnabled?: boolean | undefined;
+        enabledIngredients?: string[] | undefined;
     };
     expiresAt: number | null;
     round?: number | undefined;
@@ -1589,6 +1613,53 @@ export declare const ActionSendRune: z.ZodObject<{
     type: "send_rune";
     toPlayerId: string;
 }>;
+export declare const ActionAcknowledgeBio: z.ZodObject<{
+    type: z.ZodLiteral<"acknowledge_bio">;
+}, "strip", z.ZodTypeAny, {
+    type: "acknowledge_bio";
+}, {
+    type: "acknowledge_bio";
+}>;
+export declare const ActionUpdateConfig: z.ZodObject<{
+    type: z.ZodLiteral<"update_config">;
+    config: z.ZodObject<{
+        nightSeconds: z.ZodOptional<z.ZodDefault<z.ZodNumber>>;
+        daySeconds: z.ZodOptional<z.ZodDefault<z.ZodNumber>>;
+        handSize: z.ZodOptional<z.ZodDefault<z.ZodNumber>>;
+        timersEnabled: z.ZodOptional<z.ZodDefault<z.ZodBoolean>>;
+        enabledIngredients: z.ZodOptional<z.ZodDefault<z.ZodArray<z.ZodString, "many">>>;
+    }, "strip", z.ZodTypeAny, {
+        nightSeconds?: number | undefined;
+        daySeconds?: number | undefined;
+        handSize?: number | undefined;
+        timersEnabled?: boolean | undefined;
+        enabledIngredients?: string[] | undefined;
+    }, {
+        nightSeconds?: number | undefined;
+        daySeconds?: number | undefined;
+        handSize?: number | undefined;
+        timersEnabled?: boolean | undefined;
+        enabledIngredients?: string[] | undefined;
+    }>;
+}, "strip", z.ZodTypeAny, {
+    type: "update_config";
+    config: {
+        nightSeconds?: number | undefined;
+        daySeconds?: number | undefined;
+        handSize?: number | undefined;
+        timersEnabled?: boolean | undefined;
+        enabledIngredients?: string[] | undefined;
+    };
+}, {
+    type: "update_config";
+    config: {
+        nightSeconds?: number | undefined;
+        daySeconds?: number | undefined;
+        handSize?: number | undefined;
+        timersEnabled?: boolean | undefined;
+        enabledIngredients?: string[] | undefined;
+    };
+}>;
 export declare const ActionPayloads: z.ZodDiscriminatedUnion<"type", [z.ZodObject<{
     type: z.ZodLiteral<"play_card">;
     cardId: z.ZodString;
@@ -1664,5 +1735,50 @@ export declare const ActionPayloads: z.ZodDiscriminatedUnion<"type", [z.ZodObjec
     message: string;
     type: "send_rune";
     toPlayerId: string;
+}>, z.ZodObject<{
+    type: z.ZodLiteral<"acknowledge_bio">;
+}, "strip", z.ZodTypeAny, {
+    type: "acknowledge_bio";
+}, {
+    type: "acknowledge_bio";
+}>, z.ZodObject<{
+    type: z.ZodLiteral<"update_config">;
+    config: z.ZodObject<{
+        nightSeconds: z.ZodOptional<z.ZodDefault<z.ZodNumber>>;
+        daySeconds: z.ZodOptional<z.ZodDefault<z.ZodNumber>>;
+        handSize: z.ZodOptional<z.ZodDefault<z.ZodNumber>>;
+        timersEnabled: z.ZodOptional<z.ZodDefault<z.ZodBoolean>>;
+        enabledIngredients: z.ZodOptional<z.ZodDefault<z.ZodArray<z.ZodString, "many">>>;
+    }, "strip", z.ZodTypeAny, {
+        nightSeconds?: number | undefined;
+        daySeconds?: number | undefined;
+        handSize?: number | undefined;
+        timersEnabled?: boolean | undefined;
+        enabledIngredients?: string[] | undefined;
+    }, {
+        nightSeconds?: number | undefined;
+        daySeconds?: number | undefined;
+        handSize?: number | undefined;
+        timersEnabled?: boolean | undefined;
+        enabledIngredients?: string[] | undefined;
+    }>;
+}, "strip", z.ZodTypeAny, {
+    type: "update_config";
+    config: {
+        nightSeconds?: number | undefined;
+        daySeconds?: number | undefined;
+        handSize?: number | undefined;
+        timersEnabled?: boolean | undefined;
+        enabledIngredients?: string[] | undefined;
+    };
+}, {
+    type: "update_config";
+    config: {
+        nightSeconds?: number | undefined;
+        daySeconds?: number | undefined;
+        handSize?: number | undefined;
+        timersEnabled?: boolean | undefined;
+        enabledIngredients?: string[] | undefined;
+    };
 }>]>;
 //# sourceMappingURL=schema.d.ts.map

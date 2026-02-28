@@ -60,12 +60,16 @@ function addLogEntry(state: GameState, entry: Omit<ResolutionLogEntry, 'round'>)
   });
 }
 
-export function buildDeckFromAssets(): Card[] {
+export function buildDeckFromAssets(enabledIngredients?: string[]): Card[] {
   const ingredientsDir = path.join(assetsRoot, 'ingredients');
   const images = fs.existsSync(ingredientsDir) ? fs.readdirSync(ingredientsDir).filter((n) => IMAGE_RE.test(n)) : [];
   const cards: Card[] = [];
   for (const img of images) {
     const name = img.replace(IMAGE_RE, '');
+    // Skip if this ingredient is not in the enabled list
+    if (enabledIngredients && !enabledIngredients.includes(name)) {
+      continue;
+    }
     for (let i = 0; i < 10; i++) {
       cards.push({ id: `${name}#${i}`, kind: 'INGREDIENT', name, image: `/assets/ingredients/${img}` });
     }
@@ -147,7 +151,7 @@ export function calculateWinner(state: GameState): 'GOOD' | 'EVIL' | 'TIE' {
 }
 
 export function startGame(state: GameState) {
-  state.deck.drawPile = buildDeckFromAssets();
+  state.deck.drawPile = buildDeckFromAssets(state.config.enabledIngredients);
   state.deck.discardPile = [];
   state.centerDeck = createCenterDeck();
   state.hands = Object.fromEntries(state.players.map((p) => [p.id, []]));
@@ -905,7 +909,7 @@ function applyYewSecondary(state: GameState, playerIds: string[]) {
 export function revealDay(state: GameState) {
   console.log('=== DAY PHASE STARTING ===');
   state.phase = 'DAY';
-  state.expiresAt = Date.now() + state.config.daySeconds * 1000;
+  state.expiresAt = state.config.timersEnabled ? Date.now() + state.config.daySeconds * 1000 : null;
   
   // Reset endedDiscussion flags
   state.players.forEach(p => p.endedDiscussion = false);
@@ -968,7 +972,7 @@ export function nextRound(state: GameState) {
   // Advance to night phase
   state.phase = 'NIGHT';
   state.round += 1;
-  state.expiresAt = Date.now() + state.config.nightSeconds * 1000;
+  state.expiresAt = state.config.timersEnabled ? Date.now() + state.config.nightSeconds * 1000 : null;
   console.log(`=== STARTING ROUND ${state.round} ===`);
 }
 
@@ -1230,7 +1234,7 @@ export function acknowledgeBio(state: GameState, playerId: string) {
     
     if (allAcknowledged) {
       // Start the timer now that everyone has seen their character
-      state.expiresAt = Date.now() + state.config.nightSeconds * 1000;
+      state.expiresAt = state.config.timersEnabled ? Date.now() + state.config.nightSeconds * 1000 : null;
       console.log(`[BIO] All players acknowledged - starting round 1 timer`);
     } else {
       const remaining = state.players.filter(p => !p.acknowledgedBio).length;

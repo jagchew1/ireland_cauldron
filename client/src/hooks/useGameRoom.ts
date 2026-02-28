@@ -71,9 +71,13 @@ export function useGameRoom(roomCode: string | null) {
     socketRef.current.emit(WS.GAME_ACTION, { type: 'acknowledge_bio' });
   }, []);
 
+  const updateConfig = useCallback((config: any) => {
+    socketRef.current.emit(WS.GAME_ACTION, { type: 'update_config', config });
+  }, []);
+
   const sendChat = useCallback((room: string, message: string) => {
     socketRef.current.emit(WS.CHAT_SEND, { roomCode: room, message });
   }, []);
 
-  return { state, createRoom, joinRoom, start, ready, playCard, unplayCard, claimCard, resolutionChoice, yewTarget, endDiscussion, sendRune, acknowledgeBio, sendChat };
+  return { state, createRoom, joinRoom, start, ready, playCard, unplayCard, claimCard, resolutionChoice, yewTarget, endDiscussion, sendRune, acknowledgeBio, updateConfig, sendChat };
 }

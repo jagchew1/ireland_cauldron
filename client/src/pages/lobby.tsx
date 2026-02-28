@@ -7,7 +7,7 @@ export default function Lobby() {
   const { roomCode = '' } = useParams();
   const nav = useNavigate();
   const name = sessionStorage.getItem('name') || 'Player';
-  const { state, joinRoom, start, ready } = useGameRoom(roomCode);
+  const { state, joinRoom, start, ready, updateConfig } = useGameRoom(roomCode);
 
   useEffect(() => {
     sessionStorage.setItem('name', name);
@@ -19,5 +19,5 @@ export default function Lobby() {
   }, [state?.phase, nav, roomCode]);
 
   if (!state) return <div className="p-4">Connecting...</div>;
-  return <GameLobby state={state} onStart={start} onReady={ready} />;
+  return <GameLobby state={state} onStart={start} onReady={ready} onUpdateConfig={updateConfig} />;
 }

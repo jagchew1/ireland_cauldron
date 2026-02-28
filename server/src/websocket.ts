@@ -146,6 +146,17 @@ export function initSockets(io: IOServer, _app: Express) {
         case 'acknowledge_bio':
           acknowledgeBio(s, playerId);
           break;
+        case 'update_config': {
+          // Only allow the first player (host) to update config, and only in lobby phase
+          if (s.phase === 'LOBBY' && s.players[0]?.id === playerId) {
+            const configUpdate = res.data.config;
+            if (configUpdate) {
+              // Merge the config updates
+              s.config = { ...s.config, ...configUpdate };
+            }
+          }
+          break;
+        }
       }
       broadcastState(io, currentRoom);
     });

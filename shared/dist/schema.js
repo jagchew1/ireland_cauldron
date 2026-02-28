@@ -36,6 +36,7 @@ export const Player = z.object({
     connected: z.boolean().default(true),
     endedDiscussion: z.boolean().default(false), // for day phase voting
     poisoned: z.boolean().default(false), // cannot play cards next round if true
+    acknowledgedBio: z.boolean().default(false), // whether player has seen their character bio
 });
 export const Room = z.object({
     code: z.string(),
@@ -53,6 +54,15 @@ export const GameConfig = z.object({
     nightSeconds: z.number().default(30),
     daySeconds: z.number().default(45),
     handSize: z.number().default(3),
+    timersEnabled: z.boolean().default(true),
+    enabledIngredients: z.array(z.string()).default([
+        'brigids_blessing',
+        'cailleachs_gaze',
+        'ceol_of_the_midnight_cairn',
+        'faerie_thistle',
+        'wolfbane_root',
+        'yews_quiet_draught',
+    ]),
 });
 export const ResolutionLogEntry = z.object({
     type: z.enum(['primary', 'secondary', 'info']),
@@ -163,6 +173,11 @@ export const ActionSendRune = z.object({
     toPlayerId: z.string(),
     message: z.string()
 });
+export const ActionAcknowledgeBio = z.object({ type: z.literal('acknowledge_bio') });
+export const ActionUpdateConfig = z.object({
+    type: z.literal('update_config'),
+    config: GameConfig.partial(),
+});
 export const ActionPayloads = z.discriminatedUnion('type', [
     ActionPlayCard,
     ActionUnplayCard,
@@ -173,4 +188,6 @@ export const ActionPayloads = z.discriminatedUnion('type', [
     ActionResolution,
     ActionEndDiscussion,
     ActionSendRune,
+    ActionAcknowledgeBio,
+    ActionUpdateConfig,
 ]);
