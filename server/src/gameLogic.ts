@@ -854,6 +854,7 @@ function applyYewPrimary(state: GameState, playerIds: string[]) {
     INGREDIENTS.CEOL,
     INGREDIENTS.FAERIE,
     INGREDIENTS.WOLFBANE,
+    INGREDIENTS.INNKEEPER,
     // Note: Yew itself is not in the list
   ];
   
@@ -917,17 +918,16 @@ function applyYewSecondary(state: GameState, playerIds: string[]) {
 
 function applyInnkeeperPrimary(state: GameState, playerIds: string[]) {
   // Each player who played Innkeepers' Lots votes on which ingredient is most common across all hands
-  // Get all ingredient names from all hands (excluding the innkeeper cards themselves)
-  const allIngredientNames = new Set<string>();
-  Object.values(state.hands).forEach(hand => {
-    hand.forEach(card => {
-      if (card.kind === 'INGREDIENT') {
-        allIngredientNames.add(card.name);
-      }
-    });
-  });
-  
-  const availableIngredients = Array.from(allIngredientNames);
+  // Use all enabled ingredients as options (not just what's in hands)
+  const availableIngredients = state.config.enabledIngredients || [
+    INGREDIENTS.BRIGID,
+    INGREDIENTS.CAILLEACH,
+    INGREDIENTS.CEOL,
+    INGREDIENTS.FAERIE,
+    INGREDIENTS.WOLFBANE,
+    INGREDIENTS.YEW,
+    INGREDIENTS.INNKEEPER,
+  ];
   
   for (const playerId of playerIds) {
     state.pendingActions.push({
