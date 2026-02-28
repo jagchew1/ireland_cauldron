@@ -261,9 +261,15 @@ export function ResolutionModal({ state, myPendingAction, onChoice, onYewTarget,
   }
   
   if (myPendingAction.actionType === 'yew_primary') {
+    const [isVotingMinimized, setIsVotingMinimized] = useState(false);
+    
     // Create a helper to get the correct image path
     const getIngredientImage = (ingredient: string) => {
-      // Try .JPG first (most files), fallback to .jpg (yew's file)
+      // Try .JPG first, with fallback for .jpg (yew's file)
+      // CardImage component will handle missing images with fallback
+      if (ingredient === 'yews_quiet_draught') {
+        return `/assets/ingredients/${ingredient}.jpg`;
+      }
       return `/assets/ingredients/${ingredient}.JPG`;
     };
     
@@ -274,10 +280,37 @@ export function ResolutionModal({ state, myPendingAction, onChoice, onYewTarget,
       image: getIngredientImage(ingredient),
     }));
     
+    if (isVotingMinimized) {
+      return (
+        <div className="fixed bottom-4 right-4 z-50">
+          <button
+            onClick={() => setIsVotingMinimized(false)}
+            className="rounded-lg border border-green-600 bg-slate-800 px-4 py-3 shadow-xl hover:bg-slate-750 transition-colors flex items-center gap-2"
+          >
+            <div className="animate-pulse h-2 w-2 rounded-full bg-green-400"></div>
+            <div className="text-sm text-slate-200">
+              Yew's Voting
+            </div>
+          </button>
+        </div>
+      );
+    }
+    
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70">
         <div className="rounded-lg border border-slate-700 bg-slate-900 p-6 shadow-2xl max-w-2xl">
-          <h2 className="mb-4 text-xl font-bold text-green-600">Yew's Quiet Draught (Primary)</h2>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-bold text-green-600">Yew's Quiet Draught (Primary)</h2>
+            <button
+              onClick={() => setIsVotingMinimized(true)}
+              className="text-slate-400 hover:text-slate-200 transition-colors"
+              title="Minimize"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+          </div>
           <p className="mb-4 text-slate-300">
             Choose an ingredient to poison. If a majority of Yew players choose the same ingredient, any player who casts it next round will be poisoned and unable to act the following round.
           </p>
@@ -334,8 +367,15 @@ export function ResolutionModal({ state, myPendingAction, onChoice, onYewTarget,
   }
   
   if (myPendingAction.actionType === 'innkeeper_primary') {
+    const [isVotingMinimized, setIsVotingMinimized] = useState(false);
+    
     // Create a helper to get the correct image path
     const getIngredientImage = (ingredient: string) => {
+      // Try .JPG first, with fallback for .jpg (yew's file)
+      if (ingredient === 'yews_quiet_draught') {
+        return `/assets/ingredients/${ingredient}.jpg`;
+      }
+      // innkeepers_lots should use .JPG (or will use fallback if missing)
       return `/assets/ingredients/${ingredient}.JPG`;
     };
     
@@ -346,10 +386,37 @@ export function ResolutionModal({ state, myPendingAction, onChoice, onYewTarget,
       image: getIngredientImage(ingredient),
     }));
     
+    if (isVotingMinimized) {
+      return (
+        <div className="fixed bottom-4 right-4 z-50">
+          <button
+            onClick={() => setIsVotingMinimized(false)}
+            className="rounded-lg border border-amber-400 bg-slate-800 px-4 py-3 shadow-xl hover:bg-slate-750 transition-colors flex items-center gap-2"
+          >
+            <div className="animate-pulse h-2 w-2 rounded-full bg-amber-400"></div>
+            <div className="text-sm text-slate-200">
+              Innkeepers' Voting
+            </div>
+          </button>
+        </div>
+      );
+    }
+    
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70">
         <div className="rounded-lg border border-slate-700 bg-slate-900 p-6 shadow-2xl max-w-2xl">
-          <h2 className="mb-4 text-xl font-bold text-amber-400">Innkeepers' Lots (Primary)</h2>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-bold text-amber-400">Innkeepers' Lots (Primary)</h2>
+            <button
+              onClick={() => setIsVotingMinimized(true)}
+              className="text-slate-400 hover:text-slate-200 transition-colors"
+              title="Minimize"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+          </div>
           <p className="mb-4 text-slate-300">
             Guess which ingredient card is most common across all players' hands. If you guess correctly, you'll be able to view a card from the deck and decide whether to discard it.
           </p>
@@ -420,6 +487,29 @@ export function ResolutionModal({ state, myPendingAction, onChoice, onYewTarget,
           <p className="mt-4 text-xs text-slate-400 italic">
             Note: Other players won't know what card you saw or whether you discarded it.
           </p>
+        </div>
+      </div>
+    );
+  }
+  
+  if (myPendingAction.actionType === 'innkeeper_wrong_guess') {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70">
+        <div className="rounded-lg border border-slate-700 bg-slate-900 p-6 shadow-2xl max-w-md">
+          <h2 className="mb-4 text-xl font-bold text-amber-400">Innkeepers' Lots</h2>
+          <p className="mb-4 text-slate-300">
+            You guessed incorrectly.
+          </p>
+          
+          <div className="mb-4 rounded-lg bg-slate-800 border border-slate-700 p-4 text-center">
+            <div className="text-2xl mb-2">❌</div>
+            <div className="text-slate-300 font-semibold">Incorrect Guess</div>
+            <div className="text-sm text-slate-400 mt-1">You won't view a card this round</div>
+          </div>
+          
+          <Button onClick={() => onChoice('confirm')} className="w-full">
+            Acknowledge
+          </Button>
         </div>
       </div>
     );

@@ -133,6 +133,10 @@ export const PendingAction = z.discriminatedUnion('actionType', [
         cardIndex: z.number(), // Position in deck (for logging)
     }),
     z.object({
+        actionType: z.literal('innkeeper_wrong_guess'),
+        playerId: z.string(), // Player who guessed incorrectly
+    }),
+    z.object({
         actionType: z.literal('forced_play_notification'),
         playerId: z.string(), // Player who had a card auto-played
         cardName: z.string(), // Name of the card that was auto-played

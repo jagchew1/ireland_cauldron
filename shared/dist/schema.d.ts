@@ -617,6 +617,15 @@ export declare const PendingAction: z.ZodDiscriminatedUnion<"actionType", [z.Zod
         kind: "CENTER";
     };
 }>, z.ZodObject<{
+    actionType: z.ZodLiteral<"innkeeper_wrong_guess">;
+    playerId: z.ZodString;
+}, "strip", z.ZodTypeAny, {
+    playerId: string;
+    actionType: "innkeeper_wrong_guess";
+}, {
+    playerId: string;
+    actionType: "innkeeper_wrong_guess";
+}>, z.ZodObject<{
     actionType: z.ZodLiteral<"forced_play_notification">;
     playerId: z.ZodString;
     cardName: z.ZodString;
@@ -1161,6 +1170,15 @@ export declare const GameState: z.ZodObject<{
             kind: "CENTER";
         };
     }>, z.ZodObject<{
+        actionType: z.ZodLiteral<"innkeeper_wrong_guess">;
+        playerId: z.ZodString;
+    }, "strip", z.ZodTypeAny, {
+        playerId: string;
+        actionType: "innkeeper_wrong_guess";
+    }, {
+        playerId: string;
+        actionType: "innkeeper_wrong_guess";
+    }>, z.ZodObject<{
         actionType: z.ZodLiteral<"forced_play_notification">;
         playerId: z.ZodString;
         cardName: z.ZodString;
@@ -1411,6 +1429,9 @@ export declare const GameState: z.ZodObject<{
         };
     } | {
         playerId: string;
+        actionType: "innkeeper_wrong_guess";
+    } | {
+        playerId: string;
         actionType: "forced_play_notification";
         cardName: string;
     })[];
@@ -1598,6 +1619,9 @@ export declare const GameState: z.ZodObject<{
             type: "MILK" | "BLOOD";
             kind: "CENTER";
         };
+    } | {
+        playerId: string;
+        actionType: "innkeeper_wrong_guess";
     } | {
         playerId: string;
         actionType: "forced_play_notification";

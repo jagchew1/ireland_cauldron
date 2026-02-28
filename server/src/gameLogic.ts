@@ -1164,6 +1164,9 @@ export function processResolutionAction(state: GameState, playerId: string, choi
         isPublic: false,
       });
     }
+  } else if (action.actionType === 'innkeeper_wrong_guess') {
+    // Just confirmation that they guessed wrong
+    // No state change required
   } else if (action.actionType === 'forced_play_notification') {
     // Just confirmation that they saw the notification
     // No state change required
@@ -1283,16 +1286,27 @@ function resolveInnkeepersVotes(state: GameState) {
     .filter(([_, count]) => count === maxCount)
     .map(([name]) => name);
   
-  // Determine which players guessed correctly
+  // Determine which players guessed correctly and incorrectly
   const correctGuessers: string[] = [];
+  const wrongGuessers: string[] = [];
   for (const [playerId, guessedIngredient] of Object.entries(guesses) as [string, string][]) {
     if (mostCommonIngredients.includes(guessedIngredient)) {
       correctGuessers.push(playerId);
+    } else {
+      wrongGuessers.push(playerId);
     }
   }
   
   // Store results for processing
   (state as any).innkeepersResults = correctGuessers;
+  
+  // Add notifications for players who guessed incorrectly
+  for (const playerId of wrongGuessers) {
+    state.pendingActions.push({
+      actionType: 'innkeeper_wrong_guess',
+      playerId,
+    });
+  }
   
   if (correctGuessers.length > 0) {
     // Assign unique cards from top of deck to each correct guesser
