@@ -14,6 +14,7 @@ type Props = {
   onClaimCard: (cardId: string) => void;
   onResolutionChoice: (choice: 'keep' | 'discard' | 'confirm') => void;
   onYewTarget: (targetPlayerId: string) => void;
+  onInnkeeperGuess: (ingredientName: string) => void;
   onEndDiscussion: () => void;
   onSendRune: (toPlayerId: string, message: string) => void;
   onAcknowledgeBio: () => void;
@@ -42,10 +43,11 @@ function formatIngredientName(name: string): string {
   // Add apostrophes where needed
   return formatted
     .replace(/Brigids/g, "Brigid's")
-    .replace(/Cailleachs/g, "Cailleach's");
+    .replace(/Cailleachs/g, "Cailleach's")
+    .replace(/Innkeepers/g, "Innkeepers'");
 }
 
-export function GameBoard({ state, onPlayCard, onUnplayCard, onClaimCard, onResolutionChoice, onYewTarget, onEndDiscussion, onSendRune, onAcknowledgeBio }: Props) {
+export function GameBoard({ state, onPlayCard, onUnplayCard, onClaimCard, onResolutionChoice, onYewTarget, onInnkeeperGuess, onEndDiscussion, onSendRune, onAcknowledgeBio }: Props) {
   const isMobile = useMobile();
   const myId = state.currentPlayerId;
   const myHand = myId ? state.hands[myId] || [] : [];
@@ -352,6 +354,7 @@ export function GameBoard({ state, onPlayCard, onUnplayCard, onClaimCard, onReso
         myPendingAction={myPendingAction}
         onChoice={onResolutionChoice}
         onYewTarget={onYewTarget}
+        onInnkeeperGuess={onInnkeeperGuess}
       />
       
       <div className="flex items-center justify-between">

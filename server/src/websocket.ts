@@ -3,7 +3,7 @@ import type { Express } from 'express';
 import { z } from 'zod';
 import { WS, RoomCreatePayload, RoomJoinPayload, GameActionPayload, ChatSendPayload } from '@irish-potions/shared';
 import { ensureRoom, getRoom, getAllRooms } from './storage.js';
-import { startGame, playCard, unplayCard, claimCard, revealDay, nextRound, shapeStateFor, processResolutionAction, processYewTarget, hasPendingActions, endDiscussion, forceNightPhaseEnd, sendRune, acknowledgeBio } from './gameLogic.js';
+import { startGame, playCard, unplayCard, claimCard, revealDay, nextRound, shapeStateFor, processResolutionAction, processYewTarget, processInnkeeperGuess, hasPendingActions, endDiscussion, forceNightPhaseEnd, sendRune, acknowledgeBio } from './gameLogic.js';
 
 // Helper function to check and handle expired timers
 function checkTimerExpiry(io: IOServer, roomCode: string, state: any) {
@@ -115,6 +115,9 @@ export function initSockets(io: IOServer, _app: Express) {
           break;
         case 'yew_target':
           processYewTarget(s, playerId, res.data.targetPlayerId);
+          break;
+        case 'innkeeper_guess':
+          processInnkeeperGuess(s, playerId, res.data.ingredientName);
           break;
         case 'resolution_action':
           if (s.phase === 'DAY' && res.data.choice) {

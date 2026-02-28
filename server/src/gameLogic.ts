@@ -20,6 +20,7 @@ const INGREDIENTS = {
   FAERIE: "faerie_thistle",
   WOLFBANE: "wolfbane_root",
   YEW: "yews_quiet_draught",
+  INNKEEPER: "innkeepers_lots",
 } as const;
 
 function normalizeIngredientName(name: string): string {
@@ -33,6 +34,7 @@ function normalizeIngredientName(name: string): string {
   if (lower === INGREDIENTS.FAERIE || lower.includes('faerie') || lower.includes('thistle')) return INGREDIENTS.FAERIE;
   if (lower === INGREDIENTS.WOLFBANE || lower.includes('wolfbane') || lower.includes('wolf')) return INGREDIENTS.WOLFBANE;
   if (lower === INGREDIENTS.YEW || lower.includes('yew') || lower.includes('quiet') || lower.includes('draught')) return INGREDIENTS.YEW;
+  if (lower === INGREDIENTS.INNKEEPER || lower.includes('innkeeper') || lower.includes('lots')) return INGREDIENTS.INNKEEPER;
   
   return lower; // fallback to normalized version
 }
@@ -49,7 +51,8 @@ function formatIngredientName(name: string): string {
   return formatted
     .replace(/Brigids/g, "Brigid's")
     .replace(/Cailleachs/g, "Cailleach's")
-    .replace(/Yews/g, "Yew's");
+    .replace(/Yews/g, "Yew's")
+    .replace(/Innkeepers/g, "Innkeepers'");
 }
 
 // Helper to add log entry with current round number
@@ -496,6 +499,9 @@ function applyPrimaryEffect(
     case INGREDIENTS.YEW:
       applyYewPrimary(state, data.playerIds);
       break;
+    case INGREDIENTS.INNKEEPER:
+      applyInnkeeperPrimary(state, data.playerIds);
+      break;
   }
 }
 
@@ -529,6 +535,9 @@ function applySecondaryEffect(
       break;
     case INGREDIENTS.YEW:
       applyYewSecondary(state, data.playerIds);
+      break;
+    case INGREDIENTS.INNKEEPER:
+      applyInnkeeperSecondary(state, data.playerIds);
       break;
   }
 }
@@ -906,6 +915,66 @@ function applyYewSecondary(state: GameState, playerIds: string[]) {
   }
 }
 
+function applyInnkeeperPrimary(state: GameState, playerIds: string[]) {
+  // Each player who played Innkeepers' Lots votes on which ingredient is most common across all hands
+  // Get all ingredient names from all hands (excluding the innkeeper cards themselves)
+  const allIngredientNames = new Set<string>();
+  Object.values(state.hands).forEach(hand => {
+    hand.forEach(card => {
+      if (card.kind === 'INGREDIENT') {
+        allIngredientNames.add(card.name);
+      }
+    });
+  });
+  
+  const availableIngredients = Array.from(allIngredientNames);
+  
+  for (const playerId of playerIds) {
+    state.pendingActions.push({
+      actionType: 'innkeeper_primary',
+      playerId,
+      availableIngredients,
+    });
+  }
+  
+  addLogEntry(state, {
+    type: 'primary',
+    message: `Innkeepers' Lots: ${playerIds.length} player(s) guessing most common ingredient...`,
+  });
+}
+
+function applyInnkeeperSecondary(state: GameState, playerIds: string[]) {
+  // Each player discards one random card from their hand and draws a replacement from the deck
+  let cardsDiscarded = 0;
+  let cardsDrawn = 0;
+  
+  for (const playerId of playerIds) {
+    const hand = state.hands[playerId];
+    if (hand && hand.length > 0) {
+      // Discard a random card from hand
+      const randomIndex = Math.floor(Math.random() * hand.length);
+      const [discarded] = hand.splice(randomIndex, 1);
+      
+      if (discarded.kind === 'INGREDIENT') {
+        state.deck.discardPile.push(discarded);
+        cardsDiscarded++;
+        
+        // Draw a replacement from the deck
+        if (state.deck.drawPile.length > 0) {
+          const drawn = state.deck.drawPile.pop()!;
+          hand.push(drawn);
+          cardsDrawn++;
+        }
+      }
+    }
+  }
+  
+  addLogEntry(state, {
+    type: 'secondary',
+    message: `Innkeepers' Lots (Secondary): ${cardsDiscarded} card(s) discarded and ${cardsDrawn} card(s) drawn.`,
+  });
+}
+
 export function revealDay(state: GameState) {
   console.log('=== DAY PHASE STARTING ===');
   state.phase = 'DAY';
@@ -1068,6 +1137,33 @@ export function processResolutionAction(state: GameState, playerId: string, choi
   } else if (action.actionType === 'yew_secondary') {
     // Just confirmation of self-poison
     // Poison status already set
+  } else if (action.actionType === 'innkeeper_guess') {
+    // Player viewed a card from deck and decided to keep or discard it
+    // Remove the card from its original position
+    state.centerDeck.cards.splice(action.cardIndex, 1);
+    
+    if (choice === 'discard') {
+      state.centerDeck.discarded.push(action.cardToView);
+      // Track player knowledge (private)
+      state.playerKnowledge.push({
+        playerId,
+        cardId: action.cardToView.id,
+        type: action.cardToView.type,
+        location: 'discard',
+        isPublic: false,
+      });
+    } else {
+      // Keep - place at bottom
+      state.centerDeck.cards.unshift(action.cardToView);
+      // Track player knowledge (private)
+      state.playerKnowledge.push({
+        playerId,
+        cardId: action.cardToView.id,
+        type: action.cardToView.type,
+        location: 'deck',
+        isPublic: false,
+      });
+    }
   } else if (action.actionType === 'forced_play_notification') {
     // Just confirmation that they saw the notification
     // No state change required
@@ -1142,6 +1238,92 @@ function resolveYewVotes(state: GameState) {
   
   // Clear the votes
   delete (state as any).yewVotes;
+}
+
+export function processInnkeeperGuess(state: GameState, playerId: string, ingredientName: string) {
+  // Find and remove this player's pending innkeeper action
+  const actionIndex = state.pendingActions.findIndex(
+    a => a.playerId === playerId && a.actionType === 'innkeeper_primary'
+  );
+  if (actionIndex === -1) return;
+  
+  // Store the guess in a temporary map
+  if (!state.innkeepersVotes) {
+    (state as any).innkeepersVotes = {};
+  }
+  (state as any).innkeepersVotes[playerId] = ingredientName;
+  
+  // Remove this player's pending action
+  state.pendingActions.splice(actionIndex, 1);
+  
+  // Check if all Innkeeper players have voted
+  const remainingInnkeeperActions = state.pendingActions.filter(a => a.actionType === 'innkeeper_primary');
+  if (remainingInnkeeperActions.length === 0) {
+    // All guesses are in - process the results
+    resolveInnkeepersVotes(state);
+  }
+}
+
+function resolveInnkeepersVotes(state: GameState) {
+  const guesses = (state as any).innkeepersVotes || {};
+  
+  // Count all ingredients across all hands
+  const ingredientCount: Record<string, number> = {};
+  Object.values(state.hands).forEach(hand => {
+    hand.forEach(card => {
+      if (card.kind === 'INGREDIENT') {
+        ingredientCount[card.name] = (ingredientCount[card.name] || 0) + 1;
+      }
+    });
+  });
+  
+  // Find the maximum count (most common ingredient)
+  const maxCount = Math.max(...Object.values(ingredientCount), 0);
+  const mostCommonIngredients = Object.entries(ingredientCount)
+    .filter(([_, count]) => count === maxCount)
+    .map(([name]) => name);
+  
+  // Determine which players guessed correctly
+  const correctGuessers: string[] = [];
+  for (const [playerId, guessedIngredient] of Object.entries(guesses) as [string, string][]) {
+    if (mostCommonIngredients.includes(guessedIngredient)) {
+      correctGuessers.push(playerId);
+    }
+  }
+  
+  // Store results for processing
+  (state as any).innkeepersResults = correctGuessers;
+  
+  if (correctGuessers.length > 0) {
+    // Assign unique cards from top of deck to each correct guesser
+    const cardsToView = state.centerDeck.cards.slice(-correctGuessers.length);
+    
+    correctGuessers.forEach((playerId, index) => {
+      if (index < cardsToView.length) {
+        const cardToView = cardsToView[index];
+        const cardIndex = state.centerDeck.cards.length - correctGuessers.length + index;
+        state.pendingActions.push({
+          actionType: 'innkeeper_guess',
+          playerId,
+          cardToView,
+          cardIndex,
+        });
+      }
+    });
+    
+    addLogEntry(state, {
+      type: 'primary',
+      message: `Innkeepers' Lots: ${correctGuessers.length} player(s) guessed correctly and may now view cards from the deck.`,
+    });
+  } else {
+    addLogEntry(state, {
+      type: 'primary',
+      message: `Innkeepers' Lots: No players guessed the most common ingredient correctly.`,
+    });
+  }
+  
+  // Clear the votes
+  delete (state as any).innkeepersVotes;
 }
 
 export function endDiscussion(state: GameState, playerId: string) {

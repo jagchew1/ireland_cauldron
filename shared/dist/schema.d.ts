@@ -570,6 +570,53 @@ export declare const PendingAction: z.ZodDiscriminatedUnion<"actionType", [z.Zod
     playerId: string;
     actionType: "yew_secondary";
 }>, z.ZodObject<{
+    actionType: z.ZodLiteral<"innkeeper_primary">;
+    playerId: z.ZodString;
+    availableIngredients: z.ZodArray<z.ZodString, "many">;
+}, "strip", z.ZodTypeAny, {
+    playerId: string;
+    actionType: "innkeeper_primary";
+    availableIngredients: string[];
+}, {
+    playerId: string;
+    actionType: "innkeeper_primary";
+    availableIngredients: string[];
+}>, z.ZodObject<{
+    actionType: z.ZodLiteral<"innkeeper_guess">;
+    playerId: z.ZodString;
+    cardToView: z.ZodObject<{
+        id: z.ZodString;
+        kind: z.ZodLiteral<"CENTER">;
+        type: z.ZodEnum<["MILK", "BLOOD"]>;
+    }, "strip", z.ZodTypeAny, {
+        id: string;
+        type: "MILK" | "BLOOD";
+        kind: "CENTER";
+    }, {
+        id: string;
+        type: "MILK" | "BLOOD";
+        kind: "CENTER";
+    }>;
+    cardIndex: z.ZodNumber;
+}, "strip", z.ZodTypeAny, {
+    playerId: string;
+    actionType: "innkeeper_guess";
+    cardIndex: number;
+    cardToView: {
+        id: string;
+        type: "MILK" | "BLOOD";
+        kind: "CENTER";
+    };
+}, {
+    playerId: string;
+    actionType: "innkeeper_guess";
+    cardIndex: number;
+    cardToView: {
+        id: string;
+        type: "MILK" | "BLOOD";
+        kind: "CENTER";
+    };
+}>, z.ZodObject<{
     actionType: z.ZodLiteral<"forced_play_notification">;
     playerId: z.ZodString;
     cardName: z.ZodString;
@@ -1067,6 +1114,53 @@ export declare const GameState: z.ZodObject<{
         playerId: string;
         actionType: "yew_secondary";
     }>, z.ZodObject<{
+        actionType: z.ZodLiteral<"innkeeper_primary">;
+        playerId: z.ZodString;
+        availableIngredients: z.ZodArray<z.ZodString, "many">;
+    }, "strip", z.ZodTypeAny, {
+        playerId: string;
+        actionType: "innkeeper_primary";
+        availableIngredients: string[];
+    }, {
+        playerId: string;
+        actionType: "innkeeper_primary";
+        availableIngredients: string[];
+    }>, z.ZodObject<{
+        actionType: z.ZodLiteral<"innkeeper_guess">;
+        playerId: z.ZodString;
+        cardToView: z.ZodObject<{
+            id: z.ZodString;
+            kind: z.ZodLiteral<"CENTER">;
+            type: z.ZodEnum<["MILK", "BLOOD"]>;
+        }, "strip", z.ZodTypeAny, {
+            id: string;
+            type: "MILK" | "BLOOD";
+            kind: "CENTER";
+        }, {
+            id: string;
+            type: "MILK" | "BLOOD";
+            kind: "CENTER";
+        }>;
+        cardIndex: z.ZodNumber;
+    }, "strip", z.ZodTypeAny, {
+        playerId: string;
+        actionType: "innkeeper_guess";
+        cardIndex: number;
+        cardToView: {
+            id: string;
+            type: "MILK" | "BLOOD";
+            kind: "CENTER";
+        };
+    }, {
+        playerId: string;
+        actionType: "innkeeper_guess";
+        cardIndex: number;
+        cardToView: {
+            id: string;
+            type: "MILK" | "BLOOD";
+            kind: "CENTER";
+        };
+    }>, z.ZodObject<{
         actionType: z.ZodLiteral<"forced_play_notification">;
         playerId: z.ZodString;
         cardName: z.ZodString;
@@ -1139,6 +1233,8 @@ export declare const GameState: z.ZodObject<{
     }>, "many">>;
     yewVotes: z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodString>>;
     poisonedIngredient: z.ZodDefault<z.ZodNullable<z.ZodString>>;
+    innkeepersVotes: z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodString>>;
+    innkeepersResults: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
     winner: z.ZodDefault<z.ZodNullable<z.ZodEnum<["GOOD", "EVIL", "TIE"]>>>;
     runes: z.ZodDefault<z.ZodArray<z.ZodObject<{
         fromPlayerId: z.ZodString;
@@ -1302,6 +1398,19 @@ export declare const GameState: z.ZodObject<{
         actionType: "yew_secondary";
     } | {
         playerId: string;
+        actionType: "innkeeper_primary";
+        availableIngredients: string[];
+    } | {
+        playerId: string;
+        actionType: "innkeeper_guess";
+        cardIndex: number;
+        cardToView: {
+            id: string;
+            type: "MILK" | "BLOOD";
+            kind: "CENTER";
+        };
+    } | {
+        playerId: string;
         actionType: "forced_play_notification";
         cardName: string;
     })[];
@@ -1334,6 +1443,8 @@ export declare const GameState: z.ZodObject<{
     }[];
     runesSentThisRound: Record<string, boolean>;
     yewVotes?: Record<string, string> | undefined;
+    innkeepersVotes?: Record<string, string> | undefined;
+    innkeepersResults?: string[] | undefined;
 }, {
     deck: {
         drawPile: ({
@@ -1476,6 +1587,19 @@ export declare const GameState: z.ZodObject<{
         actionType: "yew_secondary";
     } | {
         playerId: string;
+        actionType: "innkeeper_primary";
+        availableIngredients: string[];
+    } | {
+        playerId: string;
+        actionType: "innkeeper_guess";
+        cardIndex: number;
+        cardToView: {
+            id: string;
+            type: "MILK" | "BLOOD";
+            kind: "CENTER";
+        };
+    } | {
+        playerId: string;
         actionType: "forced_play_notification";
         cardName: string;
     })[] | undefined;
@@ -1499,6 +1623,8 @@ export declare const GameState: z.ZodObject<{
     }[] | undefined;
     yewVotes?: Record<string, string> | undefined;
     poisonedIngredient?: string | null | undefined;
+    innkeepersVotes?: Record<string, string> | undefined;
+    innkeepersResults?: string[] | undefined;
     winner?: "GOOD" | "EVIL" | "TIE" | null | undefined;
     runes?: {
         message: string;
@@ -1565,6 +1691,16 @@ export declare const ActionYewTarget: z.ZodObject<{
 }, {
     type: "yew_target";
     targetPlayerId: string;
+}>;
+export declare const ActionInnkeeperGuess: z.ZodObject<{
+    type: z.ZodLiteral<"innkeeper_guess">;
+    ingredientName: z.ZodString;
+}, "strip", z.ZodTypeAny, {
+    type: "innkeeper_guess";
+    ingredientName: string;
+}, {
+    type: "innkeeper_guess";
+    ingredientName: string;
 }>;
 export declare const ActionReady: z.ZodObject<{
     type: z.ZodLiteral<"ready">;
@@ -1693,6 +1829,15 @@ export declare const ActionPayloads: z.ZodDiscriminatedUnion<"type", [z.ZodObjec
 }, {
     type: "yew_target";
     targetPlayerId: string;
+}>, z.ZodObject<{
+    type: z.ZodLiteral<"innkeeper_guess">;
+    ingredientName: z.ZodString;
+}, "strip", z.ZodTypeAny, {
+    type: "innkeeper_guess";
+    ingredientName: string;
+}, {
+    type: "innkeeper_guess";
+    ingredientName: string;
 }>, z.ZodObject<{
     type: z.ZodLiteral<"ready">;
     ready: z.ZodBoolean;

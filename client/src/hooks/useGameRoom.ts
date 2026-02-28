@@ -59,6 +59,10 @@ export function useGameRoom(roomCode: string | null) {
     socketRef.current.emit(WS.GAME_ACTION, { type: 'yew_target', targetPlayerId });
   }, []);
 
+  const innkeeperGuess = useCallback((ingredientName: string) => {
+    socketRef.current.emit(WS.GAME_ACTION, { type: 'innkeeper_guess', ingredientName });
+  }, []);
+
   const endDiscussion = useCallback(() => {
     socketRef.current.emit(WS.GAME_ACTION, { type: 'end_discussion' });
   }, []);
@@ -79,5 +83,5 @@ export function useGameRoom(roomCode: string | null) {
     socketRef.current.emit(WS.CHAT_SEND, { roomCode: room, message });
   }, []);
 
-  return { state, createRoom, joinRoom, start, ready, playCard, unplayCard, claimCard, resolutionChoice, yewTarget, endDiscussion, sendRune, acknowledgeBio, updateConfig, sendChat };
+  return { state, createRoom, joinRoom, start, ready, playCard, unplayCard, claimCard, resolutionChoice, yewTarget, innkeeperGuess, endDiscussion, sendRune, acknowledgeBio, updateConfig, sendChat };
 }

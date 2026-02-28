@@ -8,6 +8,7 @@ type Props = {
   myPendingAction?: PendingAction;
   onChoice: (choice: 'keep' | 'discard' | 'confirm') => void;
   onYewTarget: (targetPlayerId: string) => void;
+  onInnkeeperGuess: (ingredientName: string) => void;
 };
 
 function formatRoleName(name: string): string {
@@ -21,7 +22,7 @@ function formatRoleName(name: string): string {
     .join(' ');
 }
 
-export function ResolutionModal({ state, myPendingAction, onChoice, onYewTarget }: Props) {
+export function ResolutionModal({ state, myPendingAction, onChoice, onYewTarget, onInnkeeperGuess }: Props) {
   const [isMinimized, setIsMinimized] = useState(false);
   const hasPendingActions = state.pendingActions && state.pendingActions.length > 0;
   
@@ -327,6 +328,98 @@ export function ResolutionModal({ state, myPendingAction, onChoice, onYewTarget 
           <Button onClick={() => onChoice('confirm')} className="w-full">
             Acknowledge
           </Button>
+        </div>
+      </div>
+    );
+  }
+  
+  if (myPendingAction.actionType === 'innkeeper_primary') {
+    // Create a helper to get the correct image path
+    const getIngredientImage = (ingredient: string) => {
+      return `/assets/ingredients/${ingredient}.JPG`;
+    };
+    
+    // Format ingredient names for display
+    const ingredientOptions = myPendingAction.availableIngredients.map(ingredient => ({
+      value: ingredient,
+      label: formatRoleName(ingredient),
+      image: getIngredientImage(ingredient),
+    }));
+    
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70">
+        <div className="rounded-lg border border-slate-700 bg-slate-900 p-6 shadow-2xl max-w-2xl">
+          <h2 className="mb-4 text-xl font-bold text-amber-400">Innkeepers' Lots (Primary)</h2>
+          <p className="mb-4 text-slate-300">
+            Guess which ingredient card is most common across all players' hands. If you guess correctly, you'll be able to view a card from the deck and decide whether to discard it.
+          </p>
+          
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 max-h-96 overflow-y-auto">
+            {ingredientOptions.map(option => (
+              <div 
+                key={option.value}
+                className="flex flex-col items-center cursor-pointer group"
+                onClick={() => onInnkeeperGuess(option.value)}
+              >
+                <CardImage
+                  src={option.image}
+                  cardName={option.label}
+                  playerCount={state.players.length}
+                  className="transition-all group-hover:scale-105 group-hover:ring-2 group-hover:ring-amber-400 group-hover:shadow-lg group-hover:shadow-amber-400/50"
+                />
+                <span className="mt-2 text-sm text-slate-300 text-center group-hover:text-amber-400 transition-colors">
+                  {option.label}
+                </span>
+              </div>
+            ))}
+          </div>
+          
+          <p className="mt-4 text-xs text-slate-400 italic">
+            Your guess is secret. If there's a tie for most common, any tied ingredient counts as correct.
+          </p>
+        </div>
+      </div>
+    );
+  }
+  
+  if (myPendingAction.actionType === 'innkeeper_guess') {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70">
+        <div className="rounded-lg border border-slate-700 bg-slate-900 p-6 shadow-2xl max-w-md">
+          <h2 className="mb-4 text-xl font-bold text-amber-400">Innkeepers' Lots - Correct Guess!</h2>
+          <p className="mb-4 text-slate-300">
+            You guessed correctly! You may look at this card from the deck:
+          </p>
+          
+          {/* Show the card */}
+          <div className="mb-6 flex justify-center">
+            <div className={`h-40 w-28 rounded-md border-2 overflow-hidden ${
+              myPendingAction.cardToView.type === 'MILK' ? 'border-green-500' : 'border-red-500'
+            }`}>
+              <img 
+                src={`/assets/center_deck/${myPendingAction.cardToView.type.toLowerCase()}.png`} 
+                alt={myPendingAction.cardToView.type}
+                className="h-full w-full object-cover"
+              />
+            </div>
+          </div>
+          
+          <p className="mb-4 text-sm text-slate-400">
+            Choose what to do with this card:
+          </p>
+          
+          <div className="flex gap-3">
+            <Button onClick={() => onChoice('keep')} className="flex-1">
+              Keep in Deck
+            </Button>
+            <Button onClick={() => onChoice('discard')} className="flex-1 bg-red-600 hover:bg-red-700">
+              Discard Secretly
+            </Button>
+          </div>
+          
+          <p className="mt-4 text-xs text-slate-400 italic">
+            Note: Other players won't know what card you saw or whether you discarded it.
+          </p>
         </div>
       </div>
     );

@@ -31,6 +31,11 @@ export const CARD_EFFECTS = {
     name: "Yew's Quiet Draught",
     primary: "Each player who played this votes for an ingredient to poison. The ingredient with the most votes becomes poisoned for the next round. Any player who casts the poisoned ingredient becomes poisoned. On tie: random selection.",
     secondary: "Reveal the top card of the center deck. If it's Blood, all players who cast Yew become poisoned."
+  },
+  "innkeepers_lots": {
+    name: "Innkeepers' Lots",
+    primary: "Each player who played this votes for which ingredient they believe is most common across all players' hands. Players who guess correctly can view a card from the deck and decide whether to secretly discard it.",
+    secondary: "Discard one of your remaining ingredient cards at random and replace it with one from the ingredient deck."
   }
 } as const;
 

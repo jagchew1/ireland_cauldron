@@ -62,6 +62,7 @@ export const GameConfig = z.object({
         'faerie_thistle',
         'wolfbane_root',
         'yews_quiet_draught',
+        'innkeepers_lots',
     ]),
 });
 export const ResolutionLogEntry = z.object({
@@ -121,6 +122,17 @@ export const PendingAction = z.discriminatedUnion('actionType', [
         playerId: z.string(), // Player who poisoned themselves
     }),
     z.object({
+        actionType: z.literal('innkeeper_primary'),
+        playerId: z.string(),
+        availableIngredients: z.array(z.string()), // Ingredient names that can be guessed
+    }),
+    z.object({
+        actionType: z.literal('innkeeper_guess'),
+        playerId: z.string(),
+        cardToView: CenterCard, // The card this player gets to view
+        cardIndex: z.number(), // Position in deck (for logging)
+    }),
+    z.object({
         actionType: z.literal('forced_play_notification'),
         playerId: z.string(), // Player who had a card auto-played
         cardName: z.string(), // Name of the card that was auto-played
@@ -146,6 +158,8 @@ export const GameState = z.object({
     playerKnowledge: z.array(PlayerKnowledge).default([]), // Track what each player knows about center deck
     yewVotes: z.record(z.string(), z.string()).optional(), // playerId -> ingredientName for Yew's poison voting
     poisonedIngredient: z.string().nullable().default(null), // The ingredient that is currently poisoned (players who play it get poisoned)
+    innkeepersVotes: z.record(z.string(), z.string()).optional(), // playerId -> ingredientName for Innkeepers' Lots voting
+    innkeepersResults: z.array(z.string()).optional(), // Array of playerIds who guessed correctly
     winner: z.enum(['GOOD', 'EVIL', 'TIE']).nullable().default(null), // Winner when game ends
     runes: z.array(RuneMessage).default([]), // Runic communications between players
     runesSentThisRound: z.record(z.string(), z.boolean()).default({}), // playerId -> has sent rune this day phase
@@ -161,6 +175,7 @@ export const ActionPlayCard = z.object({ type: z.literal('play_card'), cardId: z
 export const ActionUnplayCard = z.object({ type: z.literal('unplay_card') });
 export const ActionClaimCard = z.object({ type: z.literal('claim_card'), cardId: z.string() });
 export const ActionYewTarget = z.object({ type: z.literal('yew_target'), targetPlayerId: z.string() });
+export const ActionInnkeeperGuess = z.object({ type: z.literal('innkeeper_guess'), ingredientName: z.string() });
 export const ActionReady = z.object({ type: z.literal('ready'), ready: z.boolean() });
 export const ActionStart = z.object({ type: z.literal('start') });
 export const ActionResolution = z.object({
@@ -183,6 +198,7 @@ export const ActionPayloads = z.discriminatedUnion('type', [
     ActionUnplayCard,
     ActionClaimCard,
     ActionYewTarget,
+    ActionInnkeeperGuess,
     ActionReady,
     ActionStart,
     ActionResolution,
