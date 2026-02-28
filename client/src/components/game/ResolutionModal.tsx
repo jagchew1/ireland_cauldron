@@ -264,9 +264,8 @@ export function ResolutionModal({ state, myPendingAction, onChoice, onYewTarget,
   if (myPendingAction.actionType === 'yew_primary') {
     // Create a helper to get the correct image path
     const getIngredientImage = (ingredient: string) => {
-      // Try .JPG first, with fallback for .jpg (yew's file)
-      // CardImage component will handle missing images with fallback
-      if (ingredient === 'yews_quiet_draught') {
+      // Handle lowercase .jpg files
+      if (ingredient === 'yews_quiet_draught' || ingredient === 'innkeepers_lots') {
         return `/assets/ingredients/${ingredient}.jpg`;
       }
       return `/assets/ingredients/${ingredient}.JPG`;
@@ -368,11 +367,10 @@ export function ResolutionModal({ state, myPendingAction, onChoice, onYewTarget,
   if (myPendingAction.actionType === 'innkeeper_primary') {
     // Create a helper to get the correct image path
     const getIngredientImage = (ingredient: string) => {
-      // Try .JPG first, with fallback for .jpg (yew's file)
-      if (ingredient === 'yews_quiet_draught') {
+      // Handle lowercase .jpg files
+      if (ingredient === 'yews_quiet_draught' || ingredient === 'innkeepers_lots') {
         return `/assets/ingredients/${ingredient}.jpg`;
       }
-      // innkeepers_lots should use .JPG (or will use fallback if missing)
       return `/assets/ingredients/${ingredient}.JPG`;
     };
     
