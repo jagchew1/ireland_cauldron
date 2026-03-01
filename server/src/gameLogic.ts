@@ -642,7 +642,9 @@ function applyCeolPrimary(state: GameState, playerIds: string[]) {
   const extraRole = availableRoles[randomIndex];
   // Remove the selected role from heroDeck
   const deckIndex = state.heroDeck.findIndex(r => r.id === extraRole.id);
-  state.heroDeck.splice(deckIndex, 1);
+  if (deckIndex !== -1) {
+    state.heroDeck.splice(deckIndex, 1);
+  }
   
   // Create pool of all roles (player roles + extra from deck)
   const rolePool = [...playerRoles.map(pr => pr.role), extraRole];
