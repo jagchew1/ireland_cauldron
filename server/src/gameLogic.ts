@@ -620,9 +620,29 @@ function applyCeolPrimary(state: GameState, playerIds: string[]) {
   
   if (playerRoles.length === 0) return;
   
-  // Take one random role from hero deck
-  const randomIndex = Math.floor(Math.random() * state.heroDeck.length);
-  const extraRole = state.heroDeck.splice(randomIndex, 1)[0];
+  // Filter out roles that are currently assigned to any player in the game
+  const assignedRoleIds = new Set(
+    state.players
+      .filter(p => p.roleId)
+      .map(p => p.roleId!)
+  );
+  const availableRoles = state.heroDeck.filter(role => !assignedRoleIds.has(role.id));
+  
+  // If no valid roles remain after filtering, the effect fizzles
+  if (availableRoles.length === 0) {
+    addLogEntry(state, {
+      type: 'info',
+      message: `No unassigned roles available - Ceol effect fizzled.`,
+    });
+    return;
+  }
+  
+  // Take one random role from available roles
+  const randomIndex = Math.floor(Math.random() * availableRoles.length);
+  const extraRole = availableRoles[randomIndex];
+  // Remove the selected role from heroDeck
+  const deckIndex = state.heroDeck.findIndex(r => r.id === extraRole.id);
+  state.heroDeck.splice(deckIndex, 1);
   
   // Create pool of all roles (player roles + extra from deck)
   const rolePool = [...playerRoles.map(pr => pr.role), extraRole];
